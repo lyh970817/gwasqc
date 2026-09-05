@@ -8,3 +8,27 @@ testing*
 *.pyc
 null/
 .lineage/
+
+# Local development environment — machine-specific, and .envrc carries secrets
+.envrc
+.direnv/
+.nf-test*
+
+# Local agent and workspace files — mutable client state is not part of the
+# nf-core pipeline. The shared skills and repository instructions are tracked
+# through .agents/skills, .claude/skills, .codex/skills, and AGENTS.md.
+.claude/*
+!.claude/skills
+SPEC.md
+.scratch/
+.lavish/
+.worktrees/
+# Read-only symlink into the sibling gwas checkout's reference material
+# (nf-core reference pipelines and the companion nf-core/modules checkout).
+# Intentionally machine-local.
+.references
+CONTEXT.md
+CONTEXT-MAP.md
+docs/agents/
+docs/adr/
+docs/nf-core-standards/
