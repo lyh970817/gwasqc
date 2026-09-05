@@ -1,0 +1,75 @@
+# AGENTS.md
+
+## Collaboration constraints
+
+Recommend designs on their merits. Do not discount a design because implementation or refactoring mistakes may
+be introduced; assume testing and review can catch them later.
+
+Ask for the user's explicit approval before deciding to patch the source of a third-party programme that this
+pipeline invokes directly and that we did not write. Changes to pipeline code and programmes owned by this
+repository do not require that approval.
+
+Wire a third-party programme that this pipeline invokes according to its own documentation. Investigate its
+native behavior when the wiring at hand needs it: a contract the documentation leaves ambiguous, an output the
+pipeline must parse, a failure the pipeline must detect. Do not investigate as an end in itself. Report a
+defect in such a programme, whether in an issue, a review, or documentation, only when it is material: the
+programme returns a wrong or unusable result on input in its expected form, or the defect lies on a
+conventional route that ordinary users take, such as a sex check on a standard genotype array fileset. Behavior
+on malformed, unconventional, or adversarial input, such as a missing header, a name containing a comma, an
+empty file, a sentinel value, or a hostile flag combination, is not a defect here; do not guard against it,
+document it in user-facing docs, or test for it. It may be recorded, but only in the programme's single
+consolidated issue of non-material defects, recorded and not guarded, never as an individual issue. Record
+every material defect as an individual issue in this repository, naming the pinned image or version it was
+measured on. Do not build compensation for a tool defect, whether a refusal, an assertion, or a recomputation,
+without the owner's explicit decision. Validating user-supplied input such as samplesheet rows, method options,
+and resource files is unaffected.
+
+Choose the model family and reasoning effort for each subagent task according to its difficulty.
+
+## Repository identity and routing
+
+This is `gwasqc`, an nf-core-style genotype quality-control pipeline. It uses the nf-core template and the
+`nf-core/` org prefix but is not a registered nf-core pipeline.
+
+`GLAD_EDGI_NBR_qc_workflows/` is the read-only archive of the legacy GLAD/EDGI/NBR bash QC pipeline that this
+pipeline ports. Never edit anything under it; it is the historical reference. The legacy bash pipeline plus the
+decided fixes recorded in the local issue tracker are the port's specification.
+
+`.references` is a machine-local symlink into the sibling `gwas` checkout's reference material (nf-core
+reference pipelines and a companion `nf-core/modules` checkout). It is read-only, not a submission workspace,
+and not an ancestry source for this repository's branches.
+
+[`CODING_STANDARDS.md`](CODING_STANDARDS.md) indexes the canonical tracked standards. Skills under
+`.agents/skills/` own task procedures, gates, evidence, and reporting; they do not override stable contracts in
+the canonical standards.
+
+Before changing a governed subtree, read every `AGENTS.md` from this root through the closest containing
+directory. A task started at the repository root must discover and apply descendant instructions before acting
+in that subtree.
+
+Repository-local agent guidance and development infrastructure are personal-only. Use `dual-track-commit` for
+any commit or synchronization task that may mix those changes with the portable pipeline or a public PR.
+
+Local `personal` is the primary branch, and the repository-root checkout normally remains on it. Use linked
+worktrees for other branches.
+
+After a temporary branch has been merged into local `personal` and its content has been verified there, remove
+its worktree and delete the local branch. Use the commit on `personal` for later propagation; do not retain the
+temporary branch or worktree for that purpose.
+
+Push `personal` to `origin/personal` only after all work intended for that push has been merged into `personal`
+and all merged temporary branches and worktrees have been cleaned up.
+
+Never merge a branch that still carries files which must never be tracked, anything under `.scratch/` above
+all; the merge reintroduces those blobs. Rewrite the branch first.
+
+## Generated development documents
+
+Commit issue-specific generated audit and evidence documents while they are needed for review or historical
+record. After verification, delete them; retain only documents with an ongoing named consumer.
+
+## Upstream-bound local components
+
+The PLINK 2 atomic modules under `modules/local/` are upstream-bound candidates despite their local paths. Keep
+portable atomic components free of pipeline routing, scientific policy, publication, and reuse identity; the
+descendant instructions route the exact boundary.
