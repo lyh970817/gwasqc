@@ -1,0 +1,112 @@
+nextflow_process {
+
+    name "Test Process PLINK2_HARDY"
+    script "../main.nf"
+    process "PLINK2_HARDY"
+    config "./nextflow.config"
+
+    tag "modules"
+    tag "modules_nfcore"
+    tag "plink2"
+    tag "plink2/hardy"
+
+    test("plink_simulated - bed") {
+
+        when {
+            process {
+                """
+                input[0] = [
+                    [ id:'plink_simulated' ],
+                    file(params.modules_testdata_base_path + 'genomics/homo_sapiens/popgen/plink_simulated.bed', checkIfExists: true),
+                    file(params.modules_testdata_base_path + 'genomics/homo_sapiens/popgen/plink_simulated.bim', checkIfExists: true),
+                    file(params.modules_testdata_base_path + 'genomics/homo_sapiens/popgen/plink_simulated.fam', checkIfExists: true),
+                    [],
+                    [],
+                    [],
+                    [],
+                ]
+                """
+            }
+        }
+
+        then {
+            def command = path(process.out.hardy.get(0).get(1)).parent.resolve('.command.sh').text
+            assertAll(
+                { assert process.success },
+                { assert command.contains('--bfile plink_simulated') },
+                { assert path(process.out.hardy.get(0).get(1)).readLines().first().split('\t').toList() == ['#CHROM', 'ID', 'A1', 'AX', 'HOM_A1_CT', 'HET_A1_CT', 'TWO_AX_CT', 'O(HET_A1)', 'E(HET_A1)', 'P'] },
+                // The public fixture is autosomal only, so no chromosome X report exists.
+                { assert process.out.hardy_x.size() == 0 },
+                { assert snapshot(process.out.hardy, process.out.versions_plink2).match() },
+            )
+        }
+    }
+
+    test("plink_simulated - pgen - exclude list") {
+
+        when {
+            process {
+                """
+                // Dropping the first five variants of the pvar exercises the exclude fragment and shortens the report by five lines.
+                def exclude_list = file("${workDir}/plink_simulated_exclude.txt")
+                exclude_list.text = file(params.modules_testdata_base_path + 'genomics/homo_sapiens/popgen/plink_simulated.pvar', checkIfExists: true)
+                    .readLines()
+                    .findAll { line -> !line.startsWith('#') }
+                    .take(5)
+                    .collect { line -> line.split('\\t')[2] }
+                    .join('\\n') + '\\n'
+                input[0] = [
+                    [ id:'plink_simulated_pgen' ],
+                    file(params.modules_testdata_base_path + 'genomics/homo_sapiens/popgen/plink_simulated.pgen', checkIfExists: true),
+                    file(params.modules_testdata_base_path + 'genomics/homo_sapiens/popgen/plink_simulated.pvar', checkIfExists: true),
+                    file(params.modules_testdata_base_path + 'genomics/homo_sapiens/popgen/plink_simulated.psam', checkIfExists: true),
+                    [],
+                    exclude_list,
+                    [],
+                    [],
+                ]
+                """
+            }
+        }
+
+        then {
+            def command = path(process.out.hardy.get(0).get(1)).parent.resolve('.command.sh').text
+            assertAll(
+                { assert process.success },
+                { assert command.contains('--pfile plink_simulated') },
+                { assert command.contains('--exclude plink_simulated_exclude.txt') },
+                { assert path(process.out.log.get(0).get(1)).text.contains('--exclude: 215 variants remaining') },
+                { assert snapshot(process.out.hardy, process.out.versions_plink2).match() },
+            )
+        }
+    }
+
+    test("plink_simulated - bed - stub") {
+
+        options "-stub"
+
+        when {
+            process {
+                """
+                input[0] = [
+                    [ id:'plink_simulated' ],
+                    file(params.modules_testdata_base_path + 'genomics/homo_sapiens/popgen/plink_simulated.bed', checkIfExists: true),
+                    file(params.modules_testdata_base_path + 'genomics/homo_sapiens/popgen/plink_simulated.bim', checkIfExists: true),
+                    file(params.modules_testdata_base_path + 'genomics/homo_sapiens/popgen/plink_simulated.fam', checkIfExists: true),
+                    [],
+                    [],
+                    [],
+                    [],
+                ]
+                """
+            }
+        }
+
+        then {
+            assertAll(
+                { assert process.success },
+                { assert snapshot(sanitizeOutput(process.out)).match() },
+            )
+        }
+    }
+}

@@ -1,0 +1,144 @@
+nextflow_process {
+
+    name "Test Process PLINK2_WRITESNPLIST"
+    script "../main.nf"
+    process "PLINK2_WRITESNPLIST"
+    config "./nextflow.config"
+
+    tag "modules"
+    tag "modules_nfcore"
+    tag "plink2"
+    tag "plink2/writesnplist"
+
+    test("plink_simulated - bed - maf filter") {
+
+        when {
+            params {
+                module_args = '--maf 0.05'
+            }
+            process {
+                """
+                input[0] = [
+                    [ id:'plink_simulated' ],
+                    file(params.modules_testdata_base_path + 'genomics/homo_sapiens/popgen/plink_simulated.bed', checkIfExists: true),
+                    file(params.modules_testdata_base_path + 'genomics/homo_sapiens/popgen/plink_simulated.bim', checkIfExists: true),
+                    file(params.modules_testdata_base_path + 'genomics/homo_sapiens/popgen/plink_simulated.fam', checkIfExists: true),
+                    [],
+                    [],
+                    [],
+                    [],
+                ]
+                """
+            }
+        }
+
+        then {
+            def command = path(process.out.snplist.get(0).get(1)).parent.resolve('.command.sh').text
+            assertAll(
+                { assert process.success },
+                { assert command.contains('--bfile plink_simulated') },
+                { assert command.contains('--maf 0.05') },
+                { assert !command.contains('--extract') },
+                { assert path(process.out.log.get(0).get(1)).text.contains('--write-snplist: Variant IDs written') },
+                { assert snapshot(process.out.snplist, process.out.versions_plink2).match() },
+            )
+        }
+    }
+
+    test("plink_simulated - pgen - extract and remove lists") {
+
+        setup {
+            run("PLINK2_WRITESNPLIST", alias: "PLINK2_WRITESNPLIST_KEEP") {
+                script "../main.nf"
+                process {
+                    """
+                    input[0] = [
+                        [ id:'plink_simulated_keep' ],
+                        file(params.modules_testdata_base_path + 'genomics/homo_sapiens/popgen/plink_simulated.bed', checkIfExists: true),
+                        file(params.modules_testdata_base_path + 'genomics/homo_sapiens/popgen/plink_simulated.bim', checkIfExists: true),
+                        file(params.modules_testdata_base_path + 'genomics/homo_sapiens/popgen/plink_simulated.fam', checkIfExists: true),
+                        [],
+                        [],
+                        [],
+                        [],
+                    ]
+                    """
+                }
+            }
+        }
+
+        when {
+            params {
+                module_args = ''
+            }
+            process {
+                """
+                // The first ten samples of the fam are removed; the keep-list carries every variant, so the
+                // extract fragment is exercised without changing the variant count.
+                def remove_list = file("${workDir}/plink_simulated_remove.txt")
+                remove_list.text = file(params.modules_testdata_base_path + 'genomics/homo_sapiens/popgen/plink_simulated.fam', checkIfExists: true)
+                    .readLines()
+                    .take(10)
+                    .collect { line -> line.split(/\\s+/)[0..1].join(' ') }
+                    .join('\\n') + '\\n'
+                input[0] = PLINK2_WRITESNPLIST_KEEP.out.snplist.map { meta, snplist ->
+                    [
+                        [ id:'plink_simulated_pgen' ],
+                        file(params.modules_testdata_base_path + 'genomics/homo_sapiens/popgen/plink_simulated.pgen', checkIfExists: true),
+                        file(params.modules_testdata_base_path + 'genomics/homo_sapiens/popgen/plink_simulated.pvar', checkIfExists: true),
+                        file(params.modules_testdata_base_path + 'genomics/homo_sapiens/popgen/plink_simulated.psam', checkIfExists: true),
+                        snplist,
+                        [],
+                        [],
+                        remove_list,
+                    ]
+                }
+                """
+            }
+        }
+
+        then {
+            def command = path(process.out.snplist.get(0).get(1)).parent.resolve('.command.sh').text
+            assertAll(
+                { assert process.success },
+                { assert command.contains('--pfile plink_simulated') },
+                { assert command.contains('--extract plink_simulated_keep.snplist') },
+                { assert command.contains('--remove plink_simulated_remove.txt') },
+                { assert path(process.out.log.get(0).get(1)).text.contains('--remove: 190 samples remaining') },
+                { assert snapshot(process.out.snplist, process.out.versions_plink2).match() },
+            )
+        }
+    }
+
+    test("plink_simulated - bed - stub") {
+
+        options "-stub"
+
+        when {
+            params {
+                module_args = '--maf 0.05'
+            }
+            process {
+                """
+                input[0] = [
+                    [ id:'plink_simulated' ],
+                    file(params.modules_testdata_base_path + 'genomics/homo_sapiens/popgen/plink_simulated.bed', checkIfExists: true),
+                    file(params.modules_testdata_base_path + 'genomics/homo_sapiens/popgen/plink_simulated.bim', checkIfExists: true),
+                    file(params.modules_testdata_base_path + 'genomics/homo_sapiens/popgen/plink_simulated.fam', checkIfExists: true),
+                    [],
+                    [],
+                    [],
+                    [],
+                ]
+                """
+            }
+        }
+
+        then {
+            assertAll(
+                { assert process.success },
+                { assert snapshot(sanitizeOutput(process.out)).match() },
+            )
+        }
+    }
+}

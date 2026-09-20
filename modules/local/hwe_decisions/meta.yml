@@ -1,0 +1,65 @@
+name: hwe_decisions
+description: List the variants of one stratum whose Hardy-Weinberg exact-test p-value falls below the configured threshold
+keywords:
+  - hardy-weinberg
+  - hwe
+  - genotype
+  - quality control
+tools:
+  - r-base:
+      description: The R programming language runtime; the decision script uses base R only
+      homepage: https://www.r-project.org/
+      documentation: https://cran.r-project.org/manuals.html
+input:
+  - - meta:
+        type: map
+        description: |
+          Groovy map describing the stratum.
+          Expected keys:
+            - id (string): Stratum identifier, used as the output prefix.
+    - hardy:
+        type: file
+        description: plink2 autosomal Hardy-Weinberg report with an ID and a P column
+        pattern: "*.hardy"
+        ontologies:
+          - edam: "http://edamontology.org/format_3475" # TSV
+    - hardy_x:
+        type: file
+        optional: true
+        description: plink2 chromosome X Hardy-Weinberg report with an ID and a P column; pass `[]` when the fileset has no chromosome X variants
+        pattern: "*.hardy.x"
+        ontologies:
+          - edam: "http://edamontology.org/format_3475" # TSV
+  - hwe:
+      type: float
+      description: Variants whose exact-test p-value is below this value are listed for exclusion
+output:
+  variant_exclude:
+    - - meta:
+          type: map
+          description: Metadata map propagated from input
+      - "${prefix}.hwe_exclude.txt":
+          type: file
+          description: One variant ID per line for plink2 --exclude; empty when no variant fails the test
+          pattern: "*.hwe_exclude.txt"
+          ontologies:
+            - edam: "http://edamontology.org/format_2330" # Text
+  versions:
+    - versions.yml:
+        type: file
+        description: File containing software versions
+        pattern: "versions.yml"
+        ontologies:
+          - edam: "http://edamontology.org/format_3750" # YAML
+topics:
+  versions:
+    - versions.yml:
+        type: file
+        description: File containing software versions, written by the R template because an eval output is only accepted for a Bash script
+        pattern: "versions.yml"
+        ontologies:
+          - edam: "http://edamontology.org/format_3750" # YAML
+authors:
+  - "@lyh970817"
+maintainers:
+  - "@lyh970817"

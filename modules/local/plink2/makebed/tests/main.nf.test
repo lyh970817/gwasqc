@@ -1,0 +1,121 @@
+nextflow_process {
+
+    name "Test Process PLINK2_MAKEBED"
+    script "../main.nf"
+    process "PLINK2_MAKEBED"
+    config "./nextflow.config"
+
+    tag "modules"
+    tag "modules_nfcore"
+    tag "plink2"
+    tag "plink2/makebed"
+
+    test("plink_simulated - pgen") {
+
+        when {
+            process {
+                """
+                input[0] = [
+                    [ id:'plink_simulated_bed' ],
+                    file(params.modules_testdata_base_path + 'genomics/homo_sapiens/popgen/plink_simulated.pgen', checkIfExists: true),
+                    file(params.modules_testdata_base_path + 'genomics/homo_sapiens/popgen/plink_simulated.pvar', checkIfExists: true),
+                    file(params.modules_testdata_base_path + 'genomics/homo_sapiens/popgen/plink_simulated.psam', checkIfExists: true),
+                    [],
+                    [],
+                    [],
+                    [],
+                ]
+                """
+            }
+        }
+
+        then {
+            def command = path(process.out.bed.get(0).get(1)).parent.resolve('.command.sh').text
+            assertAll(
+                { assert process.success },
+                { assert command.contains('--pfile input/plink_simulated') },
+                { assert process.out.log[0][1].toString().endsWith('plink_simulated_bed.log') },
+                { assert snapshot(process.out.bed, process.out.versions_plink2).match() },
+            )
+        }
+    }
+
+    test("plink_simulated - bed - same prefix with extract, exclude and remove lists") {
+
+        when {
+            process {
+                """
+                // The output prefix equals the input basename, which the `input/` staging is there to allow.
+                // Lists: keep every variant but the last five, drop the first five of those, remove the first ten samples.
+                def variants = file(params.modules_testdata_base_path + 'genomics/homo_sapiens/popgen/plink_simulated.bim', checkIfExists: true)
+                    .readLines()
+                    .collect { line -> line.split('\\t')[1] }
+                def extract_list = file("${workDir}/plink_simulated_extract.txt")
+                extract_list.text = variants.dropRight(5).join('\\n') + '\\n'
+                def exclude_list = file("${workDir}/plink_simulated_exclude.txt")
+                exclude_list.text = variants.take(5).join('\\n') + '\\n'
+                def remove_list = file("${workDir}/plink_simulated_remove.txt")
+                remove_list.text = file(params.modules_testdata_base_path + 'genomics/homo_sapiens/popgen/plink_simulated.fam', checkIfExists: true)
+                    .readLines()
+                    .take(10)
+                    .collect { line -> line.split(/\\s+/)[0..1].join(' ') }
+                    .join('\\n') + '\\n'
+                input[0] = [
+                    [ id:'plink_simulated' ],
+                    file(params.modules_testdata_base_path + 'genomics/homo_sapiens/popgen/plink_simulated.bed', checkIfExists: true),
+                    file(params.modules_testdata_base_path + 'genomics/homo_sapiens/popgen/plink_simulated.bim', checkIfExists: true),
+                    file(params.modules_testdata_base_path + 'genomics/homo_sapiens/popgen/plink_simulated.fam', checkIfExists: true),
+                    extract_list,
+                    exclude_list,
+                    [],
+                    remove_list,
+                ]
+                """
+            }
+        }
+
+        then {
+            def command = path(process.out.bed.get(0).get(1)).parent.resolve('.command.sh').text
+            assertAll(
+                { assert process.success },
+                { assert command.contains('--bfile input/plink_simulated') },
+                { assert command.contains('--extract plink_simulated_extract.txt') },
+                { assert command.contains('--exclude plink_simulated_exclude.txt') },
+                { assert command.contains('--remove plink_simulated_remove.txt') },
+                { assert path(process.out.bed.get(0).get(2)).readLines().size() == 210 },
+                { assert path(process.out.bed.get(0).get(3)).readLines().size() == 190 },
+                { assert !path(process.out.log.get(0).get(1)).text.contains('filenames match') },
+                { assert snapshot(process.out.bed, process.out.versions_plink2).match() },
+            )
+        }
+    }
+
+    test("plink_simulated - pgen - stub") {
+
+        options "-stub"
+
+        when {
+            process {
+                """
+                input[0] = [
+                    [ id:'plink_simulated_stub' ],
+                    file(params.modules_testdata_base_path + 'genomics/homo_sapiens/popgen/plink_simulated.pgen', checkIfExists: true),
+                    file(params.modules_testdata_base_path + 'genomics/homo_sapiens/popgen/plink_simulated.pvar', checkIfExists: true),
+                    file(params.modules_testdata_base_path + 'genomics/homo_sapiens/popgen/plink_simulated.psam', checkIfExists: true),
+                    [],
+                    [],
+                    [],
+                    [],
+                ]
+                """
+            }
+        }
+
+        then {
+            assertAll(
+                { assert process.success },
+                { assert snapshot(sanitizeOutput(process.out)).match() },
+            )
+        }
+    }
+}

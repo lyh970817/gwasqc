@@ -1,0 +1,87 @@
+name: missingness_decisions
+description: Derive the geno and mind decision lists and the legacy call-rate ladder of one stratum from a single plink2 --missing run
+keywords:
+  - missingness
+  - call rate
+  - genotype
+  - quality control
+tools:
+  - r-base:
+      description: The R programming language runtime; the decision script uses base R only
+      homepage: https://www.r-project.org/
+      documentation: https://cran.r-project.org/manuals.html
+input:
+  - - meta:
+        type: map
+        description: |
+          Groovy map describing the stratum.
+          Expected keys:
+            - id (string): Stratum identifier, used as the output prefix.
+    - vmiss:
+        type: file
+        description: plink2 variant-based missing-genotype report with an ID and an F_MISS column
+        pattern: "*.vmiss"
+        ontologies:
+          - edam: "http://edamontology.org/format_3475" # TSV
+    - smiss:
+        type: file
+        description: plink2 sample-based missing-genotype report with an IID, optionally an FID, and an F_MISS column
+        pattern: "*.smiss"
+        ontologies:
+          - edam: "http://edamontology.org/format_3475" # TSV
+  - geno:
+      type: float
+      description: Variants whose missing-call rate exceeds this value are listed for exclusion
+  - mind:
+      type: float
+      description: Samples whose missing-call rate exceeds this value are listed for removal
+output:
+  variant_exclude:
+    - - meta:
+          type: map
+          description: Metadata map propagated from input
+      - "${prefix}.geno_exclude.txt":
+          type: file
+          description: One variant ID per line for plink2 --exclude; empty when no variant exceeds the geno threshold
+          pattern: "*.geno_exclude.txt"
+          ontologies:
+            - edam: "http://edamontology.org/format_2330" # Text
+  sample_remove:
+    - - meta:
+          type: map
+          description: Metadata map propagated from input
+      - "${prefix}.mind_remove.txt":
+          type: file
+          description: One space-separated FID IID pair, or bare IID, per line for plink2 --remove; empty when no sample exceeds the mind threshold
+          pattern: "*.mind_remove.txt"
+          ontologies:
+            - edam: "http://edamontology.org/format_2330" # Text
+  ladder:
+    - - meta:
+          type: map
+          description: Metadata map propagated from input
+      - "${prefix}.missingness_ladder.tsv":
+          type: file
+          description: Twenty-rung call-rate ladder from 90 to 99 percent, geno before mind at every rate, with the variants and participants each rung drops and the counts remaining
+          pattern: "*.missingness_ladder.tsv"
+          ontologies:
+            - edam: "http://edamontology.org/format_3475" # TSV
+  versions:
+    - versions.yml:
+        type: file
+        description: File containing software versions
+        pattern: "versions.yml"
+        ontologies:
+          - edam: "http://edamontology.org/format_3750" # YAML
+topics:
+  versions:
+    - versions.yml:
+        type: file
+        description: File containing software versions, written by the R template because an eval output is only accepted for a Bash script
+        pattern: "versions.yml"
+        ontologies:
+          - edam: "http://edamontology.org/format_3750" # YAML
+authors:
+  - "@lyh970817"
+maintainers:
+  - "@lyh970817"

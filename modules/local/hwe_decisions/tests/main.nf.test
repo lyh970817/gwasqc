@@ -1,0 +1,93 @@
+nextflow_process {
+
+    name "Test Process HWE_DECISIONS"
+    script "../main.nf"
+    process "HWE_DECISIONS"
+
+    tag "modules"
+    tag "modules_local"
+    tag "hwe_decisions"
+
+    // The gwasqc fixture stratum plants five chr5 variants with every sample heterozygous; its chromosome X
+    // variants make plink2 write the separate `.hardy.x` report that the optional second input consumes.
+    setup {
+        run("PLINK2_HARDY") {
+            script "../../plink2/hardy/main.nf"
+            process {
+                """
+                input[0] = [
+                    [ id:'study_eur', ancestry:'EUR' ],
+                    file(params.pipelines_testdata_base_path + 'data/gwasqc/genotypes/study_eur.bed', checkIfExists: true),
+                    file(params.pipelines_testdata_base_path + 'data/gwasqc/genotypes/study_eur.bim', checkIfExists: true),
+                    file(params.pipelines_testdata_base_path + 'data/gwasqc/genotypes/study_eur.fam', checkIfExists: true),
+                    [],
+                    [],
+                    [],
+                    [],
+                ]
+                """
+            }
+        }
+    }
+
+    test("study_eur - with chromosome X report") {
+
+        when {
+            process {
+                """
+                input[0] = PLINK2_HARDY.out.hardy.join(PLINK2_HARDY.out.hardy_x)
+                input[1] = 1e-10
+                """
+            }
+        }
+
+        then {
+            assertAll(
+                { assert process.success },
+                { assert path(process.out.variant_exclude.get(0).get(1)).readLines() == ['rs1667531', 'rs1668208', 'rs1668410', 'rs1668428', 'rs1668730'] },
+                { assert snapshot(process.out.variant_exclude, process.out.versions).match() },
+            )
+        }
+    }
+
+    test("study_eur - autosomal report only") {
+
+        when {
+            process {
+                """
+                input[0] = PLINK2_HARDY.out.hardy.map { meta, hardy -> [ meta, hardy, [] ] }
+                input[1] = 1e-10
+                """
+            }
+        }
+
+        then {
+            assertAll(
+                { assert process.success },
+                { assert path(process.out.variant_exclude.get(0).get(1)).readLines() == ['rs1667531', 'rs1668208', 'rs1668410', 'rs1668428', 'rs1668730'] },
+                { assert snapshot(process.out.variant_exclude).match() },
+            )
+        }
+    }
+
+    test("study_eur - stub") {
+
+        options "-stub"
+
+        when {
+            process {
+                """
+                input[0] = PLINK2_HARDY.out.hardy.join(PLINK2_HARDY.out.hardy_x)
+                input[1] = 1e-10
+                """
+            }
+        }
+
+        then {
+            assertAll(
+                { assert process.success },
+                { assert snapshot(sanitizeOutput(process.out)).match() },
+            )
+        }
+    }
+}
