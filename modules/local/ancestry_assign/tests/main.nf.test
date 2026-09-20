@@ -1,0 +1,185 @@
+nextflow_process {
+
+    name "Test Process ANCESTRY_ASSIGN"
+    script "../main.nf"
+    process "ANCESTRY_ASSIGN"
+    config "./nextflow.config"
+
+    tag "modules"
+    tag "modules_local"
+    tag "ancestry_assign"
+
+    // Synthetic projections, written by each case into its work directory: five reference groups of sixteen
+    // samples on unit centroids in four components, each group a ±0.2 two-level design on every axis so that
+    // the pooled covariance is exactly 0.04 on the diagonal, and ten study samples of a stratum labelled A:
+    // seven on A, one planted on B, one just off the centroid of A, B and C (posterior 0.39 for A, so no
+    // group reaches 0.5) and one on A but 4 standard deviations out on PC4 (assigned unless the
+    // standard-deviation rule is on).
+
+    test("synthetic - threshold only") {
+
+        when {
+            process {
+                """
+                def centroids = [A: [1, 0, 0, 0], B: [0, 1, 0, 0], C: [0, 0, 1, 0], D: [0, 0, 0, 1], E: [-1, -1, 0, 0]]
+                def header = ['#FID', 'IID', 'ALLELE_CT', 'NAMED_ALLELE_DOSAGE_SUM', 'PC1_AVG', 'PC2_AVG', 'PC3_AVG', 'PC4_AVG'].join('\\t')
+                def reference_rows = centroids.collectMany { group, centre ->
+                    (0..<16).collect { k ->
+                        def id = group + '_' + String.format('%03d', k + 1)
+                        def offset = [1, 2, 4, 8].collect { bit -> (k.intdiv(bit) % 2) * 0.4 - 0.2 }
+                        ([id, id, '400', '400'] + (0..3).collect { axis -> String.format('%.6f', (centre[axis] + offset[axis]) as double) }).join('\\t')
+                    }
+                }
+                def pop_rows = ['FID\\tIID\\tpop\\tsuper_pop'] + centroids.collectMany { group, _centre ->
+                    (0..<16).collect { k ->
+                        def id = group + '_' + String.format('%03d', k + 1)
+                        [id, id, group + ((k % 2) + 1), group].join('\\t')
+                    }
+                }
+                def study_rows = (0..<7).collect { k ->
+                    def id = 'S_' + String.format('%03d', k + 1)
+                    def offset = [1, 2, 4, 8].collect { bit -> ((k.intdiv(bit) % 2) * 0.4 - 0.2) * 0.3 }
+                    ([id, id, '400', '400'] + (0..3).collect { axis -> String.format('%.6f', (centroids.A[axis] + offset[axis]) as double) }).join('\\t')
+                } + [
+                    ['S_008', 'S_008', '400', '400', '0.010000', '0.990000', '0.005000', '0.005000'].join('\\t'),
+                    ['S_009', 'S_009', '400', '400', '0.340000', '0.330000', '0.330000', '0.000000'].join('\\t'),
+                    ['S_010', 'S_010', '400', '400', '1.000000', '0.000000', '0.000000', '0.800000'].join('\\t'),
+                ]
+                file("${workDir}/reference.sscore").text = ([header] + reference_rows).join('\\n') + '\\n'
+                file("${workDir}/study.sscore").text = ([header] + study_rows).join('\\n') + '\\n'
+                file("${workDir}/ref_pop.tsv").text = pop_rows.join('\\n') + '\\n'
+                input[0] = [ [ id:'synthetic', ancestry:'A' ], file("${workDir}/reference.sscore"), file("${workDir}/study.sscore") ]
+                input[1] = file("${workDir}/ref_pop.tsv")
+                input[2] = 0.5
+                input[3] = 0
+                """
+            }
+        }
+
+        then {
+            def assignment = path(process.out.assignment.get(0).get(1)).readLines().collect { line -> line.split('\t').toList() }
+            def assigned = assignment.drop(1).collectEntries { fields -> [(fields[1]): fields[2]] }
+            def status = assignment.drop(1).collectEntries { fields -> [(fields[1]): fields[3]] }
+            def keep = process.out.keep_lists.get(0).get(1).collectEntries { file -> [(new File(file.toString()).name): path(file).readLines()] }
+            def summary = path(process.out.summary.get(0).get(1)).readLines().collect { line -> line.split('\t', -1).toList() }
+            def model = path(process.out.model.get(0).get(1)).readLines().drop(1).collect { line -> line.split('\t').toList() }
+            def pca = path(process.out.pca_data.get(0).get(1)).readLines().collect { line -> line.split('\t', -1).toList() }
+            assertAll(
+                { assert process.success },
+                { assert assignment[0] == ['FID', 'IID', 'ASSIGNED', 'STATUS', 'MAX_PROB', 'MAX_ABS_Z', 'PROB_A', 'PROB_B', 'PROB_C', 'PROB_D', 'PROB_E'] },
+                { assert assigned == [S_001: 'A', S_002: 'A', S_003: 'A', S_004: 'A', S_005: 'A', S_006: 'A', S_007: 'A', S_008: 'B', S_009: 'unassigned', S_010: 'A'] },
+                { assert status.S_009 == 'below_threshold' },
+                { assert Math.abs((assignment.drop(1).find { fields -> fields[1] == 'S_009' }[4] as Double) - 0.39) < 0.01 },
+                // Without the rule the far-out sample is assigned, and its distance is still reported: 0.8 over
+                // the group's sample standard deviation on PC4, 0.2 * sqrt(16 / 15).
+                { assert Math.abs((assignment.drop(1).find { fields -> fields[1] == 'S_010' }[5] as Double) - 3.873) < 0.001 },
+                { assert keep.keySet().sort() == ['synthetic.ancestry_A.keep', 'synthetic.ancestry_B.keep', 'synthetic.ancestry_C.keep', 'synthetic.ancestry_D.keep', 'synthetic.ancestry_E.keep'] },
+                { assert keep['synthetic.ancestry_A.keep'] == (1..7).collect { k -> "S_${String.format('%03d', k)} S_${String.format('%03d', k)}".toString() } + ['S_010 S_010'] },
+                { assert keep['synthetic.ancestry_B.keep'] == ['S_008 S_008'] },
+                { assert keep['synthetic.ancestry_C.keep'].isEmpty() },
+                { assert path(process.out.sample_remove.get(0).get(1)).readLines() == ['S_008 S_008', 'S_009 S_009'] },
+                // The counts describe the threshold rule and nothing else.
+                { assert summary[0] == ['GROUP', 'STATUS', 'N_REFERENCE', 'N_STUDY', 'RULE'] },
+                { assert summary.drop(1).collect { fields -> fields[0..3] } == [['A', 'assigned', '16', '8'], ['B', 'assigned', '16', '1'], ['C', 'assigned', '16', '0'], ['D', 'assigned', '16', '0'], ['E', 'assigned', '16', '0'], ['unassigned', 'below_threshold', '', '1']] },
+                { assert summary.drop(1).every { fields -> fields[4] == (fields[0] == 'unassigned' ? 'max posterior < 0.5' : 'max posterior >= 0.5') } },
+                // Leave-one-out on well-separated groups is perfect.
+                { assert model.findAll { fields -> fields[0] == fields[1] }.every { fields -> fields[2] == '16' } },
+                { assert model.findAll { fields -> fields[0] != fields[1] }.every { fields -> fields[2] == '0' } },
+                { assert pca[0] == ['FID', 'IID', 'SOURCE', 'POP', 'SUPER_POP', 'ASSIGNED', 'PC1', 'PC2', 'PC3', 'PC4'] },
+                { assert pca.size() == 91 },
+                { assert pca.count { fields -> fields[2] == 'reference' } == 80 },
+                { assert pca.find { fields -> fields[1] == 'S_008' }[3..5] == ['', '', 'B'] },
+                { assert path(process.out.pc1_pc2_plot.get(0).get(1)).size() > 0 },
+                { assert path(process.out.pc3_pc4_plot.get(0).get(2)).size() > 0 },
+                { assert snapshot(process.out.assignment, process.out.summary, process.out.model, process.out.keep_lists, process.out.sample_remove, process.out.pca_data, process.out.versions).match() },
+            )
+        }
+    }
+
+    test("synthetic - threshold and standard-deviation rule") {
+
+        when {
+            process {
+                """
+                def centroids = [A: [1, 0, 0, 0], B: [0, 1, 0, 0], C: [0, 0, 1, 0], D: [0, 0, 0, 1], E: [-1, -1, 0, 0]]
+                def header = ['#FID', 'IID', 'ALLELE_CT', 'NAMED_ALLELE_DOSAGE_SUM', 'PC1_AVG', 'PC2_AVG', 'PC3_AVG', 'PC4_AVG'].join('\\t')
+                def reference_rows = centroids.collectMany { group, centre ->
+                    (0..<16).collect { k ->
+                        def id = group + '_' + String.format('%03d', k + 1)
+                        def offset = [1, 2, 4, 8].collect { bit -> (k.intdiv(bit) % 2) * 0.4 - 0.2 }
+                        ([id, id, '400', '400'] + (0..3).collect { axis -> String.format('%.6f', (centre[axis] + offset[axis]) as double) }).join('\\t')
+                    }
+                }
+                def pop_rows = ['FID\\tIID\\tpop\\tsuper_pop'] + centroids.collectMany { group, _centre ->
+                    (0..<16).collect { k ->
+                        def id = group + '_' + String.format('%03d', k + 1)
+                        [id, id, group + ((k % 2) + 1), group].join('\\t')
+                    }
+                }
+                def study_rows = (0..<7).collect { k ->
+                    def id = 'S_' + String.format('%03d', k + 1)
+                    def offset = [1, 2, 4, 8].collect { bit -> ((k.intdiv(bit) % 2) * 0.4 - 0.2) * 0.3 }
+                    ([id, id, '400', '400'] + (0..3).collect { axis -> String.format('%.6f', (centroids.A[axis] + offset[axis]) as double) }).join('\\t')
+                } + [
+                    ['S_008', 'S_008', '400', '400', '0.010000', '0.990000', '0.005000', '0.005000'].join('\\t'),
+                    ['S_009', 'S_009', '400', '400', '0.340000', '0.330000', '0.330000', '0.000000'].join('\\t'),
+                    ['S_010', 'S_010', '400', '400', '1.000000', '0.000000', '0.000000', '0.800000'].join('\\t'),
+                ]
+                file("${workDir}/reference.sscore").text = ([header] + reference_rows).join('\\n') + '\\n'
+                file("${workDir}/study.sscore").text = ([header] + study_rows).join('\\n') + '\\n'
+                file("${workDir}/ref_pop.tsv").text = pop_rows.join('\\n') + '\\n'
+                input[0] = [ [ id:'synthetic', ancestry:'A' ], file("${workDir}/reference.sscore"), file("${workDir}/study.sscore") ]
+                input[1] = file("${workDir}/ref_pop.tsv")
+                input[2] = 0.5
+                input[3] = 3
+                """
+            }
+        }
+
+        then {
+            def assignment = path(process.out.assignment.get(0).get(1)).readLines().drop(1).collect { line -> line.split('\t').toList() }
+            def summary = path(process.out.summary.get(0).get(1)).readLines().drop(1).collect { line -> line.split('\t', -1).toList() }
+            def keep = process.out.keep_lists.get(0).get(1).collectEntries { file -> [(new File(file.toString()).name): path(file).readLines()] }
+            assertAll(
+                { assert process.success },
+                // The far-out sample now falls to the rule, and every count says so.
+                { assert assignment.find { fields -> fields[1] == 'S_010' }[2..3] == ['unassigned', 'outside_sd'] },
+                { assert assignment.find { fields -> fields[1] == 'S_009' }[2..3] == ['unassigned', 'below_threshold'] },
+                { assert assignment.findAll { fields -> fields[3] == 'assigned' }.size() == 8 },
+                { assert keep['synthetic.ancestry_A.keep'].size() == 7 },
+                { assert path(process.out.sample_remove.get(0).get(1)).readLines() == ['S_008 S_008', 'S_009 S_009', 'S_010 S_010'] },
+                { assert summary.collect { fields -> fields[0..3] } == [['A', 'assigned', '16', '7'], ['B', 'assigned', '16', '1'], ['C', 'assigned', '16', '0'], ['D', 'assigned', '16', '0'], ['E', 'assigned', '16', '0'], ['unassigned', 'below_threshold', '', '1'], ['unassigned', 'outside_sd', '', '1']] },
+                { assert summary.find { fields -> fields[0] == 'A' }[4] == "max posterior >= 0.5 and every PC within 3 SD of the group's reference mean" },
+                { assert summary.find { fields -> fields[1] == 'outside_sd' }[4] == "max posterior >= 0.5 but a PC beyond 3 SD of the group's reference mean" },
+                { assert snapshot(process.out.assignment, process.out.summary, process.out.keep_lists, process.out.sample_remove).match() },
+            )
+        }
+    }
+
+    test("synthetic - stub") {
+
+        options "-stub"
+
+        when {
+            process {
+                """
+                def header = ['#FID', 'IID', 'ALLELE_CT', 'NAMED_ALLELE_DOSAGE_SUM', 'PC1_AVG', 'PC2_AVG', 'PC3_AVG', 'PC4_AVG'].join('\\t')
+                file("${workDir}/reference.sscore").text = header + '\\n'
+                file("${workDir}/study.sscore").text = header + '\\n'
+                file("${workDir}/ref_pop.tsv").text = 'FID\\tIID\\tpop\\tsuper_pop\\n'
+                input[0] = [ [ id:'synthetic', ancestry:'A' ], file("${workDir}/reference.sscore"), file("${workDir}/study.sscore") ]
+                input[1] = file("${workDir}/ref_pop.tsv")
+                input[2] = 0.5
+                input[3] = 0
+                """
+            }
+        }
+
+        then {
+            assertAll(
+                { assert process.success },
+                { assert snapshot(sanitizeOutput(process.out)).match() },
+            )
+        }
+    }
+}

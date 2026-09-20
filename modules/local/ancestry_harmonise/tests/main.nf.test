@@ -1,0 +1,145 @@
+nextflow_process {
+
+    name "Test Process ANCESTRY_HARMONISE"
+    script "../main.nf"
+    process "ANCESTRY_HARMONISE"
+    config "./nextflow.config"
+
+    tag "modules"
+    tag "modules_local"
+    tag "ancestry_harmonise"
+
+    // The gwasqc fixture reference shares every autosomal variant with the study strata except 54 that the
+    // study carries on the other strand and 40 A/T or C/G pairs that no strand check can resolve.
+    test("study_eur - fixture reference bim") {
+
+        when {
+            process {
+                """
+                input[0] = [
+                    [ id:'study_eur', ancestry:'EUR' ],
+                    file(params.pipelines_testdata_base_path + 'data/gwasqc/genotypes/study_eur.bim', checkIfExists: true),
+                    file(params.pipelines_testdata_base_path + 'data/gwasqc/reference/ref_panel.bim', checkIfExists: true),
+                ]
+                """
+            }
+        }
+
+        then {
+            def flipped = ['rs1019157', 'rs1084781', 'rs1090252', 'rs1097655', 'rs1145782', 'rs1159607', 'rs1163718', 'rs1273151', 'rs1360139', 'rs1389123', 'rs1436911', 'rs1452101', 'rs1467337', 'rs1549826', 'rs1578801', 'rs1677459', 'rs1680161', 'rs1722029', 'rs1723746', 'rs1762883', 'rs1776206', 'rs1803389', 'rs1862912', 'rs1916892', 'rs1941077', 'rs1988230', 'rs1996775', 'rs2027882', 'rs2109777', 'rs2130274', 'rs2144516', 'rs2150265', 'rs2164106', 'rs2169905', 'rs2281679', 'rs2294093', 'rs2309898', 'rs2314061', 'rs2347169', 'rs2362593', 'rs2389678', 'rs2439958', 'rs2469140', 'rs2504154', 'rs2515327', 'rs2516136', 'rs2517896', 'rs2524188', 'rs2526561', 'rs2637925', 'rs2675388', 'rs2729284', 'rs2781271', 'rs2789194']
+            def ambiguous = ['rs1008974', 'rs1111502', 'rs1117409', 'rs1212885', 'rs1239733', 'rs1301534', 'rs1323806', 'rs1325713', 'rs1462042', 'rs1515061', 'rs1532976', 'rs1540256', 'rs1617881', 'rs1630597', 'rs1648278', 'rs1658669', 'rs1676231', 'rs1678804', 'rs1685698', 'rs1719304', 'rs1801805', 'rs1810040', 'rs1880092', 'rs2032830', 'rs2036157', 'rs2115243', 'rs2140434', 'rs2173298', 'rs2239178', 'rs2293247', 'rs2339427', 'rs2417072', 'rs2489817', 'rs2586694', 'rs2670145', 'rs2679890', 'rs2693456', 'rs2696100', 'rs2779816', 'rs2814949']
+            def table = path(process.out.table.get(0).get(1)).readLines().collect { line -> line.split('\t', -1).toList() }
+            def by_class = table.drop(1).groupBy { fields -> fields[7] }.collectEntries { name, rows -> [(name): rows.collect { fields -> fields[0] }.sort()] }
+            def flip_update = path(process.out.flip_update.get(0).get(1)).readLines().collect { line -> line.split('\t').toList() }
+            def complement = [A: 'T', C: 'G', G: 'C', T: 'A']
+            def summary = path(process.out.summary.get(0).get(1)).readLines().collect { line -> line.split('\t').toList() }
+            assertAll(
+                { assert process.success },
+                { assert table[0] == ['ID', 'CHROM', 'POS', 'REF_A1', 'REF_A2', 'TARGET_A1', 'TARGET_A2', 'CLASS'] },
+                { assert table.size() == 1 + 3632 },
+                // Exactly the documented flips and ambiguous pairs, and nothing else falls out.
+                { assert by_class.flip == flipped.sort() },
+                { assert by_class.ambiguous == ambiguous.sort() },
+                { assert by_class.keySet().sort() == ['ambiguous', 'flip', 'match'] },
+                { assert path(process.out.snplist.get(0).get(1)).readLines().size() == 3632 - 40 },
+                { assert path(process.out.snplist.get(0).get(1)).readLines().containsAll(flipped) },
+                { assert path(process.out.snplist.get(0).get(1)).readLines().intersect(ambiguous).isEmpty() },
+                // The update names the reference alleles and their complements, one line per flip.
+                { assert flip_update.collect { fields -> fields[0] }.sort() == flipped.sort() },
+                { assert flip_update.every { fields -> fields.size() == 5 && fields[3] == complement[fields[1]] && fields[4] == complement[fields[2]] } },
+                { assert summary[0] == ['CLASS', 'N', 'RETAINED'] },
+                { assert summary.find { fields -> fields[0] == 'flip' }[1..2] == ['54', 'TRUE'] },
+                { assert summary.find { fields -> fields[0] == 'ambiguous' }[1..2] == ['40', 'FALSE'] },
+                { assert summary.find { fields -> fields[0] == 'match' }[1] == '3538' },
+                { assert snapshot(process.out.snplist, process.out.flip_update, process.out.table, process.out.summary, process.out.versions).match() },
+            )
+        }
+    }
+
+    test("synthetic - every class - pvar route with two reference files") {
+
+        when {
+            process {
+                """
+                // A target bim and two reference pvars covering every class once; rs_dup occurs in both
+                // reference files, rs_absent only in the reference, and rs_pos moved on the target.
+                def target = file("${workDir}/target.bim")
+                target.text = [
+                    '1\\trs_match\\t0\\t100\\tA\\tG',
+                    '1\\trs_swap\\t0\\t200\\tG\\tA',
+                    '1\\trs_flip\\t0\\t300\\tT\\tC',
+                    '1\\trs_flip_swap\\t0\\t400\\tC\\tT',
+                    '1\\trs_ambig\\t0\\t500\\tA\\tT',
+                    '1\\trs_ambig_flip\\t0\\t550\\tG\\tC',
+                    '1\\trs_mismatch\\t0\\t600\\tA\\tC',
+                    '1\\trs_indel\\t0\\t700\\tA\\tAT',
+                    '1\\trs_pos\\t0\\t801\\tA\\tG',
+                    'chr2\\trs_chr\\t0\\t900\\tA\\tG',
+                    '2\\trs_dup\\t0\\t1000\\tA\\tG',
+                ].join('\\n') + '\\n'
+                def first = file("${workDir}/first.pvar")
+                first.text = [
+                    '##fileformat=PVARv1.0',
+                    '#CHROM\\tPOS\\tID\\tREF\\tALT',
+                    '1\\t100\\trs_match\\tA\\tG',
+                    '1\\t200\\trs_swap\\tA\\tG',
+                    '1\\t300\\trs_flip\\tA\\tG',
+                    '1\\t400\\trs_flip_swap\\tA\\tG',
+                    '1\\t500\\trs_ambig\\tA\\tT',
+                    '1\\t550\\trs_ambig_flip\\tC\\tG',
+                    '1\\t600\\trs_mismatch\\tA\\tG',
+                    '1\\t700\\trs_indel\\tA\\tAT',
+                    '1\\t800\\trs_pos\\tA\\tG',
+                ].join('\\n') + '\\n'
+                def second = file("${workDir}/second.pvar")
+                second.text = [
+                    '#CHROM\\tPOS\\tID\\tREF\\tALT',
+                    '2\\t900\\trs_chr\\tA\\tG',
+                    '2\\t1000\\trs_dup\\tA\\tG',
+                    '2\\t1000\\trs_dup\\tA\\tC',
+                    '2\\t1100\\trs_absent\\tA\\tG',
+                ].join('\\n') + '\\n'
+                input[0] = [ [ id:'synthetic' ], target, [first, second] ]
+                """
+            }
+        }
+
+        then {
+            def table = path(process.out.table.get(0).get(1)).readLines().drop(1).collect { line -> line.split('\t', -1).toList() }
+            def classes = table.collectEntries { fields -> [(fields[0]): fields[7]] }
+            assertAll(
+                { assert process.success },
+                { assert classes == [rs_match: 'match', rs_swap: 'swap', rs_flip: 'flip', rs_flip_swap: 'flip', rs_ambig: 'ambiguous', rs_ambig_flip: 'ambiguous', rs_mismatch: 'allele_mismatch', rs_indel: 'non_snp', rs_pos: 'position_mismatch', rs_chr: 'match', rs_dup: 'duplicate_id', rs_absent: 'absent_from_target'] },
+                { assert table.size() == 13 },
+                { assert table.find { fields -> fields[0] == 'rs_absent' }[5..6] == ['', ''] },
+                { assert path(process.out.snplist.get(0).get(1)).readLines() == ['rs_match', 'rs_swap', 'rs_flip', 'rs_flip_swap', 'rs_chr'] },
+                { assert path(process.out.flip_update.get(0).get(1)).readLines() == ['rs_flip\tA\tG\tT\tC', 'rs_flip_swap\tA\tG\tT\tC'] },
+                { assert snapshot(process.out.snplist, process.out.flip_update, process.out.table, process.out.summary).match() },
+            )
+        }
+    }
+
+    test("study_eur - stub") {
+
+        options "-stub"
+
+        when {
+            process {
+                """
+                input[0] = [
+                    [ id:'study_eur', ancestry:'EUR' ],
+                    file(params.pipelines_testdata_base_path + 'data/gwasqc/genotypes/study_eur.bim', checkIfExists: true),
+                    file(params.pipelines_testdata_base_path + 'data/gwasqc/reference/ref_panel.bim', checkIfExists: true),
+                ]
+                """
+            }
+        }
+
+        then {
+            assertAll(
+                { assert process.success },
+                { assert snapshot(sanitizeOutput(process.out)).match() },
+            )
+        }
+    }
+}

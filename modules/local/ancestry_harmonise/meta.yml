@@ -1,0 +1,91 @@
+name: ancestry_harmonise
+description: Match the variants of a reference panel against the variant file of one stratum by ID, position and alleles, classify each as matching, swapped, strand-flipped, strand-ambiguous or mismatched, and write the retained variant list and the allele update that flips the reference onto the stratum's strand
+keywords:
+  - ancestry
+  - harmonisation
+  - strand flip
+  - reference panel
+  - genotype
+  - quality control
+tools:
+  - r-base:
+      description: The R programming language runtime
+      homepage: https://www.r-project.org/
+      documentation: https://cran.r-project.org/manuals.html
+input:
+  - - meta:
+        type: map
+        description: |
+          Groovy map describing the stratum.
+          Expected keys:
+            - id (string): Stratum identifier, used as the output prefix.
+    - plink_variant_file:
+        type: file
+        description: PLINK 1 extended MAP file or uncompressed PLINK 2 variant information file of the stratum; every variant the reference tables name is looked up here by ID
+        pattern: "*.{bim,pvar}"
+        ontologies: []
+    - reference_variant_files:
+        type: file
+        description: One or more PLINK 1 extended MAP files or uncompressed PLINK 2 variant information files of the reference filesets, typically already restricted to the stratum's variant IDs; the first listed allele of each is its A1 (bim column 5 or pvar REF) and the second its A2
+        pattern: "*.{bim,pvar}"
+        ontologies: []
+output:
+  snplist:
+    - - meta:
+          type: map
+          description: Metadata map propagated from input
+      - "${prefix}.ancestry_harmonised.snplist":
+          type: file
+          description: IDs of the reference variants classified match, swap or flip, one per line, for plink2 --extract on the reference and the stratum alike
+          pattern: "*.ancestry_harmonised.snplist"
+          ontologies:
+            - edam: "http://edamontology.org/format_2330" # Text
+  flip_update:
+    - - meta:
+          type: map
+          description: Metadata map propagated from input
+      - "${prefix}.ancestry_flip_update.txt":
+          type: file
+          description: One tab-separated line per strand-flipped variant with its ID, its two reference alleles and their complements, in the five-column form of plink2 --update-alleles, to be applied to the reference; empty when no variant flips
+          pattern: "*.ancestry_flip_update.txt"
+          ontologies:
+            - edam: "http://edamontology.org/format_2330" # Text
+  table:
+    - - meta:
+          type: map
+          description: Metadata map propagated from input
+      - "${prefix}.ancestry_harmonisation.tsv":
+          type: file
+          description: One row per reference variant with its chromosome and position, the reference and stratum alleles and its CLASS (match, swap, flip, ambiguous, allele_mismatch, non_snp, position_mismatch, absent_from_target, duplicate_id); the stratum alleles are empty for an absent variant
+          pattern: "*.ancestry_harmonisation.tsv"
+          ontologies:
+            - edam: "http://edamontology.org/format_3475" # TSV
+  summary:
+    - - meta:
+          type: map
+          description: Metadata map propagated from input
+      - "${prefix}.ancestry_harmonisation_summary.tsv":
+          type: file
+          description: Variant count per class, every class listed, with whether the class is retained
+          pattern: "*.ancestry_harmonisation_summary.tsv"
+          ontologies:
+            - edam: "http://edamontology.org/format_3475" # TSV
+  versions:
+    - versions.yml:
+        type: file
+        description: File containing software versions
+        pattern: "versions.yml"
+        ontologies:
+          - edam: "http://edamontology.org/format_3750" # YAML
+topics:
+  versions:
+    - versions.yml:
+        type: file
+        description: File containing software versions, written by the R template because an eval output is only accepted for a Bash script
+        pattern: "versions.yml"
+        ontologies:
+          - edam: "http://edamontology.org/format_3750" # YAML
+authors:
+  - "@lyh970817"
+maintainers:
+  - "@lyh970817"

@@ -1,0 +1,185 @@
+name: ancestry_assign
+description: Assign the study samples of one stratum to reference super-populations from projected principal components with linear discriminant analysis on the labelled reference, write the keep-lists, the mismatch removal list, the assignment, summary and model tables, and draw the projection with the study samples highlighted above the reference populations
+keywords:
+  - ancestry
+  - principal components
+  - classification
+  - linear discriminant analysis
+  - genotype
+  - quality control
+  - plot
+tools:
+  - r-base:
+      description: The R programming language runtime
+      homepage: https://www.r-project.org/
+      documentation: https://cran.r-project.org/manuals.html
+  - r-ggplot2:
+      description: Grammar-of-graphics plotting for R
+      homepage: https://ggplot2.tidyverse.org/
+      documentation: https://ggplot2.tidyverse.org/reference/
+  - r-data.table:
+      description: Fast tabular data handling for R
+      homepage: https://r-datatable.com/
+      documentation: https://rdatatable.gitlab.io/data.table/
+  - r-mass:
+      description: Modern Applied Statistics with S, the R package supplying linear discriminant analysis; an import of ggplot2 and therefore pinned by the same lock file
+      homepage: https://www.stats.ox.ac.uk/pub/MASS4/
+      documentation: https://cran.r-project.org/package=MASS
+input:
+  - - meta:
+        type: map
+        description: |
+          Groovy map describing the stratum.
+          Expected keys:
+            - id (string): Stratum identifier, used as the output prefix.
+            - ancestry (string): The stratum's own super-population label; study samples assigned to any other group, or to none, are listed for removal.
+    - reference_scores:
+        type: file
+        description: plink2 --score report of the reference samples projected onto the reference principal components, with IID, optionally FID, and PC<k>_AVG (or _SUM) columns
+        pattern: "*.sscore"
+        ontologies:
+          - edam: "http://edamontology.org/format_3475" # TSV
+    - study_scores:
+        type: file
+        description: plink2 --score report of the study samples projected with the same weights, frequencies and modifiers, carrying the same PC columns; at least four components are needed for the two plots
+        pattern: "*.sscore"
+        ontologies:
+          - edam: "http://edamontology.org/format_3475" # TSV
+  - pop_data:
+      type: file
+      description: Tab-separated table with a header naming FID, IID, pop and super_pop; every scored reference sample must appear in it, and the super_pop labels are the groups the classifier learns
+      pattern: "*.tsv"
+      ontologies:
+        - edam: "http://edamontology.org/format_3475" # TSV
+  - prob_threshold:
+      type: float
+      description: A study sample is assigned to the super-population of its largest posterior probability when that probability is at least this value, and is unassigned otherwise
+  - sd_filter:
+      type: float
+      description: When positive, an assigned study sample whose coordinate on any component lies more than this many standard deviations from its group's reference mean becomes unassigned; zero switches the rule off
+output:
+  assignment:
+    - - meta:
+          type: map
+          description: Metadata map propagated from input
+      - "${prefix}.ancestry_assignment.tsv":
+          type: file
+          description: Per study sample, the ID columns, ASSIGNED (a super-population or unassigned), STATUS (assigned, below_threshold, outside_sd), MAX_PROB, MAX_ABS_Z (the largest per-component distance from the nearest group's reference mean in that group's standard deviations) and PROB_<group> for every super-population
+          pattern: "*.ancestry_assignment.tsv"
+          ontologies:
+            - edam: "http://edamontology.org/format_3475" # TSV
+  summary:
+    - - meta:
+          type: map
+          description: Metadata map propagated from input
+      - "${prefix}.ancestry_summary.tsv":
+          type: file
+          description: Per super-population, the number of reference and assigned study samples, then the unassigned study samples below the threshold and, when the rule is on, outside the standard-deviation bound; every row states the rule that produced its count
+          pattern: "*.ancestry_summary.tsv"
+          ontologies:
+            - edam: "http://edamontology.org/format_3475" # TSV
+  model:
+    - - meta:
+          type: map
+          description: Metadata map propagated from input
+      - "${prefix}.ancestry_model.tsv":
+          type: file
+          description: Leave-one-out cross-validated confusion of the classifier on the reference samples, one row per observed and predicted group pair
+          pattern: "*.ancestry_model.tsv"
+          ontologies:
+            - edam: "http://edamontology.org/format_3475" # TSV
+  keep_lists:
+    - - meta:
+          type: map
+          description: Metadata map propagated from input
+      - "${prefix}.ancestry_*.keep":
+          type: file
+          description: One file per super-population of the population data, named after it, listing the study samples assigned to it as space-separated FID IID pairs, or bare IIDs, for plink2 --keep; empty when none is
+          pattern: "*.ancestry_*.keep"
+          ontologies:
+            - edam: "http://edamontology.org/format_2330" # Text
+  sample_remove:
+    - - meta:
+          type: map
+          description: Metadata map propagated from input
+      - "${prefix}.ancestry_mismatch_remove.txt":
+          type: file
+          description: The study samples whose ASSIGNED differs from meta.ancestry, the unassigned included, as space-separated FID IID pairs, or bare IIDs, for plink2 --remove; empty when none does
+          pattern: "*.ancestry_mismatch_remove.txt"
+          ontologies:
+            - edam: "http://edamontology.org/format_2330" # Text
+  pca_data:
+    - - meta:
+          type: map
+          description: Metadata map propagated from input
+      - "${prefix}.ancestry_pca.tsv":
+          type: file
+          description: Reference and study samples with SOURCE, POP and SUPER_POP (reference only), ASSIGNED (study only) and their projected coordinates; the data the plots are drawn from
+          pattern: "*.ancestry_pca.tsv"
+          ontologies:
+            - edam: "http://edamontology.org/format_3475" # TSV
+  pc1_pc2_plot:
+    - - meta:
+          type: map
+          description: Metadata map propagated from input
+      - "${prefix}.ancestry_pc1_pc2.pdf":
+          type: file
+          description: PC1 against PC2, reference populations in their own colours and the study samples drawn above them in orange with a dark outline
+          pattern: "*.ancestry_pc1_pc2.pdf"
+          ontologies:
+            - edam: "http://edamontology.org/format_3508" # PDF
+      - "${prefix}.ancestry_pc1_pc2.png":
+          type: file
+          description: The same figure as an image
+          pattern: "*.ancestry_pc1_pc2.png"
+          ontologies:
+            - edam: "http://edamontology.org/format_3603" # PNG
+  pc3_pc4_plot:
+    - - meta:
+          type: map
+          description: Metadata map propagated from input
+      - "${prefix}.ancestry_pc3_pc4.pdf":
+          type: file
+          description: PC3 against PC4, drawn the same way
+          pattern: "*.ancestry_pc3_pc4.pdf"
+          ontologies:
+            - edam: "http://edamontology.org/format_3508" # PDF
+      - "${prefix}.ancestry_pc3_pc4.png":
+          type: file
+          description: The same figure as an image
+          pattern: "*.ancestry_pc3_pc4.png"
+          ontologies:
+            - edam: "http://edamontology.org/format_3603" # PNG
+  versions:
+    - versions.yml:
+        type: file
+        description: File containing software versions
+        pattern: "versions.yml"
+        ontologies:
+          - edam: "http://edamontology.org/format_3750" # YAML
+topics:
+  versions:
+    - versions.yml:
+        type: file
+        description: File containing software versions, written by the R template because an eval output is only accepted for a Bash script
+        pattern: "versions.yml"
+        ontologies:
+          - edam: "http://edamontology.org/format_3750" # YAML
+authors:
+  - "@lyh970817"
+maintainers:
+  - "@lyh970817"
+containers:
+  conda:
+    linux/amd64:
+      lock_file: "modules/local/ancestry_assign/.conda-lock/linux_amd64-bd-785e51271c23bbdc_1.txt"
+  docker:
+    linux/amd64:
+      build_id: "bd-785e51271c23bbdc_1"
+      name: "community.wave.seqera.io/library/r-base_r-ggplot2_r-data.table:785e51271c23bbdc"
+      scan_id: "sc-940f534e023f3133_1"
+  singularity:
+    linux/amd64:
+      build_id: "bd-0012f1154a886ee6_1"
+      name: "oras://community.wave.seqera.io/library/r-base_r-ggplot2_r-data.table:0012f1154a886ee6"
+      https: "https://community-cr-prod.seqera.io/docker/registry/v2/blobs/sha256/ac/ac330e254aed1e019ded0a6140463199760e9ee8f1cf398670eb40ccee61ed14/data"

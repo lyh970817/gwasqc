@@ -38,6 +38,10 @@
 
   > Wickham H. ggplot2: Elegant Graphics for Data Analysis. Springer-Verlag New York, 2016. ISBN 978-3-319-24277-4.
 
+- [MASS](https://www.stats.ox.ac.uk/pub/MASS4/)
+
+  > Venables WN, Ripley BD. Modern Applied Statistics with S. Fourth Edition. Springer, New York, 2002. ISBN 0-387-95457-0.
+
 ## Software packaging/containerisation tools
 
 - [Anaconda](https://anaconda.com)

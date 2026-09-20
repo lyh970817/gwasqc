@@ -1,0 +1,213 @@
+{
+    "synthetic - threshold only": {
+        "content": [
+            [
+                [
+                    {
+                        "id": "synthetic",
+                        "ancestry": "A"
+                    },
+                    "synthetic.ancestry_assignment.tsv:md5,1c75f021c8ebec4ab92a21e5af66b36b"
+                ]
+            ],
+            [
+                [
+                    {
+                        "id": "synthetic",
+                        "ancestry": "A"
+                    },
+                    "synthetic.ancestry_summary.tsv:md5,b007a9b98a938f0a13a1854da0cd25e7"
+                ]
+            ],
+            [
+                [
+                    {
+                        "id": "synthetic",
+                        "ancestry": "A"
+                    },
+                    "synthetic.ancestry_model.tsv:md5,61739b822164ed7b94d1806c590ad771"
+                ]
+            ],
+            [
+                [
+                    {
+                        "id": "synthetic",
+                        "ancestry": "A"
+                    },
+                    [
+                        "synthetic.ancestry_A.keep:md5,79cd49121af18d41deb972bf06ee2641",
+                        "synthetic.ancestry_B.keep:md5,2bd78d8f2ae86f019bc9b8d8fc9c1d26",
+                        "synthetic.ancestry_C.keep:md5,d41d8cd98f00b204e9800998ecf8427e",
+                        "synthetic.ancestry_D.keep:md5,d41d8cd98f00b204e9800998ecf8427e",
+                        "synthetic.ancestry_E.keep:md5,d41d8cd98f00b204e9800998ecf8427e"
+                    ]
+                ]
+            ],
+            [
+                [
+                    {
+                        "id": "synthetic",
+                        "ancestry": "A"
+                    },
+                    "synthetic.ancestry_mismatch_remove.txt:md5,8a944ba9ecfc48daef126ff25f7630cf"
+                ]
+            ],
+            [
+                [
+                    {
+                        "id": "synthetic",
+                        "ancestry": "A"
+                    },
+                    "synthetic.ancestry_pca.tsv:md5,233f6a31b6c7fdaa9d74a4ff704838d2"
+                ]
+            ],
+            [
+                "versions.yml:md5,6faeda8ae88a18c7ab909c38e91c7a6d"
+            ]
+        ],
+        "timestamp": "2026-09-20T20:24:07.783708962",
+        "meta": {
+            "nf-test": "0.9.5",
+            "nextflow": "26.04.4"
+        }
+    },
+    "synthetic - threshold and standard-deviation rule": {
+        "content": [
+            [
+                [
+                    {
+                        "id": "synthetic",
+                        "ancestry": "A"
+                    },
+                    "synthetic.ancestry_assignment.tsv:md5,cf6d79440d63fb853a9f8514f53f7d48"
+                ]
+            ],
+            [
+                [
+                    {
+                        "id": "synthetic",
+                        "ancestry": "A"
+                    },
+                    "synthetic.ancestry_summary.tsv:md5,7b1b60fb2dff72ac027e329ed7459796"
+                ]
+            ],
+            [
+                [
+                    {
+                        "id": "synthetic",
+                        "ancestry": "A"
+                    },
+                    [
+                        "synthetic.ancestry_A.keep:md5,b2ee218080d322d972dd5fdfa7682986",
+                        "synthetic.ancestry_B.keep:md5,2bd78d8f2ae86f019bc9b8d8fc9c1d26",
+                        "synthetic.ancestry_C.keep:md5,d41d8cd98f00b204e9800998ecf8427e",
+                        "synthetic.ancestry_D.keep:md5,d41d8cd98f00b204e9800998ecf8427e",
+                        "synthetic.ancestry_E.keep:md5,d41d8cd98f00b204e9800998ecf8427e"
+                    ]
+                ]
+            ],
+            [
+                [
+                    {
+                        "id": "synthetic",
+                        "ancestry": "A"
+                    },
+                    "synthetic.ancestry_mismatch_remove.txt:md5,05c20c10b375540fb34b0e37d5d2e087"
+                ]
+            ]
+        ],
+        "timestamp": "2026-09-20T20:24:16.707334985",
+        "meta": {
+            "nf-test": "0.9.5",
+            "nextflow": "26.04.4"
+        }
+    },
+    "synthetic - stub": {
+        "content": [
+            {
+                "assignment": [
+                    [
+                        {
+                            "ancestry": "A",
+                            "id": "synthetic"
+                        },
+                        "synthetic.ancestry_assignment.tsv:md5,6afa188feffd4d3ea0b0ef6bc692d06b"
+                    ]
+                ],
+                "keep_lists": [
+                    [
+                        {
+                            "ancestry": "A",
+                            "id": "synthetic"
+                        },
+                        "synthetic.ancestry_A.keep:md5,d41d8cd98f00b204e9800998ecf8427e"
+                    ]
+                ],
+                "model": [
+                    [
+                        {
+                            "ancestry": "A",
+                            "id": "synthetic"
+                        },
+                        "synthetic.ancestry_model.tsv:md5,aaaa4cf39bcc5ac603f4a20a9d0a2e81"
+                    ]
+                ],
+                "pc1_pc2_plot": [
+                    [
+                        {
+                            "ancestry": "A",
+                            "id": "synthetic"
+                        },
+                        "synthetic.ancestry_pc1_pc2.pdf:md5,d41d8cd98f00b204e9800998ecf8427e",
+                        "synthetic.ancestry_pc1_pc2.png:md5,d41d8cd98f00b204e9800998ecf8427e"
+                    ]
+                ],
+                "pc3_pc4_plot": [
+                    [
+                        {
+                            "ancestry": "A",
+                            "id": "synthetic"
+                        },
+                        "synthetic.ancestry_pc3_pc4.pdf:md5,d41d8cd98f00b204e9800998ecf8427e",
+                        "synthetic.ancestry_pc3_pc4.png:md5,d41d8cd98f00b204e9800998ecf8427e"
+                    ]
+                ],
+                "pca_data": [
+                    [
+                        {
+                            "ancestry": "A",
+                            "id": "synthetic"
+                        },
+                        "synthetic.ancestry_pca.tsv:md5,94490ff822e78dbc2b548bd36d1529b5"
+                    ]
+                ],
+                "sample_remove": [
+                    [
+                        {
+                            "ancestry": "A",
+                            "id": "synthetic"
+                        },
+                        "synthetic.ancestry_mismatch_remove.txt:md5,d41d8cd98f00b204e9800998ecf8427e"
+                    ]
+                ],
+                "summary": [
+                    [
+                        {
+                            "ancestry": "A",
+                            "id": "synthetic"
+                        },
+                        "synthetic.ancestry_summary.tsv:md5,696f413f11a666f72b6b5cc8f905f0f2"
+                    ]
+                ],
+                "versions": [
+                    "versions.yml:md5,6faeda8ae88a18c7ab909c38e91c7a6d"
+                ]
+            }
+        ],
+        "timestamp": "2026-09-20T20:24:23.445760888",
+        "meta": {
+            "nf-test": "0.9.5",
+            "nextflow": "26.04.4"
+        }
+    }
+}

@@ -1,0 +1,141 @@
+{
+    "study_eur - stub": {
+        "content": [
+            {
+                "flip_update": [
+                    [
+                        {
+                            "ancestry": "EUR",
+                            "id": "study_eur"
+                        },
+                        "study_eur.ancestry_flip_update.txt:md5,d41d8cd98f00b204e9800998ecf8427e"
+                    ]
+                ],
+                "snplist": [
+                    [
+                        {
+                            "ancestry": "EUR",
+                            "id": "study_eur"
+                        },
+                        "study_eur.ancestry_harmonised.snplist:md5,d41d8cd98f00b204e9800998ecf8427e"
+                    ]
+                ],
+                "summary": [
+                    [
+                        {
+                            "ancestry": "EUR",
+                            "id": "study_eur"
+                        },
+                        "study_eur.ancestry_harmonisation_summary.tsv:md5,2274e48a3efc8251df776a9268c225e4"
+                    ]
+                ],
+                "table": [
+                    [
+                        {
+                            "ancestry": "EUR",
+                            "id": "study_eur"
+                        },
+                        "study_eur.ancestry_harmonisation.tsv:md5,28d68332c620df9929dc96540f9f0b06"
+                    ]
+                ],
+                "versions": [
+                    "versions.yml:md5,27016de2334ca8d7afe178053eff8de8"
+                ]
+            }
+        ],
+        "timestamp": "2026-09-20T20:16:03.564431835",
+        "meta": {
+            "nf-test": "0.9.5",
+            "nextflow": "26.04.4"
+        }
+    },
+    "study_eur - fixture reference bim": {
+        "content": [
+            [
+                [
+                    {
+                        "id": "study_eur",
+                        "ancestry": "EUR"
+                    },
+                    "study_eur.ancestry_harmonised.snplist:md5,70cf086358d48ff5de5e201ac0a84af3"
+                ]
+            ],
+            [
+                [
+                    {
+                        "id": "study_eur",
+                        "ancestry": "EUR"
+                    },
+                    "study_eur.ancestry_flip_update.txt:md5,2ffcb0888e521c734c95f0730187cac2"
+                ]
+            ],
+            [
+                [
+                    {
+                        "id": "study_eur",
+                        "ancestry": "EUR"
+                    },
+                    "study_eur.ancestry_harmonisation.tsv:md5,19d1783cd4d8d7b76d4a18ed1799899f"
+                ]
+            ],
+            [
+                [
+                    {
+                        "id": "study_eur",
+                        "ancestry": "EUR"
+                    },
+                    "study_eur.ancestry_harmonisation_summary.tsv:md5,7f6ed94e1e2361503e457e2b2960b3b1"
+                ]
+            ],
+            [
+                "versions.yml:md5,27016de2334ca8d7afe178053eff8de8"
+            ]
+        ],
+        "timestamp": "2026-09-20T20:15:31.875308972",
+        "meta": {
+            "nf-test": "0.9.5",
+            "nextflow": "26.04.4"
+        }
+    },
+    "synthetic - every class - pvar route with two reference files": {
+        "content": [
+            [
+                [
+                    {
+                        "id": "synthetic"
+                    },
+                    "synthetic.ancestry_harmonised.snplist:md5,85755ad829aaa443a8f688c0f722d70d"
+                ]
+            ],
+            [
+                [
+                    {
+                        "id": "synthetic"
+                    },
+                    "synthetic.ancestry_flip_update.txt:md5,6707aa62715e45425340918097008d2a"
+                ]
+            ],
+            [
+                [
+                    {
+                        "id": "synthetic"
+                    },
+                    "synthetic.ancestry_harmonisation.tsv:md5,b9716d501796e8685916c24332bd5b3d"
+                ]
+            ],
+            [
+                [
+                    {
+                        "id": "synthetic"
+                    },
+                    "synthetic.ancestry_harmonisation_summary.tsv:md5,fdcdf4db40ba7618d7c0cb54348edb90"
+                ]
+            ]
+        ],
+        "timestamp": "2026-09-20T20:15:50.12059008",
+        "meta": {
+            "nf-test": "0.9.5",
+            "nextflow": "26.04.4"
+        }
+    }
+}
