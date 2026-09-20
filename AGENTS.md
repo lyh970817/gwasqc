@@ -33,7 +33,7 @@ This is `gwasqc`, an nf-core-style genotype quality-control pipeline. It uses th
 
 `GLAD_EDGI_NBR_qc_workflows/` is the read-only archive of the legacy GLAD/EDGI/NBR bash QC pipeline that this
 pipeline ports. Never edit anything under it; it is the historical reference. The legacy bash pipeline plus the
-decided fixes recorded in the local issue tracker are the port's specification.
+decided fixes recorded in the GitHub issue tracker (the implementation-plan issue) are the port's specification.
 
 `.references` is a machine-local symlink into the sibling `gwas` checkout's reference material (nf-core
 reference pipelines and a companion `nf-core/modules` checkout). It is read-only, not a submission workspace,
