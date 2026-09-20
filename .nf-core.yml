@@ -6,6 +6,12 @@ lint:
   files_exist:
     - conf/igenomes.config
     - conf/igenomes_ignored.config
+    # The single module config is split into per-method-family files under `conf/modules/`, so that a new QC
+    # stage adds a file instead of editing a shared one. Both this `files_exist` entry and the
+    # `modules_config` toggle below are required: the first stops lint demanding the deleted file, the second
+    # stops the `withName:` check reading it.
+    - conf/modules.config
+  modules_config: false
 
 template:
   org: nf-core

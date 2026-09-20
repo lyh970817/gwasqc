@@ -19,8 +19,8 @@
                     "schema": "assets/schema_input.json",
                     "mimetype": "text/csv",
                     "pattern": "^\\S+\\.csv$",
-                    "description": "Path to comma-separated file containing information about the samples in the experiment.",
-                    "help_text": "You will need to create a design file with information about the samples in your experiment before running the pipeline. Use this parameter to specify its location. It has to be a comma-separated file with 3 columns, and a header row. See [usage docs](https://nf-co.re/gwasqc/usage#samplesheet-input).",
+                    "description": "Path to the comma-separated samplesheet declaring one PLINK 1 fileset per stratum.",
+                    "help_text": "You will need to create a samplesheet with one row per stratum before running the pipeline. Use this parameter to specify its location. It has to be a comma-separated file with the 5 columns `id,ancestry,bed,bim,fam` and a header row. See [usage docs](https://nf-co.re/gwasqc/usage#samplesheet-input).",
                     "fa_icon": "fas fa-file-csv"
                 },
                 "outdir": {
@@ -40,6 +40,53 @@
                     "type": "string",
                     "description": "MultiQC report title. Printed as page header, used for filename if not otherwise specified.",
                     "fa_icon": "fas fa-file-signature"
+                }
+            }
+        },
+        "qc_threshold_options": {
+            "title": "QC threshold options",
+            "type": "object",
+            "fa_icon": "fas fa-filter",
+            "description": "Thresholds of the variant and sample QC chain. Every comparison is strict, as in plink2 itself.",
+            "properties": {
+                "maf": {
+                    "type": "number",
+                    "default": 0.01,
+                    "minimum": 0,
+                    "maximum": 0.5,
+                    "description": "Minor allele frequency threshold; variants with a frequency below this value are dropped before any other statistic is computed.",
+                    "fa_icon": "fas fa-percentage"
+                },
+                "geno": {
+                    "type": "number",
+                    "default": 0.05,
+                    "minimum": 0,
+                    "maximum": 1,
+                    "description": "Maximum per-variant missing-call rate; variants whose rate exceeds this value are listed for exclusion.",
+                    "fa_icon": "fas fa-percentage"
+                },
+                "mind": {
+                    "type": "number",
+                    "default": 0.05,
+                    "minimum": 0,
+                    "maximum": 1,
+                    "description": "Maximum per-sample missing-call rate; samples whose rate exceeds this value are listed for removal.",
+                    "fa_icon": "fas fa-percentage"
+                },
+                "hwe": {
+                    "type": "number",
+                    "default": 1e-10,
+                    "minimum": 0,
+                    "maximum": 1,
+                    "description": "Hardy-Weinberg equilibrium exact-test p-value threshold; variants with a p-value below this value are listed for exclusion.",
+                    "fa_icon": "fas fa-percentage"
+                },
+                "apply_sample_removals": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Apply the sample decision lists that the legacy chain only reported (sex, heterozygosity, relatedness and ancestry) when writing the QC'd fileset; the missingness removals are always applied.",
+                    "help_text": "No stage produces those decision lists yet, so this parameter has no effect until the sample QC stages are added.",
+                    "fa_icon": "fas fa-user-slash"
                 }
             }
         },
@@ -169,8 +216,8 @@
                 "pipelines_testdata_base_path": {
                     "type": "string",
                     "fa_icon": "far fa-check-circle",
-                    "description": "Base URL or local path to location of pipeline test dataset files",
-                    "default": "https://raw.githubusercontent.com/nf-core/test-datasets/",
+                    "description": "Base URL or local path to location of pipeline test dataset files.",
+                    "default": "https://raw.githubusercontent.com/nf-core/test-datasets/gwasqc/",
                     "hidden": true
                 },
                 "trace_report_suffix": {
@@ -197,6 +244,9 @@
     "allOf": [
         {
             "$ref": "#/$defs/input_output_options"
+        },
+        {
+            "$ref": "#/$defs/qc_threshold_options"
         },
         {
             "$ref": "#/$defs/institutional_config_options"

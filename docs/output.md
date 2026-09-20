@@ -6,14 +6,50 @@ This document describes the output produced by the pipeline. Most of the plots a
 
 The directories listed below will be created in the results directory after the pipeline has finished. All paths are relative to the top-level results directory.
 
-<!-- TODO nf-core: Write this documentation describing your workflow's output -->
-
 ## Pipeline overview
 
 The pipeline is built using [Nextflow](https://www.nextflow.io/) and processes data using the following steps:
 
+- [Variant and sample QC lists](#variant-and-sample-qc-lists) - Per-stratum MAF keep-list, missingness and Hardy-Weinberg statistics, and the decision lists derived from them
+- [QC'd genotypes](#qcd-genotypes) - The filtered PLINK 1 fileset of each stratum, written once from the original fileset and the decision lists
 - [MultiQC](#multiqc) - Aggregate report describing results and QC from the whole pipeline
 - [Pipeline information](#pipeline-information) - Report metrics generated during the workflow execution
+
+### Variant and sample QC lists
+
+<details markdown="1">
+<summary>Output files</summary>
+
+- `qc/<id>/maf/`
+  - `<id>.maf.snplist`: Variants passing the `--maf` threshold, one ID per line; the keep-list every later step starts from.
+- `qc/<id>/missingness/`
+  - `<id>.vmiss`: [plink2 `--missing`](https://www.cog-genomics.org/plink/2.0/basic_stats#missing) per-variant missing-call report over the MAF-passing variants.
+  - `<id>.smiss`: plink2 `--missing` per-sample missing-call report over the MAF-passing variants.
+  - `<id>.geno_exclude.txt`: Variants whose missing-call rate exceeds `--geno`, one ID per line.
+  - `<id>.mind_remove.txt`: Samples whose missing-call rate exceeds `--mind`, one `FID IID` pair per line.
+  - `<id>.missingness_ladder.tsv`: Call-rate ladder from 90 % to 99 %, variants first and then samples at every rate, with the counts each rung drops and the counts remaining.
+- `qc/<id>/hwe/`
+  - `<id>.hardy`: [plink2 `--hardy`](https://www.cog-genomics.org/plink/2.0/basic_stats#hardy) autosomal exact-test report over the MAF-, `--geno`- and `--mind`-filtered set.
+  - `<id>.hardy.x`: The chromosome X report, present only when the stratum carries chromosome X variants.
+  - `<id>.hwe_exclude.txt`: Variants whose exact-test p-value is below `--hwe`, one ID per line.
+
+</details>
+
+[PLINK 2](https://www.cog-genomics.org/plink/2.0/) computes every statistic on the original fileset with the lists accumulated so far applied through `--extract`, `--exclude` and `--remove`, so no intermediate fileset is written. The decision lists are derived from the statistics in R at the configured thresholds.
+
+### QC'd genotypes
+
+<details markdown="1">
+<summary>Output files</summary>
+
+- `genotypes/<id>/`
+  - `<id>.qc.bed`: PLINK 1 binary genotype table after all variant and sample lists were applied.
+  - `<id>.qc.bim`: The matching variant file.
+  - `<id>.qc.fam`: The matching sample file.
+
+</details>
+
+The fileset keeps the MAF-passing variants minus the `--geno` and `--hwe` exclusions, and drops the `--mind` removals.
 
 ### MultiQC
 

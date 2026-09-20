@@ -1,0 +1,90 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/nf-core/modules/master/subworkflows/yaml-schema.json
+name: plink_qc_filter_lists
+description: Derive the MAF keep-list, the geno and mind missingness decision lists with the legacy call-rate ladder, and the Hardy-Weinberg exclusion list of one PLINK fileset per stratum from stats-only plink2 runs
+keywords:
+  - plink
+  - quality control
+  - missingness
+  - hardy-weinberg
+  - minor allele frequency
+components:
+  - plink2/writesnplist
+  - plink2/missing
+  - missingness_decisions
+  - plink2/hardy
+  - hwe_decisions
+input:
+  - ch_genotypes:
+      description: One PLINK 1 fileset per stratum; meta.id must be unique across strata
+      structure: [map meta, path bed, path bim, path fam]
+      pattern: "*.{bed,bim,fam}"
+      ontologies: []
+  - geno:
+      description: Variants whose missing-call rate exceeds this value are listed for exclusion
+      structure: number geno
+  - mind:
+      description: Samples whose missing-call rate exceeds this value are listed for removal
+      structure: number mind
+  - hwe:
+      description: Variants whose Hardy-Weinberg exact-test p-value is below this value are listed for exclusion
+      structure: number hwe
+output:
+  - maf_snplist:
+      type: file
+      description: Variants passing the MAF threshold configured on PLINK2_WRITESNPLIST through ext.args, one ID per line
+      structure: [map meta, path snplist]
+      pattern: "*.snplist"
+      ontologies: []
+  - vmiss:
+      type: file
+      description: plink2 variant-based missingness report over the MAF-passing variants
+      structure: [map meta, path vmiss]
+      pattern: "*.vmiss"
+      ontologies: []
+  - smiss:
+      type: file
+      description: plink2 sample-based missingness report over the MAF-passing variants
+      structure: [map meta, path smiss]
+      pattern: "*.smiss"
+      ontologies: []
+  - geno_exclude:
+      type: file
+      description: Variants exceeding the geno threshold, one ID per line for plink2 --exclude
+      structure: [map meta, path geno_exclude]
+      pattern: "*.geno_exclude.txt"
+      ontologies: []
+  - mind_remove:
+      type: file
+      description: Samples exceeding the mind threshold, one FID IID pair per line for plink2 --remove
+      structure: [map meta, path mind_remove]
+      pattern: "*.mind_remove.txt"
+      ontologies: []
+  - missingness_ladder:
+      type: file
+      description: Twenty-rung call-rate ladder from 90 to 99 percent, geno before mind at every rate
+      structure: [map meta, path ladder]
+      pattern: "*.missingness_ladder.tsv"
+      ontologies: []
+  - hardy:
+      type: file
+      description: plink2 autosomal Hardy-Weinberg report over the MAF-, geno- and mind-filtered set
+      structure: [map meta, path hardy]
+      pattern: "*.hardy"
+      ontologies: []
+  - hardy_x:
+      type: file
+      description: plink2 chromosome X Hardy-Weinberg report, emitted only for filesets that carry chromosome X
+      structure: [map meta, path hardy_x]
+      optional: true
+      pattern: "*.hardy.x"
+      ontologies: []
+  - hwe_exclude:
+      type: file
+      description: Variants below the HWE p-value threshold, one ID per line for plink2 --exclude
+      structure: [map meta, path hwe_exclude]
+      pattern: "*.hwe_exclude.txt"
+      ontologies: []
+authors:
+  - "@lyh970817"
+maintainers:
+  - "@lyh970817"

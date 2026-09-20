@@ -39,6 +39,9 @@ workflow NFCORE_GWASQC {
     //
     GWASQC (
         samplesheet,
+        params.geno,
+        params.mind,
+        params.hwe,
         params.multiqc_config,
         params.multiqc_logo,
         params.multiqc_methods_description,

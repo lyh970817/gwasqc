@@ -1,0 +1,104 @@
+nextflow_workflow {
+
+    name "Test Workflow PLINK_QC_FILTER_LISTS"
+    script "../main.nf"
+    workflow "PLINK_QC_FILTER_LISTS"
+    config "./nextflow.config"
+
+    tag "subworkflows"
+    tag "subworkflows_local"
+    tag "plink2/writesnplist"
+    tag "plink2/missing"
+    tag "missingness_decisions"
+    tag "plink2/hardy"
+    tag "hwe_decisions"
+    tag "subworkflows/plink_qc_filter_lists"
+
+    test("gwasqc fixtures - two strata") {
+
+        when {
+            workflow {
+                """
+                input[0] = channel.of(
+                    [
+                        [ id:'study_eur', ancestry:'EUR' ],
+                        file(params.pipelines_testdata_base_path + 'data/gwasqc/genotypes/study_eur.bed', checkIfExists: true),
+                        file(params.pipelines_testdata_base_path + 'data/gwasqc/genotypes/study_eur.bim', checkIfExists: true),
+                        file(params.pipelines_testdata_base_path + 'data/gwasqc/genotypes/study_eur.fam', checkIfExists: true),
+                    ],
+                    [
+                        [ id:'study_afr', ancestry:'AFR' ],
+                        file(params.pipelines_testdata_base_path + 'data/gwasqc/genotypes/study_afr.bed', checkIfExists: true),
+                        file(params.pipelines_testdata_base_path + 'data/gwasqc/genotypes/study_afr.bim', checkIfExists: true),
+                        file(params.pipelines_testdata_base_path + 'data/gwasqc/genotypes/study_afr.fam', checkIfExists: true),
+                    ]
+                )
+                input[1] = 0.05
+                input[2] = 0.05
+                input[3] = 1e-10
+                """
+            }
+        }
+
+        then {
+            def by_id = { emission -> emission.collectEntries { entry -> [(entry[0].id): path(entry[1])] } }
+            def maf_snplist = by_id(workflow.out.maf_snplist)
+            def hwe_exclude = by_id(workflow.out.hwe_exclude)
+            def mind_remove = by_id(workflow.out.mind_remove)
+            assertAll(
+                { assert workflow.success },
+                { assert workflow.out.maf_snplist.collect { entry -> entry[0].id }.sort() == ['study_afr', 'study_eur'] },
+                { assert workflow.out.hardy_x.collect { entry -> entry[0].id }.sort() == ['study_afr', 'study_eur'] },
+                // Every emission keeps the incoming metadata, ancestry included.
+                { assert workflow.out.hwe_exclude.collect { entry -> entry[0] }.sort { entry -> entry.id } == [[id: 'study_afr', ancestry: 'AFR'], [id: 'study_eur', ancestry: 'EUR']] },
+                // Planted defects from the fixture README: MAF drops eight EUR and nine AFR variants over all
+                // chromosomes, both strata carry the same five gross HWE violations, and the two high-missingness
+                // samples fall in both strata with the borderline one at the 0.05 threshold.
+                { assert maf_snplist.study_eur.readLines().size() == 3954 },
+                { assert maf_snplist.study_afr.readLines().size() == 3953 },
+                { assert hwe_exclude.study_eur.readLines() == ['rs1667531', 'rs1668208', 'rs1668410', 'rs1668428', 'rs1668730'] },
+                { assert hwe_exclude.study_afr.readLines() == ['rs1667531', 'rs1668208', 'rs1668410', 'rs1668428', 'rs1668730'] },
+                { assert mind_remove.study_eur.readLines() == ['EUR_S040 EUR_S040', 'EUR_S041 EUR_S041', 'EUR_S042 EUR_S042'] },
+                { assert mind_remove.study_afr.readLines() == ['AFR_S040 AFR_S040', 'AFR_S041 AFR_S041', 'AFR_S042 AFR_S042'] },
+                { assert snapshot(sanitizeOutput(workflow.out)).match() },
+            )
+        }
+    }
+
+    test("gwasqc fixtures - two strata - stub") {
+
+        options "-stub"
+
+        when {
+            workflow {
+                """
+                input[0] = channel.of(
+                    [
+                        [ id:'study_eur', ancestry:'EUR' ],
+                        file(params.pipelines_testdata_base_path + 'data/gwasqc/genotypes/study_eur.bed', checkIfExists: true),
+                        file(params.pipelines_testdata_base_path + 'data/gwasqc/genotypes/study_eur.bim', checkIfExists: true),
+                        file(params.pipelines_testdata_base_path + 'data/gwasqc/genotypes/study_eur.fam', checkIfExists: true),
+                    ],
+                    [
+                        [ id:'study_afr', ancestry:'AFR' ],
+                        file(params.pipelines_testdata_base_path + 'data/gwasqc/genotypes/study_afr.bed', checkIfExists: true),
+                        file(params.pipelines_testdata_base_path + 'data/gwasqc/genotypes/study_afr.bim', checkIfExists: true),
+                        file(params.pipelines_testdata_base_path + 'data/gwasqc/genotypes/study_afr.fam', checkIfExists: true),
+                    ]
+                )
+                input[1] = 0.05
+                input[2] = 0.05
+                input[3] = 1e-10
+                """
+            }
+        }
+
+        then {
+            assertAll(
+                { assert workflow.success },
+                { assert workflow.out.hwe_exclude.collect { entry -> entry[0].id }.sort() == ['study_afr', 'study_eur'] },
+                { assert snapshot(sanitizeOutput(workflow.out)).match() },
+            )
+        }
+    }
+}
