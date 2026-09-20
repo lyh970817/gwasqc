@@ -1,0 +1,108 @@
+{
+    "plink_simulated - pgen - extract list": {
+        "content": [
+            [
+                [
+                    {
+                        "id": "plink_simulated_pgen"
+                    },
+                    "plink_simulated_pgen.prune.in:md5,127248de349af5a0ad0497e7c8eeac1d"
+                ]
+            ],
+            [
+                [
+                    {
+                        "id": "plink_simulated_pgen"
+                    },
+                    "plink_simulated_pgen.prune.out:md5,d41d8cd98f00b204e9800998ecf8427e"
+                ]
+            ],
+            [
+                [
+                    "PLINK2_INDEPPAIRWISE",
+                    "plink2",
+                    "2.0.0-a.6.9LM"
+                ]
+            ]
+        ],
+        "timestamp": "2026-09-20T14:58:14.907669997",
+        "meta": {
+            "nf-test": "0.9.5",
+            "nextflow": "26.04.4"
+        }
+    },
+    "plink_simulated - bed": {
+        "content": [
+            [
+                [
+                    {
+                        "id": "plink_simulated"
+                    },
+                    "plink_simulated.prune.in:md5,127248de349af5a0ad0497e7c8eeac1d"
+                ]
+            ],
+            [
+                [
+                    {
+                        "id": "plink_simulated"
+                    },
+                    "plink_simulated.prune.out:md5,d41d8cd98f00b204e9800998ecf8427e"
+                ]
+            ],
+            [
+                [
+                    "PLINK2_INDEPPAIRWISE",
+                    "plink2",
+                    "2.0.0-a.6.9LM"
+                ]
+            ]
+        ],
+        "timestamp": "2026-09-20T14:58:02.947549696",
+        "meta": {
+            "nf-test": "0.9.5",
+            "nextflow": "26.04.4"
+        }
+    },
+    "plink_simulated - bed - stub": {
+        "content": [
+            {
+                "log": [
+                    [
+                        {
+                            "id": "plink_simulated"
+                        },
+                        "plink_simulated.log:md5,d41d8cd98f00b204e9800998ecf8427e"
+                    ]
+                ],
+                "prune_in": [
+                    [
+                        {
+                            "id": "plink_simulated"
+                        },
+                        "plink_simulated.prune.in:md5,d41d8cd98f00b204e9800998ecf8427e"
+                    ]
+                ],
+                "prune_out": [
+                    [
+                        {
+                            "id": "plink_simulated"
+                        },
+                        "plink_simulated.prune.out:md5,d41d8cd98f00b204e9800998ecf8427e"
+                    ]
+                ],
+                "versions_plink2": [
+                    [
+                        "PLINK2_INDEPPAIRWISE",
+                        "plink2",
+                        "2.0.0-a.6.9LM"
+                    ]
+                ]
+            }
+        ],
+        "timestamp": "2026-09-20T14:58:23.299383253",
+        "meta": {
+            "nf-test": "0.9.5",
+            "nextflow": "26.04.4"
+        }
+    }
+}

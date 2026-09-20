@@ -1,0 +1,34 @@
+# Long-range linkage-disequilibrium regions of the human genome, GRCh38 (b38).
+#
+# Derived from the legacy GLAD/EDGI/NBR QC asset full_pipe/dependencies/highLDregions4bim_b38.awk, whose rules
+# select bim rows with `($1 == chrom) && ($4 >= start) && ($4 <= end)`, i.e. 1-based positions with both
+# bounds inclusive. BED is 0-based and half-open, so each rule maps to `start - 1` and `end` unchanged: a
+# 1-based position p lies in the interval when start - 1 < p <= end, which is exactly the awk test.
+# The chromosome column carries bare PLINK codes (1-22, no chr prefix), matching a bim or pvar column 1.
+# The name column is an added label (chromosome and rank on it, plus the region commonly known by that
+# name); the legacy rules carry no names. Twenty-four intervals; see docs/usage.md for the derivation.
+#
+1	47822308	51822307	hld_1_1
+2	85861219	100425020	hld_2_1
+2	133908697	137408698	hld_2_2_LCT
+2	182309767	189309768	hld_2_3
+3	47483506	49987563	hld_3_1
+3	83368159	86868160	hld_3_2
+3	88868160	96298466	hld_3_3
+5	44464141	51168409	hld_5_1
+5	98636396	101136397	hld_5_2
+5	129636408	132636409	hld_5_3
+5	136136412	139136412	hld_5_4
+6	25391793	33424245	hld_6_1_MHC
+6	57027243	63232136	hld_6_2
+6	139637170	142137170	hld_6_3
+7	55158098	67090863	hld_7_1
+8	8105068	12105082	hld_8_1_INV8p23
+8	43025700	48924888	hld_8_2
+8	110918595	113918595	hld_8_3
+10	36671066	43184546	hld_10_1
+11	46021873	57475951	hld_11_1
+11	88127184	91127184	hld_11_2
+12	32955799	41319931	hld_12_1
+12	110599475	113099475	hld_12_2
+20	33948533	36438183	hld_20_1

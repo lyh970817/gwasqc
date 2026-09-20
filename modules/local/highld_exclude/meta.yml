@@ -1,0 +1,87 @@
+name: highld_exclude
+description: List the variants of a variant list that lie in a long-range linkage-disequilibrium region or off the autosomes, from the positions in a PLINK variant file and a BED of regions
+keywords:
+  - linkage disequilibrium
+  - pruning
+  - genotype
+  - quality control
+tools:
+  - gawk:
+      description: GNU awk, the text-processing language used to intersect the variant positions with the regions
+      homepage: https://www.gnu.org/software/gawk/
+      documentation: https://www.gnu.org/software/gawk/manual/
+      licence: ["GPL-3.0-or-later"]
+input:
+  - - meta:
+        type: map
+        description: |
+          Groovy map describing the stratum.
+          Expected keys:
+            - id (string): Stratum identifier, used as the output prefix.
+    - plink_variant_file:
+        type: file
+        description: PLINK 1 extended MAP file or uncompressed PLINK 2 variant information file carrying the chromosome and position of every variant the list may name; an optional chr prefix on the chromosome code is ignored
+        pattern: "*.{bim,pvar}"
+        ontologies: []
+    - variant_list:
+        type: file
+        description: Variant IDs to classify, one per line, typically a plink2 prune.in list; only these IDs can appear in the output
+        pattern: "*"
+        ontologies:
+          - edam: "http://edamontology.org/format_2330" # Text
+  - high_ld_regions:
+      type: file
+      description: BED of long-range LD regions (0-based, half-open, bare chromosome codes 1-22); comment, track and browser lines are skipped
+      pattern: "*.bed"
+      ontologies:
+        - edam: "http://edamontology.org/format_3003" # BED
+output:
+  variant_exclude:
+    - - meta:
+          type: map
+          description: Metadata map propagated from input
+      - "${prefix}.highld_exclude.txt":
+          type: file
+          description: The listed variants that lie inside a region or on a chromosome other than 1-22, one ID per line for plink2 --exclude; empty when none does
+          pattern: "*.highld_exclude.txt"
+          ontologies:
+            - edam: "http://edamontology.org/format_2330" # Text
+  versions_gawk:
+    - - "${task.process}":
+          type: string
+          description: The process the version was collected from
+      - "gawk":
+          type: string
+          description: The tool name
+      - "gawk --version | head -n 1 | sed 's/^GNU Awk //; s/,.*\\$//'":
+          type: eval
+          description: The command used to retrieve the gawk version
+topics:
+  versions:
+    - - ${task.process}:
+          type: string
+          description: The process the version was collected from
+      - gawk:
+          type: string
+          description: The tool name
+      - "gawk --version | head -n 1 | sed 's/^GNU Awk //; s/,.*\\$//'":
+          type: eval
+          description: The command used to retrieve the gawk version
+authors:
+  - "@lyh970817"
+maintainers:
+  - "@lyh970817"
+containers:
+  conda:
+    linux/amd64:
+      lock_file: "modules/local/highld_exclude/.conda-lock/linux_amd64-bd-d5d074ad9f29be71_1.txt"
+  docker:
+    linux/amd64:
+      build_id: "bd-d5d074ad9f29be71_1"
+      name: "community.wave.seqera.io/library/gawk:5.3.1--d5d074ad9f29be71"
+      scan_id: "sc-872432f3c6e6b071_1"
+  singularity:
+    linux/amd64:
+      build_id: "bd-55cafbff4f74c897_1"
+      name: "oras://community.wave.seqera.io/library/gawk:5.3.1--55cafbff4f74c897"
+      https: "https://community-cr-prod.seqera.io/docker/registry/v2/blobs/sha256/0c/0c4365ad2ac928e4b018455102731c78cfcf43ecd4cb8178c12cd00c02f6ee29/data"

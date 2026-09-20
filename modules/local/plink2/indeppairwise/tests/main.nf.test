@@ -1,0 +1,137 @@
+nextflow_process {
+
+    name "Test Process PLINK2_INDEPPAIRWISE"
+    script "../main.nf"
+    process "PLINK2_INDEPPAIRWISE"
+    config "./nextflow.config"
+
+    tag "modules"
+    tag "modules_nfcore"
+    tag "plink2"
+    tag "plink2/indeppairwise"
+
+    test("plink_simulated - bed") {
+
+        when {
+            process {
+                """
+                input[0] = [
+                    [ id:'plink_simulated' ],
+                    file(params.modules_testdata_base_path + 'genomics/homo_sapiens/popgen/plink_simulated.bed', checkIfExists: true),
+                    file(params.modules_testdata_base_path + 'genomics/homo_sapiens/popgen/plink_simulated.bim', checkIfExists: true),
+                    file(params.modules_testdata_base_path + 'genomics/homo_sapiens/popgen/plink_simulated.fam', checkIfExists: true),
+                    [],
+                    [],
+                    [],
+                    [],
+                ]
+                input[1] = 50
+                input[2] = 5
+                input[3] = 0.2
+                """
+            }
+        }
+
+        then {
+            def command = path(process.out.prune_in.get(0).get(1)).parent.resolve('.command.sh').text
+            def prune_in = path(process.out.prune_in.get(0).get(1)).readLines()
+            def prune_out = path(process.out.prune_out.get(0).get(1)).readLines()
+            assertAll(
+                { assert process.success },
+                { assert command.contains('--bfile plink_simulated') },
+                { assert command.contains('--indep-pairwise 50 5 0.2') },
+                // The two lists partition the fileset's 220 variants.
+                { assert prune_in.size() + prune_out.size() == 220 },
+                { assert prune_in.intersect(prune_out).isEmpty() },
+                { assert snapshot(process.out.prune_in, process.out.prune_out, process.out.versions_plink2).match() },
+            )
+        }
+    }
+
+    test("plink_simulated - pgen - extract list") {
+
+        setup {
+            run("PLINK2_WRITESNPLIST") {
+                script "../../writesnplist/main.nf"
+                process {
+                    """
+                    input[0] = [
+                        [ id:'plink_simulated_keep' ],
+                        file(params.modules_testdata_base_path + 'genomics/homo_sapiens/popgen/plink_simulated.bed', checkIfExists: true),
+                        file(params.modules_testdata_base_path + 'genomics/homo_sapiens/popgen/plink_simulated.bim', checkIfExists: true),
+                        file(params.modules_testdata_base_path + 'genomics/homo_sapiens/popgen/plink_simulated.fam', checkIfExists: true),
+                        [],
+                        [],
+                        [],
+                        [],
+                    ]
+                    """
+                }
+            }
+        }
+
+        when {
+            process {
+                """
+                input[0] = PLINK2_WRITESNPLIST.out.snplist.map { meta, snplist ->
+                    [
+                        [ id:'plink_simulated_pgen' ],
+                        file(params.modules_testdata_base_path + 'genomics/homo_sapiens/popgen/plink_simulated.pgen', checkIfExists: true),
+                        file(params.modules_testdata_base_path + 'genomics/homo_sapiens/popgen/plink_simulated.pvar', checkIfExists: true),
+                        file(params.modules_testdata_base_path + 'genomics/homo_sapiens/popgen/plink_simulated.psam', checkIfExists: true),
+                        snplist,
+                        [],
+                        [],
+                        [],
+                    ]
+                }
+                input[1] = 50
+                input[2] = 5
+                input[3] = 0.2
+                """
+            }
+        }
+
+        then {
+            def command = path(process.out.prune_in.get(0).get(1)).parent.resolve('.command.sh').text
+            assertAll(
+                { assert process.success },
+                { assert command.contains('--pfile plink_simulated') },
+                { assert command.contains('--extract plink_simulated_keep.snplist') },
+                { assert snapshot(process.out.prune_in, process.out.prune_out, process.out.versions_plink2).match() },
+            )
+        }
+    }
+
+    test("plink_simulated - bed - stub") {
+
+        options "-stub"
+
+        when {
+            process {
+                """
+                input[0] = [
+                    [ id:'plink_simulated' ],
+                    file(params.modules_testdata_base_path + 'genomics/homo_sapiens/popgen/plink_simulated.bed', checkIfExists: true),
+                    file(params.modules_testdata_base_path + 'genomics/homo_sapiens/popgen/plink_simulated.bim', checkIfExists: true),
+                    file(params.modules_testdata_base_path + 'genomics/homo_sapiens/popgen/plink_simulated.fam', checkIfExists: true),
+                    [],
+                    [],
+                    [],
+                    [],
+                ]
+                input[1] = 50
+                input[2] = 5
+                input[3] = 0.2
+                """
+            }
+        }
+
+        then {
+            assertAll(
+                { assert process.success },
+                { assert snapshot(sanitizeOutput(process.out)).match() },
+            )
+        }
+    }
+}

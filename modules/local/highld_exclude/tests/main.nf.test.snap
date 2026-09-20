@@ -1,0 +1,71 @@
+{
+    "study_eur - bim - pruned list": {
+        "content": [
+            [
+                [
+                    {
+                        "id": "study_eur",
+                        "ancestry": "EUR"
+                    },
+                    "study_eur.highld_exclude.txt:md5,20606a3ef430e338b05e872a7970d435"
+                ]
+            ],
+            [
+                [
+                    "HIGHLD_EXCLUDE",
+                    "gawk",
+                    "5.3.1"
+                ]
+            ]
+        ],
+        "timestamp": "2026-09-20T14:57:37.209384536",
+        "meta": {
+            "nf-test": "0.9.5",
+            "nextflow": "26.04.4"
+        }
+    },
+    "study_eur - bim - stub": {
+        "content": [
+            {
+                "variant_exclude": [
+                    [
+                        {
+                            "ancestry": "EUR",
+                            "id": "study_eur"
+                        },
+                        "study_eur.highld_exclude.txt:md5,d41d8cd98f00b204e9800998ecf8427e"
+                    ]
+                ],
+                "versions_gawk": [
+                    [
+                        "HIGHLD_EXCLUDE",
+                        "gawk",
+                        "5.3.1"
+                    ]
+                ]
+            }
+        ],
+        "timestamp": "2026-09-20T14:57:54.058733476",
+        "meta": {
+            "nf-test": "0.9.5",
+            "nextflow": "26.04.4"
+        }
+    },
+    "plink_simulated - pvar - no region on its chromosome": {
+        "content": [
+            [
+                [
+                    {
+                        "id": "plink_simulated"
+                    },
+                    "plink_simulated.highld_exclude.txt:md5,d41d8cd98f00b204e9800998ecf8427e"
+                ]
+            ]
+        ],
+        "timestamp": "2026-09-20T14:57:47.757005884",
+        "meta": {
+            "nf-test": "0.9.5",
+            "nextflow": "26.04.4"
+        }
+    }
+}

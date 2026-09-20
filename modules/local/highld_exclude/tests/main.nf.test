@@ -1,0 +1,136 @@
+nextflow_process {
+
+    name "Test Process HIGHLD_EXCLUDE"
+    script "../main.nf"
+    process "HIGHLD_EXCLUDE"
+    config "./nextflow.config"
+
+    tag "modules"
+    tag "modules_local"
+    tag "highld_exclude"
+
+    // The gwasqc fixture plants a dense block of 38 variants inside the MHC interval of its b38 BED and carries
+    // 330 chrX/chrY variants; the pruned list comes from a real --indep-pairwise run on the same stratum.
+    setup {
+        run("PLINK2_INDEPPAIRWISE") {
+            script "../../plink2/indeppairwise/main.nf"
+            process {
+                """
+                input[0] = [
+                    [ id:'study_eur', ancestry:'EUR' ],
+                    file(params.pipelines_testdata_base_path + 'data/gwasqc/genotypes/study_eur.bed', checkIfExists: true),
+                    file(params.pipelines_testdata_base_path + 'data/gwasqc/genotypes/study_eur.bim', checkIfExists: true),
+                    file(params.pipelines_testdata_base_path + 'data/gwasqc/genotypes/study_eur.fam', checkIfExists: true),
+                    [],
+                    [],
+                    [],
+                    [],
+                ]
+                input[1] = 1500
+                input[2] = 150
+                input[3] = 0.2
+                """
+            }
+        }
+    }
+
+    test("study_eur - bim - pruned list") {
+
+        when {
+            process {
+                """
+                input[0] = PLINK2_INDEPPAIRWISE.out.prune_in.map { meta, prune_in ->
+                    [meta, file(params.pipelines_testdata_base_path + 'data/gwasqc/genotypes/study_eur.bim', checkIfExists: true), prune_in]
+                }
+                input[1] = file(params.pipelines_testdata_base_path + 'data/gwasqc/highld/high_ld_regions_b38.bed', checkIfExists: true)
+                """
+            }
+        }
+
+        then {
+            // The staged inputs sit beside the output in the work directory.
+            def work_dir = path(process.out.variant_exclude.get(0).get(1)).parent
+            def prune_in = work_dir.resolve('study_eur.prune.in').readLines()
+            def excluded = path(process.out.variant_exclude.get(0).get(1)).readLines()
+            def bim = work_dir.resolve('study_eur.bim').readLines().collect { line -> line.split('\t') }
+            def non_autosomal = bim.findAll { fields -> !(fields[0] ==~ /^([1-9]|1[0-9]|2[0-2])$/) }.collect { fields -> fields[1] }
+            def mhc_block = ['rs1691803', 'rs1692225', 'rs1692986', 'rs1693180', 'rs1693565', 'rs1694305', 'rs1695168', 'rs1695930', 'rs1696394', 'rs1696687', 'rs1697113', 'rs1697536', 'rs1697583', 'rs1698450', 'rs1699148', 'rs1699176', 'rs1699973', 'rs1700763', 'rs1701059', 'rs1701798', 'rs1701848', 'rs1702222', 'rs1702918', 'rs1703899', 'rs1704251', 'rs1704269', 'rs1704945', 'rs1705262', 'rs1705437', 'rs1706350', 'rs1706917', 'rs1707913', 'rs1708405', 'rs1708542', 'rs1709245', 'rs1709713', 'rs1710071', 'rs1710602']
+            assertAll(
+                { assert process.success },
+                { assert non_autosomal.size() == 330 },
+                // Only listed variants are excluded; every listed MHC and non-autosomal variant is.
+                { assert prune_in.containsAll(excluded) },
+                { assert excluded.containsAll(mhc_block.intersect(prune_in)) },
+                { assert excluded.containsAll(non_autosomal.intersect(prune_in)) },
+                { assert excluded.size() >= mhc_block.intersect(prune_in).size() + non_autosomal.intersect(prune_in).size() },
+                { assert snapshot(process.out.variant_exclude, process.out.versions_gawk).match() },
+            )
+        }
+    }
+
+    test("plink_simulated - pvar - no region on its chromosome") {
+
+        setup {
+            run("PLINK2_WRITESNPLIST") {
+                script "../../plink2/writesnplist/main.nf"
+                process {
+                    """
+                    input[0] = [
+                        [ id:'plink_simulated' ],
+                        file(params.modules_testdata_base_path + 'genomics/homo_sapiens/popgen/plink_simulated.pgen', checkIfExists: true),
+                        file(params.modules_testdata_base_path + 'genomics/homo_sapiens/popgen/plink_simulated.pvar', checkIfExists: true),
+                        file(params.modules_testdata_base_path + 'genomics/homo_sapiens/popgen/plink_simulated.psam', checkIfExists: true),
+                        [],
+                        [],
+                        [],
+                        [],
+                    ]
+                    """
+                }
+            }
+        }
+
+        when {
+            process {
+                """
+                input[0] = PLINK2_WRITESNPLIST.out.snplist.map { meta, snplist ->
+                    [meta, file(params.modules_testdata_base_path + 'genomics/homo_sapiens/popgen/plink_simulated.pvar', checkIfExists: true), snplist]
+                }
+                input[1] = file(params.pipelines_testdata_base_path + 'data/gwasqc/highld/high_ld_regions_b38.bed', checkIfExists: true)
+                """
+            }
+        }
+
+        then {
+            assertAll(
+                { assert process.success },
+                // Chromosome 1, positions 1 to 220: autosomal and outside every region, so the list is empty.
+                { assert path(process.out.variant_exclude.get(0).get(1)).readLines().isEmpty() },
+                { assert snapshot(process.out.variant_exclude).match() },
+            )
+        }
+    }
+
+    test("study_eur - bim - stub") {
+
+        options "-stub"
+
+        when {
+            process {
+                """
+                input[0] = PLINK2_INDEPPAIRWISE.out.prune_in.map { meta, prune_in ->
+                    [meta, file(params.pipelines_testdata_base_path + 'data/gwasqc/genotypes/study_eur.bim', checkIfExists: true), prune_in]
+                }
+                input[1] = file(params.pipelines_testdata_base_path + 'data/gwasqc/highld/high_ld_regions_b38.bed', checkIfExists: true)
+                """
+            }
+        }
+
+        then {
+            assertAll(
+                { assert process.success },
+                { assert snapshot(sanitizeOutput(process.out)).match() },
+            )
+        }
+    }
+}
