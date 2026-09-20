@@ -9,7 +9,9 @@ nextflow_workflow {
     tag "subworkflows_local"
     tag "plink2/writesnplist"
     tag "plink2/missing"
-    tag "missingness_decisions"
+    tag "geno_decisions"
+    tag "mind_decisions"
+    tag "missingness_ladder"
     tag "plink2/hardy"
     tag "hwe_decisions"
     tag "subworkflows/plink_qc_filter_lists"
@@ -43,23 +45,40 @@ nextflow_workflow {
         then {
             def by_id = { emission -> emission.collectEntries { entry -> [(entry[0].id): path(entry[1])] } }
             def maf_snplist = by_id(workflow.out.maf_snplist)
+            def geno_exclude = by_id(workflow.out.geno_exclude)
+            def smiss = by_id(workflow.out.smiss)
             def hwe_exclude = by_id(workflow.out.hwe_exclude)
             def mind_remove = by_id(workflow.out.mind_remove)
+            def ladder = by_id(workflow.out.missingness_ladder)
+            def obs_ct = { report -> report.readLines().drop(1).collect { line -> line.split('\t')[3] as Integer }.max() }
             assertAll(
                 { assert workflow.success },
                 { assert workflow.out.maf_snplist.collect { entry -> entry[0].id }.sort() == ['study_afr', 'study_eur'] },
                 { assert workflow.out.hardy_x.collect { entry -> entry[0].id }.sort() == ['study_afr', 'study_eur'] },
-                // Every emission keeps the incoming metadata, ancestry included.
+                // Every emission keeps the incoming metadata, ancestry included, and the ladder rung never leaks.
                 { assert workflow.out.hwe_exclude.collect { entry -> entry[0] }.sort { entry -> entry.id } == [[id: 'study_afr', ancestry: 'AFR'], [id: 'study_eur', ancestry: 'EUR']] },
+                { assert workflow.out.missingness_ladder.collect { entry -> entry[0] }.sort { entry -> entry.id } == [[id: 'study_afr', ancestry: 'AFR'], [id: 'study_eur', ancestry: 'EUR']] },
                 // Planted defects from the fixture README: MAF drops eight EUR and nine AFR variants over all
-                // chromosomes, both strata carry the same five gross HWE violations, and the two high-missingness
-                // samples fall in both strata with the borderline one at the 0.05 threshold.
+                // chromosomes, geno at 0.05 drops the twenty planted chr3 variants plus the four borderline chr4
+                // variants above 0.05, and both strata carry the same five gross HWE violations.
                 { assert maf_snplist.study_eur.readLines().size() == 3954 },
                 { assert maf_snplist.study_afr.readLines().size() == 3953 },
+                { assert geno_exclude.study_eur.readLines().size() == 24 },
+                { assert geno_exclude.study_eur.readLines().containsAll(['rs1395803', 'rs1406332', 'rs1499588', 'rs1500478', 'rs1501405', 'rs1502040']) },
                 { assert hwe_exclude.study_eur.readLines() == ['rs1667531', 'rs1668208', 'rs1668410', 'rs1668428', 'rs1668730'] },
                 { assert hwe_exclude.study_afr.readLines() == ['rs1667531', 'rs1668208', 'rs1668410', 'rs1668428', 'rs1668730'] },
-                { assert mind_remove.study_eur.readLines() == ['EUR_S040 EUR_S040', 'EUR_S041 EUR_S041', 'EUR_S042 EUR_S042'] },
-                { assert mind_remove.study_afr.readLines() == ['AFR_S040 AFR_S040', 'AFR_S041 AFR_S041', 'AFR_S042 AFR_S042'] },
+                // The two high-missingness samples fall in both strata. The borderline sample sits at F_MISS
+                // 0.0501 over the MAF-passing variants but at 0.0483 over the geno-retained ones, because eight
+                // of its missing calls lie in the excluded variants; measured in the legacy order, it survives.
+                { assert mind_remove.study_eur.readLines() == ['EUR_S040 EUR_S040', 'EUR_S041 EUR_S041'] },
+                { assert mind_remove.study_afr.readLines() == ['AFR_S040 AFR_S040', 'AFR_S041 AFR_S041'] },
+                // The sample report is measured over the geno-retained variants: its largest OBS_CT is the
+                // MAF-passing count minus the geno exclusions.
+                { assert obs_ct(smiss.study_eur) == 3954 - 24 },
+                // One ladder row per call rate, 90 to 99, every rung applied from the base fileset.
+                { assert ladder.study_eur.readLines().size() == 11 },
+                { assert ladder.study_eur.readLines().drop(1).collect { line -> line.split('\t')[0] } == (90..99).collect { rate -> rate.toString() } },
+                { assert ladder.study_eur.readLines()[1].split('\t').toList() == ['90', '0.1', '20', '3934', '2', '123'] },
                 { assert snapshot(sanitizeOutput(workflow.out)).match() },
             )
         }
@@ -97,6 +116,7 @@ nextflow_workflow {
             assertAll(
                 { assert workflow.success },
                 { assert workflow.out.hwe_exclude.collect { entry -> entry[0].id }.sort() == ['study_afr', 'study_eur'] },
+                { assert workflow.out.missingness_ladder.collect { entry -> entry[0].id }.sort() == ['study_afr', 'study_eur'] },
                 { assert snapshot(sanitizeOutput(workflow.out)).match() },
             )
         }

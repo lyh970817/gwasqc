@@ -1,0 +1,93 @@
+nextflow_process {
+
+    name "Test Process MIND_DECISIONS"
+    script "../main.nf"
+    process "MIND_DECISIONS"
+    config "./nextflow.config"
+
+    tag "modules"
+    tag "modules_local"
+    tag "mind_decisions"
+
+    // The public plink_simulated fixture carries no missing call, so the decisions are exercised on the
+    // gwasqc fixture stratum, whose planted defects the README documents: samples EUR_S040 and EUR_S041 at
+    // F_MISS 0.15 and 0.22, EUR_S042 at 0.05.
+    setup {
+        run("PLINK2_MISSING") {
+            script "../../plink2/missing/main.nf"
+            process {
+                """
+                input[0] = [
+                    [ id:'study_eur', ancestry:'EUR' ],
+                    file(params.pipelines_testdata_base_path + 'data/gwasqc/genotypes/study_eur.bed', checkIfExists: true),
+                    file(params.pipelines_testdata_base_path + 'data/gwasqc/genotypes/study_eur.bim', checkIfExists: true),
+                    file(params.pipelines_testdata_base_path + 'data/gwasqc/genotypes/study_eur.fam', checkIfExists: true),
+                    [],
+                    [],
+                    [],
+                    [],
+                ]
+                """
+            }
+        }
+    }
+
+    test("study_eur - mind 0.10") {
+
+        when {
+            process {
+                """
+                input[0] = PLINK2_MISSING.out.smiss.map { meta, smiss -> [meta, smiss, 0.10] }
+                """
+            }
+        }
+
+        then {
+            assertAll(
+                { assert process.success },
+                { assert path(process.out.sample_remove.get(0).get(1)).readLines() == ['EUR_S040 EUR_S040', 'EUR_S041 EUR_S041'] },
+                { assert snapshot(process.out.sample_remove, process.out.versions).match() },
+            )
+        }
+    }
+
+    test("study_eur - mind 0.02") {
+
+        when {
+            process {
+                """
+                input[0] = PLINK2_MISSING.out.smiss.map { meta, smiss -> [meta, smiss, 0.02] }
+                """
+            }
+        }
+
+        then {
+            assertAll(
+                { assert process.success },
+                // The borderline sample falls at the stricter threshold.
+                { assert path(process.out.sample_remove.get(0).get(1)).readLines() == ['EUR_S040 EUR_S040', 'EUR_S041 EUR_S041', 'EUR_S042 EUR_S042'] },
+                { assert snapshot(process.out.sample_remove).match() },
+            )
+        }
+    }
+
+    test("study_eur - stub") {
+
+        options "-stub"
+
+        when {
+            process {
+                """
+                input[0] = PLINK2_MISSING.out.smiss.map { meta, smiss -> [meta, smiss, 0.05] }
+                """
+            }
+        }
+
+        then {
+            assertAll(
+                { assert process.success },
+                { assert snapshot(sanitizeOutput(process.out)).match() },
+            )
+        }
+    }
+}

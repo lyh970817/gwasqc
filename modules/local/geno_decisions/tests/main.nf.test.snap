@@ -1,0 +1,64 @@
+{
+    "study_eur - stub": {
+        "content": [
+            {
+                "variant_exclude": [
+                    [
+                        {
+                            "ancestry": "EUR",
+                            "id": "study_eur"
+                        },
+                        "study_eur.geno_exclude.txt:md5,d41d8cd98f00b204e9800998ecf8427e"
+                    ]
+                ],
+                "versions": [
+                    "versions.yml:md5,a0e31c86747c1adcbe97d9e03ea0f719"
+                ]
+            }
+        ],
+        "timestamp": "2026-09-20T14:51:46.631135411",
+        "meta": {
+            "nf-test": "0.9.5",
+            "nextflow": "26.04.4"
+        }
+    },
+    "study_eur - geno 0.02": {
+        "content": [
+            [
+                [
+                    {
+                        "id": "study_eur",
+                        "ancestry": "EUR"
+                    },
+                    "study_eur.geno_exclude.txt:md5,d0f35693ec69db7f8ebb6f04812bdc04"
+                ]
+            ]
+        ],
+        "timestamp": "2026-09-20T14:51:40.196906723",
+        "meta": {
+            "nf-test": "0.9.5",
+            "nextflow": "26.04.4"
+        }
+    },
+    "study_eur - geno 0.10": {
+        "content": [
+            [
+                [
+                    {
+                        "id": "study_eur",
+                        "ancestry": "EUR"
+                    },
+                    "study_eur.geno_exclude.txt:md5,47d67a97605dcfc7e4a94d1e7b4a782a"
+                ]
+            ],
+            [
+                "versions.yml:md5,a0e31c86747c1adcbe97d9e03ea0f719"
+            ]
+        ],
+        "timestamp": "2026-09-20T14:51:33.55641805",
+        "meta": {
+            "nf-test": "0.9.5",
+            "nextflow": "26.04.4"
+        }
+    }
+}

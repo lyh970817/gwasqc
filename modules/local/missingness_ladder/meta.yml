@@ -1,0 +1,64 @@
+name: missingness_ladder
+description: Assemble the legacy call-rate ladder of one stratum from the base plink2 --missing variant report and one per-rung sample report computed with that rung's variants excluded
+keywords:
+  - missingness
+  - call rate
+  - genotype
+  - quality control
+tools:
+  - r-base:
+      description: The R programming language runtime; the script uses base R only
+      homepage: https://www.r-project.org/
+      documentation: https://cran.r-project.org/manuals.html
+input:
+  - - meta:
+        type: map
+        description: |
+          Groovy map describing the stratum.
+          Expected keys:
+            - id (string): Stratum identifier, used as the output prefix.
+    - vmiss:
+        type: file
+        description: plink2 variant-based missing-genotype report over the base variant set, with an F_MISS column
+        pattern: "*.vmiss"
+        ontologies:
+          - edam: "http://edamontology.org/format_3475" # TSV
+    - call_rates:
+        type: list
+        description: Call rates in percent, one per rung, aligned with smiss_files; the missing-call threshold of a rung is 1 minus its call rate
+    - smiss_files:
+        type: file
+        description: One plink2 sample-based missing-genotype report per rung, computed with the variants that rung's geno threshold drops excluded; aligned with call_rates and named distinctly
+        pattern: "*.smiss"
+        ontologies:
+          - edam: "http://edamontology.org/format_3475" # TSV
+output:
+  ladder:
+    - - meta:
+          type: map
+          description: Metadata map propagated from input
+      - "${prefix}.missingness_ladder.tsv":
+          type: file
+          description: One row per call rate with the missing-call threshold it implies and the variants and samples removed and remaining when that threshold is applied from the base fileset, variants before samples
+          pattern: "*.missingness_ladder.tsv"
+          ontologies:
+            - edam: "http://edamontology.org/format_3475" # TSV
+  versions:
+    - versions.yml:
+        type: file
+        description: File containing software versions
+        pattern: "versions.yml"
+        ontologies:
+          - edam: "http://edamontology.org/format_3750" # YAML
+topics:
+  versions:
+    - versions.yml:
+        type: file
+        description: File containing software versions, written by the R template because an eval output is only accepted for a Bash script
+        pattern: "versions.yml"
+        ontologies:
+          - edam: "http://edamontology.org/format_3750" # YAML
+authors:
+  - "@lyh970817"
+maintainers:
+  - "@lyh970817"

@@ -1,0 +1,93 @@
+nextflow_process {
+
+    name "Test Process GENO_DECISIONS"
+    script "../main.nf"
+    process "GENO_DECISIONS"
+    config "./nextflow.config"
+
+    tag "modules"
+    tag "modules_local"
+    tag "geno_decisions"
+
+    // The public plink_simulated fixture carries no missing call, so the decisions are exercised on the
+    // gwasqc fixture stratum, whose planted defects the README documents: twenty chr3 variants above 0.10 and
+    // five chr4 variants near 0.05.
+    setup {
+        run("PLINK2_MISSING") {
+            script "../../plink2/missing/main.nf"
+            process {
+                """
+                input[0] = [
+                    [ id:'study_eur', ancestry:'EUR' ],
+                    file(params.pipelines_testdata_base_path + 'data/gwasqc/genotypes/study_eur.bed', checkIfExists: true),
+                    file(params.pipelines_testdata_base_path + 'data/gwasqc/genotypes/study_eur.bim', checkIfExists: true),
+                    file(params.pipelines_testdata_base_path + 'data/gwasqc/genotypes/study_eur.fam', checkIfExists: true),
+                    [],
+                    [],
+                    [],
+                    [],
+                ]
+                """
+            }
+        }
+    }
+
+    test("study_eur - geno 0.10") {
+
+        when {
+            process {
+                """
+                input[0] = PLINK2_MISSING.out.vmiss.map { meta, vmiss -> [meta, vmiss, 0.10] }
+                """
+            }
+        }
+
+        then {
+            assertAll(
+                { assert process.success },
+                { assert path(process.out.variant_exclude.get(0).get(1)).readLines().size() == 20 },
+                { assert snapshot(process.out.variant_exclude, process.out.versions).match() },
+            )
+        }
+    }
+
+    test("study_eur - geno 0.02") {
+
+        when {
+            process {
+                """
+                input[0] = PLINK2_MISSING.out.vmiss.map { meta, vmiss -> [meta, vmiss, 0.02] }
+                """
+            }
+        }
+
+        then {
+            assertAll(
+                { assert process.success },
+                // The borderline variants fall at the stricter threshold.
+                { assert path(process.out.variant_exclude.get(0).get(1)).readLines().containsAll(['rs1498627', 'rs1499588', 'rs1500478', 'rs1501405', 'rs1502040']) },
+                { assert snapshot(process.out.variant_exclude).match() },
+            )
+        }
+    }
+
+    test("study_eur - stub") {
+
+        options "-stub"
+
+        when {
+            process {
+                """
+                input[0] = PLINK2_MISSING.out.vmiss.map { meta, vmiss -> [meta, vmiss, 0.05] }
+                """
+            }
+        }
+
+        then {
+            assertAll(
+                { assert process.success },
+                { assert snapshot(sanitizeOutput(process.out)).match() },
+            )
+        }
+    }
+}

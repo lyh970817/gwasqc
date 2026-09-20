@@ -1,6 +1,6 @@
 # yaml-language-server: $schema=https://raw.githubusercontent.com/nf-core/modules/master/subworkflows/yaml-schema.json
 name: plink_qc_filter_lists
-description: Derive the MAF keep-list, the geno and mind missingness decision lists with the legacy call-rate ladder, and the Hardy-Weinberg exclusion list of one PLINK fileset per stratum from stats-only plink2 runs
+description: Derive the MAF keep-list, the geno and mind missingness decision lists in the legacy order with the call-rate ladder, and the Hardy-Weinberg exclusion list of one PLINK fileset per stratum from stats-only plink2 runs
 keywords:
   - plink
   - quality control
@@ -10,7 +10,9 @@ keywords:
 components:
   - plink2/writesnplist
   - plink2/missing
-  - missingness_decisions
+  - geno_decisions
+  - mind_decisions
+  - missingness_ladder
   - plink2/hardy
   - hwe_decisions
 input:
@@ -43,7 +45,7 @@ output:
       ontologies: []
   - smiss:
       type: file
-      description: plink2 sample-based missingness report over the MAF-passing variants
+      description: plink2 sample-based missingness report over the MAF-passing variants that survive the geno threshold, as the legacy chain measured it
       structure: [map meta, path smiss]
       pattern: "*.smiss"
       ontologies: []
@@ -55,13 +57,13 @@ output:
       ontologies: []
   - mind_remove:
       type: file
-      description: Samples exceeding the mind threshold, one FID IID pair per line for plink2 --remove
+      description: Samples exceeding the mind threshold over the geno-retained variants, one FID IID pair per line for plink2 --remove
       structure: [map meta, path mind_remove]
       pattern: "*.mind_remove.txt"
       ontologies: []
   - missingness_ladder:
       type: file
-      description: Twenty-rung call-rate ladder from 90 to 99 percent, geno before mind at every rate
+      description: Call-rate ladder from 90 to 99 percent, one row per rate applied from the base fileset with geno before mind, from one --missing run per rung
       structure: [map meta, path ladder]
       pattern: "*.missingness_ladder.tsv"
       ontologies: []

@@ -1,0 +1,58 @@
+name: geno_decisions
+description: List the variants of one stratum whose missing-call rate exceeds the geno threshold, from a plink2 --missing variant report
+keywords:
+  - missingness
+  - call rate
+  - genotype
+  - quality control
+tools:
+  - r-base:
+      description: The R programming language runtime; the decision script uses base R only
+      homepage: https://www.r-project.org/
+      documentation: https://cran.r-project.org/manuals.html
+input:
+  - - meta:
+        type: map
+        description: |
+          Groovy map describing the stratum.
+          Expected keys:
+            - id (string): Stratum identifier, used as the output prefix.
+    - vmiss:
+        type: file
+        description: plink2 variant-based missing-genotype report with an ID and an F_MISS column
+        pattern: "*.vmiss"
+        ontologies:
+          - edam: "http://edamontology.org/format_3475" # TSV
+    - geno:
+        type: float
+        description: Variants whose missing-call rate exceeds this value are listed for exclusion; tuple-local so that one report can be listed at several thresholds
+output:
+  variant_exclude:
+    - - meta:
+          type: map
+          description: Metadata map propagated from input
+      - "${prefix}.geno_exclude.txt":
+          type: file
+          description: One variant ID per line for plink2 --exclude; empty when no variant exceeds the geno threshold
+          pattern: "*.geno_exclude.txt"
+          ontologies:
+            - edam: "http://edamontology.org/format_2330" # Text
+  versions:
+    - versions.yml:
+        type: file
+        description: File containing software versions
+        pattern: "versions.yml"
+        ontologies:
+          - edam: "http://edamontology.org/format_3750" # YAML
+topics:
+  versions:
+    - versions.yml:
+        type: file
+        description: File containing software versions, written by the R template because an eval output is only accepted for a Bash script
+        pattern: "versions.yml"
+        ontologies:
+          - edam: "http://edamontology.org/format_3750" # YAML
+authors:
+  - "@lyh970817"
+maintainers:
+  - "@lyh970817"

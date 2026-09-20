@@ -53,9 +53,15 @@ Decided 2026-09-20 with the foundation milestone of the legacy port; the tuple c
 - **[MUST]** Decision lists are derived from published statistics by pipeline-owned modules that take their
   thresholds as explicit inputs; a threshold reaches a plink2 atom only as native optional behaviour through
   `ext.args`. Comparisons are strict, as plink2's own `--geno`, `--mind`, `--maf` and `--hwe` are.
-- The iterative-missingness ladder is computed once, in R, from the single `--missing` report: at each call
-  rate from 90 % to 99 % it counts the variants, then the samples, not already dropped at an earlier rung. The
-  legacy sweep re-ran plink after every rung on a shrinking fileset, so its per-sample rates were measured over
-  the surviving variants and vice versa; the marginal rates of one report cannot reproduce that recomputation,
-  and the ladder is defined on the single report by design. The same holds for the mind list: it is measured
-  over the MAF-passing variants, where the legacy chain measured it over the geno-passing ones.
+- **[MUST]** Missingness follows the legacy order exactly, and does so with lists because plink2 writes the
+  `--missing` report before it applies `--geno` (verified on 2.0.0a.6.9: `--geno 0.10 --missing` reports every
+  variant; `--mind` is applied before the report). One `--missing` run over the MAF-passing variants yields the
+  variant report and, from it, the geno exclusion list; a second run with that list under `--exclude` yields
+  the sample report over the geno-retained variants and, from it, the mind removal list. A sample's rate is
+  therefore measured over the variants that survive geno, as the legacy `--geno` then `--mind` filesets
+  measured it, and a sample at the threshold over all variants can survive once its missing calls in excluded
+  variants no longer count.
+- The call-rate ladder, 90 % to 99 %, applies each rate from the base fileset, geno then mind, as the legacy
+  `Iterative_Missingness.sh` did: per rung, the geno exclusion list at that rate is derived from the base
+  variant report, one `--missing` run with that list under `--exclude` yields the rung's sample report, and the
+  table records the variants and samples each rung removes and leaves. Ten stats-only runs, no fileset.

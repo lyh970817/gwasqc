@@ -1,0 +1,121 @@
+nextflow_process {
+
+    name "Test Process MISSINGNESS_LADDER"
+    script "../main.nf"
+    process "MISSINGNESS_LADDER"
+    config "./nextflow.config"
+
+    tag "modules"
+    tag "modules_local"
+    tag "missingness_ladder"
+
+    // Two rungs stand in for the pipeline's ten. The module only reads the reports it is given, so both
+    // per-rung sample reports are computed on the unfiltered fixture stratum under distinct prefixes; the
+    // subworkflow test covers the real chain, where each rung's report excludes that rung's variants. The
+    // planted defects (fixture README): twenty variants above F_MISS 0.10, samples EUR_S040 and EUR_S041 at
+    // 0.15 and 0.22, EUR_S042 at 0.05, the next sample at 0.0083.
+    setup {
+        run("PLINK2_MISSING") {
+            script "../../plink2/missing/main.nf"
+            process {
+                """
+                input[0] = [
+                    [ id:'study_eur', ancestry:'EUR' ],
+                    file(params.pipelines_testdata_base_path + 'data/gwasqc/genotypes/study_eur.bed', checkIfExists: true),
+                    file(params.pipelines_testdata_base_path + 'data/gwasqc/genotypes/study_eur.bim', checkIfExists: true),
+                    file(params.pipelines_testdata_base_path + 'data/gwasqc/genotypes/study_eur.fam', checkIfExists: true),
+                    [],
+                    [],
+                    [],
+                    [],
+                ]
+                """
+            }
+        }
+        run("PLINK2_MISSING", alias: "PLINK2_MISSING_RUNG90") {
+            script "../../plink2/missing/main.nf"
+            process {
+                """
+                input[0] = [
+                    [ id:'study_eur', ancestry:'EUR' ],
+                    file(params.pipelines_testdata_base_path + 'data/gwasqc/genotypes/study_eur.bed', checkIfExists: true),
+                    file(params.pipelines_testdata_base_path + 'data/gwasqc/genotypes/study_eur.bim', checkIfExists: true),
+                    file(params.pipelines_testdata_base_path + 'data/gwasqc/genotypes/study_eur.fam', checkIfExists: true),
+                    [],
+                    [],
+                    [],
+                    [],
+                ]
+                """
+            }
+        }
+        run("PLINK2_MISSING", alias: "PLINK2_MISSING_RUNG99") {
+            script "../../plink2/missing/main.nf"
+            process {
+                """
+                input[0] = [
+                    [ id:'study_eur', ancestry:'EUR' ],
+                    file(params.pipelines_testdata_base_path + 'data/gwasqc/genotypes/study_eur.bed', checkIfExists: true),
+                    file(params.pipelines_testdata_base_path + 'data/gwasqc/genotypes/study_eur.bim', checkIfExists: true),
+                    file(params.pipelines_testdata_base_path + 'data/gwasqc/genotypes/study_eur.fam', checkIfExists: true),
+                    [],
+                    [],
+                    [],
+                    [],
+                ]
+                """
+            }
+        }
+    }
+
+    test("study_eur - rungs 90 and 99") {
+
+        when {
+            process {
+                """
+                input[0] = PLINK2_MISSING.out.vmiss
+                    .join(PLINK2_MISSING_RUNG90.out.smiss)
+                    .join(PLINK2_MISSING_RUNG99.out.smiss)
+                    .map { meta, vmiss, smiss90, smiss99 -> [meta, vmiss, [90, 99], [smiss90, smiss99]] }
+                """
+            }
+        }
+
+        then {
+            def ladder = path(process.out.ladder.get(0).get(1)).readLines().collect { line -> line.split('\t').toList() }
+            assertAll(
+                { assert process.success },
+                { assert ladder.size() == 3 },
+                { assert ladder[0] == ['call_rate', 'missing_threshold', 'variants_removed', 'variants_remaining', 'samples_removed', 'samples_remaining'] },
+                { assert ladder[1] == ['90', '0.1', '20', '3942', '2', '123'] },
+                { assert ladder[2][0..1] == ['99', '0.01'] },
+                { assert (ladder[2][2] as Integer) > 20 },
+                { assert ladder[2][4..5] == ['3', '122'] },
+                { assert snapshot(process.out.ladder, process.out.versions).match() },
+            )
+        }
+    }
+
+    test("study_eur - stub") {
+
+        options "-stub"
+
+        when {
+            process {
+                """
+                input[0] = PLINK2_MISSING.out.vmiss
+                    .join(PLINK2_MISSING_RUNG90.out.smiss)
+                    .join(PLINK2_MISSING_RUNG99.out.smiss)
+                    .map { meta, vmiss, smiss90, smiss99 -> [meta, vmiss, [90, 99], [smiss90, smiss99]] }
+                """
+            }
+        }
+
+        then {
+            assertAll(
+                { assert process.success },
+                { assert snapshot(sanitizeOutput(process.out)).match() },
+            )
+        }
+    }
+}

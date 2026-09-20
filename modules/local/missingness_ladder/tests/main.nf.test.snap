@@ -1,0 +1,46 @@
+{
+    "study_eur - stub": {
+        "content": [
+            {
+                "ladder": [
+                    [
+                        {
+                            "ancestry": "EUR",
+                            "id": "study_eur"
+                        },
+                        "study_eur.missingness_ladder.tsv:md5,6db4d75477a422eaf685abf58c479466"
+                    ]
+                ],
+                "versions": [
+                    "versions.yml:md5,1ddad68c76b7b0cdf93c16b6f944b93c"
+                ]
+            }
+        ],
+        "timestamp": "2026-09-20T14:52:29.983264756",
+        "meta": {
+            "nf-test": "0.9.5",
+            "nextflow": "26.04.4"
+        }
+    },
+    "study_eur - rungs 90 and 99": {
+        "content": [
+            [
+                [
+                    {
+                        "id": "study_eur",
+                        "ancestry": "EUR"
+                    },
+                    "study_eur.missingness_ladder.tsv:md5,8460c5a2e7af897fcefe675239382e42"
+                ]
+            ],
+            [
+                "versions.yml:md5,1ddad68c76b7b0cdf93c16b6f944b93c"
+            ]
+        ],
+        "timestamp": "2026-09-20T14:52:15.667648527",
+        "meta": {
+            "nf-test": "0.9.5",
+            "nextflow": "26.04.4"
+        }
+    }
+}

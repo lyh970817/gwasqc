@@ -1,0 +1,64 @@
+{
+    "study_eur - stub": {
+        "content": [
+            {
+                "sample_remove": [
+                    [
+                        {
+                            "ancestry": "EUR",
+                            "id": "study_eur"
+                        },
+                        "study_eur.mind_remove.txt:md5,d41d8cd98f00b204e9800998ecf8427e"
+                    ]
+                ],
+                "versions": [
+                    "versions.yml:md5,fbe430d0abc13a5818a2f4072dc91b50"
+                ]
+            }
+        ],
+        "timestamp": "2026-09-20T14:52:06.205381504",
+        "meta": {
+            "nf-test": "0.9.5",
+            "nextflow": "26.04.4"
+        }
+    },
+    "study_eur - mind 0.10": {
+        "content": [
+            [
+                [
+                    {
+                        "id": "study_eur",
+                        "ancestry": "EUR"
+                    },
+                    "study_eur.mind_remove.txt:md5,448301c601adc8a7c6d42a36aafd4159"
+                ]
+            ],
+            [
+                "versions.yml:md5,fbe430d0abc13a5818a2f4072dc91b50"
+            ]
+        ],
+        "timestamp": "2026-09-20T14:51:53.138101879",
+        "meta": {
+            "nf-test": "0.9.5",
+            "nextflow": "26.04.4"
+        }
+    },
+    "study_eur - mind 0.02": {
+        "content": [
+            [
+                [
+                    {
+                        "id": "study_eur",
+                        "ancestry": "EUR"
+                    },
+                    "study_eur.mind_remove.txt:md5,6052c5a2225990a800497de7c0f0f3a8"
+                ]
+            ]
+        ],
+        "timestamp": "2026-09-20T14:51:59.745612597",
+        "meta": {
+            "nf-test": "0.9.5",
+            "nextflow": "26.04.4"
+        }
+    }
+}
