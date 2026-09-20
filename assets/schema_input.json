@@ -2,32 +2,52 @@
     "$schema": "https://json-schema.org/draft/2020-12/schema",
     "$id": "https://raw.githubusercontent.com/nf-core/gwasqc/master/assets/schema_input.json",
     "title": "nf-core/gwasqc pipeline - params.input schema",
-    "description": "Schema for the file provided with params.input",
+    "description": "Schema for the samplesheet provided with params.input. One row declares one stratum: a PLINK 1 bed/bim/fam fileset that is quality-controlled independently of every other row.",
     "type": "array",
+    "uniqueEntries": ["id"],
     "items": {
         "type": "object",
+        "additionalProperties": false,
         "properties": {
-            "sample": {
+            "id": {
                 "type": "string",
                 "pattern": "^\\S+$",
-                "errorMessage": "Sample name must be provided and cannot contain spaces",
+                "description": "Unique stratum identifier; used as the output prefix of every file the stratum produces.",
+                "errorMessage": "Stratum id must be provided, must be unique across the samplesheet and cannot contain spaces",
                 "meta": ["id"]
             },
-            "fastq_1": {
+            "ancestry": {
                 "type": "string",
-                "format": "file-path",
-                "exists": true,
-                "pattern": "^([\\S\\s]*\\/)?[^\\s\\/]+\\.f(ast)?q\\.gz$",
-                "errorMessage": "FastQ file for reads 1 must be provided, cannot contain spaces and must have extension '.fq.gz' or '.fastq.gz'"
+                "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]*$",
+                "description": "Ancestry label of the stratum, such as EUR, AFR or CSA; carried through as meta.ancestry.",
+                "errorMessage": "Ancestry must be provided, must start with a letter or digit and may contain only letters, digits, underscores, dots and dashes",
+                "meta": ["ancestry"]
             },
-            "fastq_2": {
+            "bed": {
                 "type": "string",
                 "format": "file-path",
                 "exists": true,
-                "pattern": "^([\\S\\s]*\\/)?[^\\s\\/]+\\.f(ast)?q\\.gz$",
-                "errorMessage": "FastQ file for reads 2 cannot contain spaces and must have extension '.fq.gz' or '.fastq.gz'"
+                "pattern": "^\\S+\\.bed$",
+                "description": "PLINK 1 binary genotype file of the stratum; must share its basename with the bim and fam files.",
+                "errorMessage": "PLINK 1 genotype file must be provided, must exist, cannot contain spaces and must have extension '.bed'"
+            },
+            "bim": {
+                "type": "string",
+                "format": "file-path",
+                "exists": true,
+                "pattern": "^\\S+\\.bim$",
+                "description": "PLINK 1 extended MAP file accompanying the bed file.",
+                "errorMessage": "PLINK 1 variant file must be provided, must exist, cannot contain spaces and must have extension '.bim'"
+            },
+            "fam": {
+                "type": "string",
+                "format": "file-path",
+                "exists": true,
+                "pattern": "^\\S+\\.fam$",
+                "description": "PLINK 1 sample information file accompanying the bed file.",
+                "errorMessage": "PLINK 1 sample file must be provided, must exist, cannot contain spaces and must have extension '.fam'"
             }
         },
-        "required": ["sample", "fastq_1"]
+        "required": ["id", "ancestry", "bed", "bim", "fam"]
     }
 }

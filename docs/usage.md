@@ -10,47 +10,31 @@
 
 ## Samplesheet input
 
-You will need to create a samplesheet with information about the samples you would like to analyse before running the pipeline. Use this parameter to specify its location. It has to be a comma-separated file with 3 columns, and a header row as shown in the examples below.
+You will need to create a samplesheet with one row per stratum before running the pipeline. A stratum is a PLINK 1 bed/bim/fam fileset, typically one ancestry group of a cohort, that the pipeline quality-controls independently of every other row. Use this parameter to specify its location. It has to be a comma-separated file with exactly the 5 columns below and a header row.
 
 ```bash
 --input '[path to samplesheet file]'
 ```
 
-### Multiple runs of the same sample
-
-The `sample` identifiers have to be the same when you have re-sequenced the same sample more than once e.g. to increase sequencing depth. The pipeline will concatenate the raw reads before performing any downstream analysis. Below is an example for the same sample sequenced across 3 lanes:
-
 ```csv title="samplesheet.csv"
-sample,fastq_1,fastq_2
-CONTROL_REP1,AEG588A1_S1_L002_R1_001.fastq.gz,AEG588A1_S1_L002_R2_001.fastq.gz
-CONTROL_REP1,AEG588A1_S1_L003_R1_001.fastq.gz,AEG588A1_S1_L003_R2_001.fastq.gz
-CONTROL_REP1,AEG588A1_S1_L004_R1_001.fastq.gz,AEG588A1_S1_L004_R2_001.fastq.gz
+id,ancestry,bed,bim,fam
+cohort_eur,EUR,/path/to/genotypes/cohort_eur.bed,/path/to/genotypes/cohort_eur.bim,/path/to/genotypes/cohort_eur.fam
+cohort_afr,AFR,/path/to/genotypes/cohort_afr.bed,/path/to/genotypes/cohort_afr.bim,/path/to/genotypes/cohort_afr.fam
 ```
 
-### Full samplesheet
-
-The pipeline will auto-detect whether a sample is single- or paired-end using the information provided in the samplesheet. The samplesheet can have as many columns as you desire, however, there is a strict requirement for the first 3 columns to match those defined in the table below.
-
-A final samplesheet file consisting of both single- and paired-end data may look something like the one below. This is for 6 samples, where `TREATMENT_REP3` has been sequenced twice.
-
-```csv title="samplesheet.csv"
-sample,fastq_1,fastq_2
-CONTROL_REP1,AEG588A1_S1_L002_R1_001.fastq.gz,AEG588A1_S1_L002_R2_001.fastq.gz
-CONTROL_REP2,AEG588A2_S2_L002_R1_001.fastq.gz,AEG588A2_S2_L002_R2_001.fastq.gz
-CONTROL_REP3,AEG588A3_S3_L002_R1_001.fastq.gz,AEG588A3_S3_L002_R2_001.fastq.gz
-TREATMENT_REP1,AEG588A4_S4_L003_R1_001.fastq.gz,
-TREATMENT_REP2,AEG588A5_S5_L003_R1_001.fastq.gz,
-TREATMENT_REP3,AEG588A6_S6_L003_R1_001.fastq.gz,
-TREATMENT_REP3,AEG588A6_S6_L004_R1_001.fastq.gz,
-```
-
-| Column    | Description                                                                                                                                                                            |
-| --------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `sample`  | Custom sample name. This entry will be identical for multiple sequencing libraries/runs from the same sample. Spaces in sample names are automatically converted to underscores (`_`). |
-| `fastq_1` | Full path to FastQ file for Illumina short reads 1. File has to be gzipped and have the extension ".fastq.gz" or ".fq.gz".                                                             |
-| `fastq_2` | Full path to FastQ file for Illumina short reads 2. File has to be gzipped and have the extension ".fastq.gz" or ".fq.gz".                                                             |
+| Column     | Description                                                                                                                                           |
+| ---------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `id`       | Unique stratum identifier without spaces. It names the stratum's output directory and prefixes every file the stratum produces.                       |
+| `ancestry` | Ancestry label of the stratum, such as `EUR`, `AFR` or `CSA`. Letters, digits, underscores, dots and dashes only; carried through as `meta.ancestry`. |
+| `bed`      | Full path to the PLINK 1 binary genotype file. Relative paths are resolved against the launch directory.                                              |
+| `bim`      | Full path to the PLINK 1 variant file. It must share its basename with the `bed` and `fam` files.                                                     |
+| `fam`      | Full path to the PLINK 1 sample file. It must share its basename with the `bed` and `bim` files.                                                      |
 
 An [example samplesheet](../assets/samplesheet.csv) has been provided with the pipeline.
+
+### QC thresholds
+
+The foundation chain applies four thresholds, each a pipeline parameter: `--maf` (variants below this minor allele frequency are dropped), `--geno` (variants whose missing-call rate exceeds this value are dropped), `--mind` (samples whose missing-call rate exceeds this value are dropped) and `--hwe` (variants whose Hardy-Weinberg exact-test p-value is below this value are dropped). Every comparison is strict, as in plink2 itself. The decision lists are published beside the statistics they were derived from, and the QC'd fileset is written once, at the end, from the original fileset and those lists.
 
 ## Running the pipeline
 
