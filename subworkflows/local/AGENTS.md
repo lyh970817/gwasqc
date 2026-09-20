@@ -1,9 +1,9 @@
 # Local subworkflows
 
-`plink_qc_filter_lists` and `utils_nfcore_gwasqc_pipeline` are pipeline-owned. `plink_qc_filter_lists` composes
-the pipeline's decision modules, so it carries scientific policy and is measured against
-`pipeline-architecture.md` and `nextflow-code-style.md` rather than the reusable-composition contract; it is not
-a component-library submission candidate.
+`plink_qc_filter_lists`, `plink_sample_qc_lists` and `utils_nfcore_gwasqc_pipeline` are pipeline-owned.
+`plink_qc_filter_lists` and `plink_sample_qc_lists` compose the pipeline's decision modules, so they carry
+scientific policy and are measured against `pipeline-architecture.md` and `nextflow-code-style.md` rather than
+the reusable-composition contract; they are not component-library submission candidates.
 
 An upstream-bound subworkflow added here must provide meaningful multi-step composition of upstream-prepared
 modules only and must follow the canonical subworkflow, GWAS-contract, fixture, and component-test standards

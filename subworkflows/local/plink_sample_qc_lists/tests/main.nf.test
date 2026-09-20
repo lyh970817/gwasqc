@@ -1,0 +1,170 @@
+nextflow_workflow {
+
+    name "Test Workflow PLINK_SAMPLE_QC_LISTS"
+    script "../main.nf"
+    workflow "PLINK_SAMPLE_QC_LISTS"
+    config "./nextflow.config"
+
+    tag "subworkflows"
+    tag "subworkflows_local"
+    tag "plink2/indeppairwise"
+    tag "highld_exclude"
+    tag "plink2/checksex"
+    tag "sex_check_decisions"
+    tag "plink2/het"
+    tag "heterozygosity_plots"
+    tag "plink2/makekingtable"
+    tag "relatedness_decisions"
+    tag "subworkflows/plink_sample_qc_lists"
+
+    // The filter chain supplies the lists exactly as the pipeline does, so the pruned set is the QC'd set.
+    setup {
+        run("PLINK_QC_FILTER_LISTS") {
+            script "../../plink_qc_filter_lists/main.nf"
+            workflow {
+                """
+                input[0] = channel.of(
+                    [
+                        [ id:'study_eur', ancestry:'EUR' ],
+                        file(params.pipelines_testdata_base_path + 'data/gwasqc/genotypes/study_eur.bed', checkIfExists: true),
+                        file(params.pipelines_testdata_base_path + 'data/gwasqc/genotypes/study_eur.bim', checkIfExists: true),
+                        file(params.pipelines_testdata_base_path + 'data/gwasqc/genotypes/study_eur.fam', checkIfExists: true),
+                    ],
+                    [
+                        [ id:'study_afr', ancestry:'AFR' ],
+                        file(params.pipelines_testdata_base_path + 'data/gwasqc/genotypes/study_afr.bed', checkIfExists: true),
+                        file(params.pipelines_testdata_base_path + 'data/gwasqc/genotypes/study_afr.bim', checkIfExists: true),
+                        file(params.pipelines_testdata_base_path + 'data/gwasqc/genotypes/study_afr.fam', checkIfExists: true),
+                    ]
+                )
+                input[1] = 0.05
+                input[2] = 0.05
+                input[3] = 1e-10
+                """
+            }
+        }
+    }
+
+    test("gwasqc fixtures - two strata") {
+
+        when {
+            workflow {
+                """
+                def genotypes = channel.of(
+                    [
+                        [ id:'study_eur', ancestry:'EUR' ],
+                        file(params.pipelines_testdata_base_path + 'data/gwasqc/genotypes/study_eur.bed', checkIfExists: true),
+                        file(params.pipelines_testdata_base_path + 'data/gwasqc/genotypes/study_eur.bim', checkIfExists: true),
+                        file(params.pipelines_testdata_base_path + 'data/gwasqc/genotypes/study_eur.fam', checkIfExists: true),
+                    ],
+                    [
+                        [ id:'study_afr', ancestry:'AFR' ],
+                        file(params.pipelines_testdata_base_path + 'data/gwasqc/genotypes/study_afr.bed', checkIfExists: true),
+                        file(params.pipelines_testdata_base_path + 'data/gwasqc/genotypes/study_afr.bim', checkIfExists: true),
+                        file(params.pipelines_testdata_base_path + 'data/gwasqc/genotypes/study_afr.fam', checkIfExists: true),
+                    ]
+                )
+                input[0] = genotypes
+                    .map { meta, bed, bim, fam -> [meta.id, meta, bed, bim, fam] }
+                    .join(PLINK_QC_FILTER_LISTS.out.maf_snplist.map { meta, snplist -> [meta.id, snplist] })
+                    .join(PLINK_QC_FILTER_LISTS.out.geno_exclude.map { meta, geno_exclude -> [meta.id, geno_exclude] })
+                    .join(PLINK_QC_FILTER_LISTS.out.hwe_exclude.map { meta, hwe_exclude -> [meta.id, hwe_exclude] })
+                    .join(PLINK_QC_FILTER_LISTS.out.mind_remove.map { meta, mind_remove -> [meta.id, mind_remove] })
+                    .join(PLINK_QC_FILTER_LISTS.out.smiss.map { meta, smiss -> [meta.id, smiss] })
+                    .map { _id, meta, bed, bim, fam, snplist, geno_exclude, hwe_exclude, mind_remove, smiss ->
+                        [meta, bed, bim, fam, snplist, [geno_exclude, hwe_exclude], mind_remove, smiss]
+                    }
+                input[1] = file(params.pipelines_testdata_base_path + 'data/gwasqc/highld/high_ld_regions_b38.bed', checkIfExists: true)
+                input[2] = 1500
+                input[3] = 150
+                input[4] = 0.2
+                input[5] = 3
+                input[6] = 0.005
+                """
+            }
+        }
+
+        then {
+            def by_id = { emission -> emission.collectEntries { entry -> [(entry[0].id): path(entry[1])] } }
+            def prune_in = by_id(workflow.out.prune_in)
+            def highld_exclude = by_id(workflow.out.highld_exclude)
+            def sex_remove = by_id(workflow.out.sex_remove)
+            def relatedness_remove = by_id(workflow.out.relatedness_remove)
+            def relationships = { id ->
+                by_id(workflow.out.relatedness_pairs)[id].readLines().drop(1).collect { line -> line.split('\t') }.collectEntries { fields -> [([fields[1], fields[3]].sort().join('/')): fields[9]] }
+            }
+            def mhc_block = ['rs1691803', 'rs1692225', 'rs1692986', 'rs1693180', 'rs1693565', 'rs1694305', 'rs1695168', 'rs1695930', 'rs1696394', 'rs1696687', 'rs1697113', 'rs1697536', 'rs1697583', 'rs1698450', 'rs1699148', 'rs1699176', 'rs1699973', 'rs1700763', 'rs1701059', 'rs1701798', 'rs1701848', 'rs1702222', 'rs1702918', 'rs1703899', 'rs1704251', 'rs1704269', 'rs1704945', 'rs1705262', 'rs1705437', 'rs1706350', 'rs1706917', 'rs1707913', 'rs1708405', 'rs1708542', 'rs1709245', 'rs1709713', 'rs1710071', 'rs1710602']
+            assertAll(
+                { assert workflow.success },
+                { assert workflow.out.relatedness_remove.collect { entry -> entry[0] }.sort { entry -> entry.id } == [[id: 'study_afr', ancestry: 'AFR'], [id: 'study_eur', ancestry: 'EUR']] },
+                // Pruning starts from the QC'd set: the pruned list never names an HWE exclusion, and the
+                // long-range LD list is a subset of it that covers every listed MHC-block variant.
+                { assert ['study_eur', 'study_afr'].every { id -> prune_in[id].readLines().intersect(['rs1667531', 'rs1668208', 'rs1668410', 'rs1668428', 'rs1668730']).isEmpty() } },
+                { assert ['study_eur', 'study_afr'].every { id -> prune_in[id].readLines().containsAll(highld_exclude[id].readLines()) } },
+                { assert ['study_eur', 'study_afr'].every { id -> highld_exclude[id].readLines().containsAll(mhc_block.intersect(prune_in[id].readLines())) } },
+                // Planted defects from the fixture README, in both strata: the two sex mismatches, the duplicate
+                // pair with its higher-missingness member listed, and the two first-degree pairs told apart by
+                // IBS0. The missingness is read over the geno-retained variants, where the pair's missing calls
+                // in the planted high-missingness variants no longer count: EUR_S021 keeps one missing call
+                // against none for EUR_S020, and the AFR pair ties at none, so the later-sorting ID is dropped.
+                { assert sex_remove.study_eur.readLines() == ['EUR_S010 EUR_S010', 'EUR_S011 EUR_S011'] },
+                { assert sex_remove.study_afr.readLines() == ['AFR_S010 AFR_S010', 'AFR_S011 AFR_S011'] },
+                { assert relatedness_remove.study_eur.readLines() == ['EUR_S021 EUR_S021'] },
+                { assert relatedness_remove.study_afr.readLines() == ['AFR_S021 AFR_S021'] },
+                { assert relationships('study_eur').subMap(['EUR_S020/EUR_S021', 'EUR_S030/EUR_S031', 'EUR_S032/EUR_S033']) == ['EUR_S020/EUR_S021': 'duplicate_or_mz', 'EUR_S030/EUR_S031': 'parent_offspring', 'EUR_S032/EUR_S033': 'full_sibling'] },
+                { assert relationships('study_afr').subMap(['AFR_S020/AFR_S021', 'AFR_S030/AFR_S031', 'AFR_S032/AFR_S033']) == ['AFR_S020/AFR_S021': 'duplicate_or_mz', 'AFR_S030/AFR_S031': 'parent_offspring', 'AFR_S032/AFR_S033': 'full_sibling'] },
+                { assert snapshot(sanitizeOutput(workflow.out)).match() },
+            )
+        }
+    }
+
+    test("gwasqc fixtures - two strata - stub") {
+
+        options "-stub"
+
+        when {
+            workflow {
+                """
+                def genotypes = channel.of(
+                    [
+                        [ id:'study_eur', ancestry:'EUR' ],
+                        file(params.pipelines_testdata_base_path + 'data/gwasqc/genotypes/study_eur.bed', checkIfExists: true),
+                        file(params.pipelines_testdata_base_path + 'data/gwasqc/genotypes/study_eur.bim', checkIfExists: true),
+                        file(params.pipelines_testdata_base_path + 'data/gwasqc/genotypes/study_eur.fam', checkIfExists: true),
+                    ],
+                    [
+                        [ id:'study_afr', ancestry:'AFR' ],
+                        file(params.pipelines_testdata_base_path + 'data/gwasqc/genotypes/study_afr.bed', checkIfExists: true),
+                        file(params.pipelines_testdata_base_path + 'data/gwasqc/genotypes/study_afr.bim', checkIfExists: true),
+                        file(params.pipelines_testdata_base_path + 'data/gwasqc/genotypes/study_afr.fam', checkIfExists: true),
+                    ]
+                )
+                input[0] = genotypes
+                    .map { meta, bed, bim, fam -> [meta.id, meta, bed, bim, fam] }
+                    .join(PLINK_QC_FILTER_LISTS.out.maf_snplist.map { meta, snplist -> [meta.id, snplist] })
+                    .join(PLINK_QC_FILTER_LISTS.out.geno_exclude.map { meta, geno_exclude -> [meta.id, geno_exclude] })
+                    .join(PLINK_QC_FILTER_LISTS.out.hwe_exclude.map { meta, hwe_exclude -> [meta.id, hwe_exclude] })
+                    .join(PLINK_QC_FILTER_LISTS.out.mind_remove.map { meta, mind_remove -> [meta.id, mind_remove] })
+                    .join(PLINK_QC_FILTER_LISTS.out.smiss.map { meta, smiss -> [meta.id, smiss] })
+                    .map { _id, meta, bed, bim, fam, snplist, geno_exclude, hwe_exclude, mind_remove, smiss ->
+                        [meta, bed, bim, fam, snplist, [geno_exclude, hwe_exclude], mind_remove, smiss]
+                    }
+                input[1] = file(params.pipelines_testdata_base_path + 'data/gwasqc/highld/high_ld_regions_b38.bed', checkIfExists: true)
+                input[2] = 1500
+                input[3] = 150
+                input[4] = 0.2
+                input[5] = 3
+                input[6] = 0.005
+                """
+            }
+        }
+
+        then {
+            assertAll(
+                { assert workflow.success },
+                { assert workflow.out.relatedness_remove.collect { entry -> entry[0].id }.sort() == ['study_afr', 'study_eur'] },
+                { assert snapshot(sanitizeOutput(workflow.out)).match() },
+            )
+        }
+    }
+}

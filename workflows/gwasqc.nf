@@ -9,6 +9,7 @@ include { PLINK2_MAKEBED         } from '../modules/local/plink2/makebed/main'
 
 // SUBWORKFLOW: Local to the pipeline
 include { PLINK_QC_FILTER_LISTS  } from '../subworkflows/local/plink_qc_filter_lists'
+include { PLINK_SAMPLE_QC_LISTS  } from '../subworkflows/local/plink_sample_qc_lists'
 include { methodsDescriptionText } from '../subworkflows/local/utils_nfcore_gwasqc_pipeline'
 
 // MODULE: Installed directly from nf-core/modules
@@ -33,6 +34,13 @@ workflow GWASQC {
     geno // value: maximum per-variant missing-call rate
     mind // value: maximum per-sample missing-call rate
     hwe // value: Hardy-Weinberg exact-test p-value floor
+    high_ld_regions // value: path to the BED of long-range LD regions
+    ld_window_size // value: --indep-pairwise window, in variants
+    ld_step_size // value: --indep-pairwise step, in variants
+    ld_r2 // value: --indep-pairwise r-squared threshold
+    relatedness_indiv_sd // value: standard deviations above the cohort mean kinship that flag an individual
+    relatedness_po_ibs0_max // value: IBS0 at or below which a first-degree pair is parent-offspring
+    apply_sample_removals // boolean: apply the sex and relatedness removal lists to the QC'd fileset
     multiqc_config
     multiqc_logo
     multiqc_methods_description
@@ -53,22 +61,47 @@ workflow GWASQC {
         hwe,
     )
 
+    def ch_samplesheet_by_id = ch_samplesheet.map { meta, bed, bim, fam -> [meta.id, meta, bed, bim, fam] }
+    def ch_filter_lists_by_id = ch_samplesheet_by_id
+        .join(PLINK_QC_FILTER_LISTS.out.maf_snplist.map { meta, snplist -> [meta.id, snplist] }, by: 0, failOnDuplicate: true, failOnMismatch: true)
+        .join(PLINK_QC_FILTER_LISTS.out.geno_exclude.map { meta, geno_exclude -> [meta.id, geno_exclude] }, by: 0, failOnDuplicate: true, failOnMismatch: true)
+        .join(PLINK_QC_FILTER_LISTS.out.hwe_exclude.map { meta, hwe_exclude -> [meta.id, hwe_exclude] }, by: 0, failOnDuplicate: true, failOnMismatch: true)
+        .join(PLINK_QC_FILTER_LISTS.out.mind_remove.map { meta, mind_remove -> [meta.id, mind_remove] }, by: 0, failOnDuplicate: true, failOnMismatch: true)
+
+    //
+    // SUBWORKFLOW: LD pruning, sex check, heterozygosity and relatedness lists and reports, per stratum
+    //
+    def ch_sample_qc_inputs = ch_filter_lists_by_id
+        .join(PLINK_QC_FILTER_LISTS.out.smiss.map { meta, smiss -> [meta.id, smiss] }, by: 0, failOnDuplicate: true, failOnMismatch: true)
+        .map { _id, meta, bed, bim, fam, maf_snplist, geno_exclude, hwe_exclude, mind_remove, smiss ->
+            [meta, bed, bim, fam, maf_snplist, [geno_exclude, hwe_exclude], mind_remove, smiss]
+        }
+
+    PLINK_SAMPLE_QC_LISTS(
+        ch_sample_qc_inputs,
+        file(high_ld_regions),
+        ld_window_size,
+        ld_step_size,
+        ld_r2,
+        relatedness_indiv_sd,
+        relatedness_po_ibs0_max,
+    )
+
     //
     // MODULE: Materialise the QC'd fileset exactly once
     //
     // Variant lists: `--extract` keeps the MAF keep-list and `--exclude` drops the union of the geno and HWE
     // exclusions, so a variant survives only when it passed all three. Sample lists: `--remove` drops the mind
-    // removals, which the legacy chain applied unconditionally. The sex, heterozygosity, relatedness and ancestry
-    // decision lists of later milestones join the `--remove` set here, and only under
-    // `params.apply_sample_removals`; nothing produces them yet.
-    def ch_makebed_inputs = ch_samplesheet
-        .map { meta, bed, bim, fam -> [meta.id, meta, bed, bim, fam] }
-        .join(PLINK_QC_FILTER_LISTS.out.maf_snplist.map { meta, snplist -> [meta.id, snplist] }, by: 0, failOnDuplicate: true, failOnMismatch: true)
-        .join(PLINK_QC_FILTER_LISTS.out.geno_exclude.map { meta, geno_exclude -> [meta.id, geno_exclude] }, by: 0, failOnDuplicate: true, failOnMismatch: true)
-        .join(PLINK_QC_FILTER_LISTS.out.hwe_exclude.map { meta, hwe_exclude -> [meta.id, hwe_exclude] }, by: 0, failOnDuplicate: true, failOnMismatch: true)
-        .join(PLINK_QC_FILTER_LISTS.out.mind_remove.map { meta, mind_remove -> [meta.id, mind_remove] }, by: 0, failOnDuplicate: true, failOnMismatch: true)
-        .map { _id, meta, bed, bim, fam, maf_snplist, geno_exclude, hwe_exclude, mind_remove ->
-            [meta, bed, bim, fam, maf_snplist, [geno_exclude, hwe_exclude], [], mind_remove]
+    // removals, which the legacy chain applied unconditionally; the sex-mismatch and relatedness removals join
+    // the `--remove` set only under `apply_sample_removals`, as the legacy chain never applied them. The
+    // ancestry keep-lists of the next milestone take the `--keep` slot, which stays empty here, under the
+    // same gate.
+    def ch_makebed_inputs = ch_filter_lists_by_id
+        .join(PLINK_SAMPLE_QC_LISTS.out.sex_remove.map { meta, sex_remove -> [meta.id, sex_remove] }, by: 0, failOnDuplicate: true, failOnMismatch: true)
+        .join(PLINK_SAMPLE_QC_LISTS.out.relatedness_remove.map { meta, relatedness_remove -> [meta.id, relatedness_remove] }, by: 0, failOnDuplicate: true, failOnMismatch: true)
+        .map { _id, meta, bed, bim, fam, maf_snplist, geno_exclude, hwe_exclude, mind_remove, sex_remove, relatedness_remove ->
+            def remove = apply_sample_removals ? [mind_remove, sex_remove, relatedness_remove] : mind_remove
+            [meta, bed, bim, fam, maf_snplist, [geno_exclude, hwe_exclude], [], remove]
         }
 
     PLINK2_MAKEBED(ch_makebed_inputs)

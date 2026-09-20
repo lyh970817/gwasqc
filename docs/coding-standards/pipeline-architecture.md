@@ -65,3 +65,17 @@ Decided 2026-09-20 with the foundation milestone of the legacy port; the tuple c
   `Iterative_Missingness.sh` did: per rung, the geno exclusion list at that rate is derived from the base
   variant report, one `--missing` run with that list under `--exclude` yields the rung's sample report, and the
   table records the variants and samples each rung removes and leaves. Ten stats-only runs, no fileset.
+- **[MUST]** The sample QC chain keeps the legacy ordering: `--indep-pairwise` prunes the QC'd set over every
+  chromosome; the long-range LD regions (the tracked GRCh38 asset, derived from the legacy awk rules) and every
+  non-autosomal variant are then listed for exclusion among the pruned variants. The sex check runs on the
+  pruned set with chromosome X, splitting the pseudo-autosomal regions and applying its thresholds in the one
+  `--check-sex` run (verified: `--split-par b38`, `--extract` and `--check-sex` combine on a `--bfile` input,
+  so nothing is materialised); heterozygosity and KING relatedness run on the pruned autosomal set outside the
+  regions. The mind removals apply to every one of these runs; no other sample list does.
+- **[MUST]** Sex mismatches are plink2's own `PROBLEM` calls, tabled with the report's header and listed for
+  removal. Heterozygosity is report-only. Relatedness pairs are classified on KING's inference boundaries; the
+  removal list holds one member of each duplicate/MZ pair, the one with the higher missing-call rate over the
+  geno-retained variants, and the mean-kinship outlier list is published without ever being applied. Under
+  `apply_sample_removals`, the sex-mismatch and relatedness removal lists join the mind list in the terminal
+  `--remove`; the ancestry keep-lists of the next milestone take the terminal `--keep` slot under the same
+  gate.

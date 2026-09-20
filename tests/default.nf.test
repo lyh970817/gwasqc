@@ -22,17 +22,37 @@ nextflow_pipeline {
             def stable_content = getAllFilesFromDir(params.outdir, ignoreFile: 'tests/.nftignore')
             def lines = { relative -> new File("${params.outdir}/${relative}").readLines() }
             def strata = ['study_eur', 'study_afr']
+            def prefix = { id -> id.replace('study_', '').toUpperCase() }
+            def relationships = { id ->
+                lines("qc/${id}/relatedness/${id}.relatedness_pairs.tsv").drop(1).collect { line -> line.split('\t') }.collectEntries { fields -> [([fields[1], fields[3]].sort().join('/')): fields[9]] }
+            }
+            def mhc_block = ['rs1691803', 'rs1692225', 'rs1692986', 'rs1693180', 'rs1693565', 'rs1694305', 'rs1695168', 'rs1695930', 'rs1696394', 'rs1696687', 'rs1697113', 'rs1697536', 'rs1697583', 'rs1698450', 'rs1699148', 'rs1699176', 'rs1699973', 'rs1700763', 'rs1701059', 'rs1701798', 'rs1701848', 'rs1702222', 'rs1702918', 'rs1703899', 'rs1704251', 'rs1704269', 'rs1704945', 'rs1705262', 'rs1705437', 'rs1706350', 'rs1706917', 'rs1707913', 'rs1708405', 'rs1708542', 'rs1709245', 'rs1709713', 'rs1710071', 'rs1710602']
             assertAll(
                 { assert workflow.success },
                 { assert new File("${params.outdir}").list().toList().sort() == ['genotypes', 'multiqc', 'pipeline_info', 'qc'] },
-                // Planted defects from the fixture README, for both strata: the two high-missingness samples and
-                // the borderline one at the 0.05 threshold, the same five gross HWE violations, and one fileset
-                // written once whose sizes reconcile with the lists it was built from.
-                { assert lines('qc/study_eur/missingness/study_eur.mind_remove.txt') == ['EUR_S040 EUR_S040', 'EUR_S041 EUR_S041', 'EUR_S042 EUR_S042'] },
-                { assert lines('qc/study_afr/missingness/study_afr.mind_remove.txt') == ['AFR_S040 AFR_S040', 'AFR_S041 AFR_S041', 'AFR_S042 AFR_S042'] },
-                { assert strata.every { id -> lines("qc/${id}/hwe/${id}.hwe_exclude.txt") == ['rs1667531', 'rs1668208', 'rs1668410', 'rs1668428', 'rs1668730'] } },
+                { assert strata.every { id -> new File("${params.outdir}/qc/${id}").list().toList().sort() == ['heterozygosity', 'hwe', 'ld_pruning', 'maf', 'missingness', 'relatedness', 'sex_check'] } },
+                // Planted defects from the fixture README, for both strata. Missingness in the legacy order: the
+                // two high-missingness samples fall, and the borderline one survives because its rate over the
+                // geno-retained variants drops below the threshold; the twenty planted variants fall at geno.
+                { assert strata.every { id -> lines("qc/${id}/missingness/${id}.mind_remove.txt") == ["${prefix(id)}_S040 ${prefix(id)}_S040", "${prefix(id)}_S041 ${prefix(id)}_S041"] } },
                 { assert strata.every { id -> lines("qc/${id}/missingness/${id}.geno_exclude.txt").size() >= 20 } },
-                { assert strata.every { id -> lines("qc/${id}/missingness/${id}.missingness_ladder.tsv").size() == 21 } },
+                { assert strata.every { id -> lines("qc/${id}/missingness/${id}.missingness_ladder.tsv").size() == 11 } },
+                { assert strata.every { id -> lines("qc/${id}/hwe/${id}.hwe_exclude.txt") == ['rs1667531', 'rs1668208', 'rs1668410', 'rs1668428', 'rs1668730'] } },
+                // Exactly the two planted sex mismatches, in the table and in the removal list.
+                { assert strata.every { id -> lines("qc/${id}/sex_check/${id}.sex_mismatch_remove.txt") == ["${prefix(id)}_S010 ${prefix(id)}_S010", "${prefix(id)}_S011 ${prefix(id)}_S011"] } },
+                { assert strata.every { id -> lines("qc/${id}/sex_check/${id}.sex_mismatch.tsv").size() == 3 } },
+                // The duplicate pair is classified as such with one member listed, and the two first-degree
+                // pairs are separated by IBS0.
+                { assert strata.every { id -> relationships(id)["${prefix(id)}_S020/${prefix(id)}_S021"] == 'duplicate_or_mz' } },
+                { assert strata.every { id -> relationships(id)["${prefix(id)}_S030/${prefix(id)}_S031"] == 'parent_offspring' } },
+                { assert strata.every { id -> relationships(id)["${prefix(id)}_S032/${prefix(id)}_S033"] == 'full_sibling' } },
+                { assert strata.every { id -> lines("qc/${id}/relatedness/${id}.relatedness_remove.txt").size() == 1 && lines("qc/${id}/relatedness/${id}.relatedness_remove.txt")[0] in ["${prefix(id)}_S020 ${prefix(id)}_S020".toString(), "${prefix(id)}_S021 ${prefix(id)}_S021".toString()] } },
+                // The long-range LD exclusion holds every pruned variant of the planted MHC block and only pruned
+                // variants; the fixture has no LD structure, so pruning itself removes little.
+                { assert strata.every { id -> lines("qc/${id}/ld_pruning/${id}.prune.in").containsAll(lines("qc/${id}/ld_pruning/${id}.highld_exclude.txt")) } },
+                { assert strata.every { id -> lines("qc/${id}/ld_pruning/${id}.highld_exclude.txt").containsAll(mhc_block.intersect(lines("qc/${id}/ld_pruning/${id}.prune.in"))) } },
+                // One fileset written once, whose sizes reconcile with the lists it was built from; the sex and
+                // relatedness lists are published only, so the sample count drops by the mind removals alone.
                 {
                     assert strata.every { id ->
                         def kept = lines("qc/${id}/maf/${id}.maf.snplist").size() - lines("qc/${id}/missingness/${id}.geno_exclude.txt").size() - lines("qc/${id}/hwe/${id}.hwe_exclude.txt").size()

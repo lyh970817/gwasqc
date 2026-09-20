@@ -43,11 +43,38 @@
                 }
             }
         },
+        "reference_options": {
+            "title": "Reference options",
+            "type": "object",
+            "fa_icon": "fas fa-dna",
+            "description": "Genome build and reference assets the QC chain relies on.",
+            "properties": {
+                "genome_build": {
+                    "type": "string",
+                    "default": "b38",
+                    "enum": ["b36", "hg18", "b37", "hg19", "b38", "hg38", "chm13"],
+                    "description": "Genome build code passed to plink2 `--split-par`, which moves the chromosome X pseudo-autosomal regions to their own codes before the sex check.",
+                    "help_text": "The pseudo-autosomal boundaries differ between builds, and the default long-range LD asset is GRCh38; a different build needs a matching `--high_ld_regions` file.",
+                    "fa_icon": "fas fa-dna"
+                },
+                "high_ld_regions": {
+                    "type": "string",
+                    "format": "file-path",
+                    "exists": true,
+                    "mimetype": "text/plain",
+                    "pattern": "^\\S+\\.bed$",
+                    "default": "${projectDir}/assets/high_ld_regions_b38.bed",
+                    "description": "BED file of long-range linkage-disequilibrium regions whose pruned variants are excluded, together with every non-autosomal variant, from the heterozygosity and relatedness reports.",
+                    "help_text": "Zero-based, half-open intervals with bare chromosome codes (1-22). The default asset is derived from the legacy `highLDregions4bim_b38.awk` rules; see the file header for the derivation.",
+                    "fa_icon": "fas fa-map"
+                }
+            }
+        },
         "qc_threshold_options": {
             "title": "QC threshold options",
             "type": "object",
             "fa_icon": "fas fa-filter",
-            "description": "Thresholds of the variant and sample QC chain. Every comparison is strict, as in plink2 itself.",
+            "description": "Thresholds of the variant filter chain. Every comparison is strict, as in plink2 itself.",
             "properties": {
                 "maf": {
                     "type": "number",
@@ -80,12 +107,106 @@
                     "maximum": 1,
                     "description": "Hardy-Weinberg equilibrium exact-test p-value threshold; variants with a p-value below this value are listed for exclusion.",
                     "fa_icon": "fas fa-percentage"
+                }
+            }
+        },
+        "ld_pruning_options": {
+            "title": "LD pruning options",
+            "type": "object",
+            "fa_icon": "fas fa-cut",
+            "description": "Parameters of the plink2 `--indep-pairwise` run that selects the variant set of the sex check, heterozygosity and relatedness reports.",
+            "properties": {
+                "ld_window_size": {
+                    "type": "integer",
+                    "default": 1500,
+                    "minimum": 2,
+                    "description": "Window size of `--indep-pairwise`, in variants.",
+                    "fa_icon": "fas fa-arrows-alt-h"
+                },
+                "ld_step_size": {
+                    "type": "integer",
+                    "default": 150,
+                    "minimum": 1,
+                    "description": "Number of variants the pruning window shifts at each step.",
+                    "fa_icon": "fas fa-step-forward"
+                },
+                "ld_r2": {
+                    "type": "number",
+                    "default": 0.2,
+                    "minimum": 0,
+                    "maximum": 1,
+                    "description": "Pairwise r-squared above which one variant of a pair is pruned.",
+                    "fa_icon": "fas fa-percentage"
+                }
+            }
+        },
+        "sample_qc_options": {
+            "title": "Sample QC options",
+            "type": "object",
+            "fa_icon": "fas fa-users",
+            "description": "Thresholds of the sex check and relatedness decisions, and whether their removal lists are applied to the QC'd fileset.",
+            "properties": {
+                "sex_check_max_female_xf": {
+                    "type": "number",
+                    "default": 0.2,
+                    "minimum": 0,
+                    "maximum": 1,
+                    "description": "Chromosome X inbreeding coefficient F below which plink2 `--check-sex` calls a sample female.",
+                    "fa_icon": "fas fa-venus"
+                },
+                "sex_check_min_male_xf": {
+                    "type": "number",
+                    "default": 0.8,
+                    "minimum": 0,
+                    "maximum": 1,
+                    "description": "Chromosome X inbreeding coefficient F above which plink2 `--check-sex` calls a sample male.",
+                    "fa_icon": "fas fa-mars"
+                },
+                "sex_check_max_female_ycount": {
+                    "type": "integer",
+                    "default": 0,
+                    "minimum": 0,
+                    "description": "Largest number of non-missing chromosome Y calls a sample called female may carry; more downgrades the call to a mismatch.",
+                    "fa_icon": "fas fa-venus"
+                },
+                "sex_check_min_male_ycount": {
+                    "type": "integer",
+                    "default": 1,
+                    "minimum": 1,
+                    "description": "Smallest number of non-missing chromosome Y calls a sample called male must carry; fewer downgrades the call to a mismatch.",
+                    "help_text": "plink1.9 `--check-sex ycount` defaulted this to 0, which plink2 rejects; 1 is the smallest value plink2 accepts and the plink1.9 `y-only` default.",
+                    "fa_icon": "fas fa-mars"
+                },
+                "king_table_filter": {
+                    "type": "number",
+                    "default": 0.0442,
+                    "minimum": 0,
+                    "maximum": 0.5,
+                    "description": "Minimum KING-robust kinship coefficient a sample pair needs to be written to the relatedness table; the default is the third-degree lower bound.",
+                    "help_text": "Pairs below the filter are absent from the table and count as unrelated in the per-individual mean kinship. Lowering it enlarges the table quadratically in the sample count.",
+                    "fa_icon": "fas fa-filter"
+                },
+                "relatedness_indiv_sd": {
+                    "type": "number",
+                    "default": 3,
+                    "minimum": 0,
+                    "description": "Number of standard deviations above the cohort mean kinship at which an individual is listed as a mean-kinship outlier.",
+                    "fa_icon": "fas fa-chart-line"
+                },
+                "relatedness_po_ibs0_max": {
+                    "type": "number",
+                    "default": 0.005,
+                    "minimum": 0,
+                    "maximum": 1,
+                    "description": "Largest IBS0 proportion at which a first-degree pair is classified parent-offspring rather than full sibling.",
+                    "help_text": "A parent-offspring pair shares one allele at every locus, so its IBS0 is bounded by the genotyping error rate; full sibs are IBD0 over a quarter of the genome and show IBS0 well above it.",
+                    "fa_icon": "fas fa-people-arrows"
                 },
                 "apply_sample_removals": {
                     "type": "boolean",
                     "default": false,
-                    "description": "Apply the sample decision lists that the legacy chain only reported (sex, heterozygosity, relatedness and ancestry) when writing the QC'd fileset; the missingness removals are always applied.",
-                    "help_text": "No stage produces those decision lists yet, so this parameter has no effect until the sample QC stages are added.",
+                    "description": "Apply the sex-mismatch and duplicate/MZ relatedness removal lists, which the legacy chain only reported, when writing the QC'd fileset; the missingness removals are always applied.",
+                    "help_text": "The lists are published either way. The mean-kinship outlier list is published but never applied.",
                     "fa_icon": "fas fa-user-slash"
                 }
             }
@@ -246,7 +367,16 @@
             "$ref": "#/$defs/input_output_options"
         },
         {
+            "$ref": "#/$defs/reference_options"
+        },
+        {
             "$ref": "#/$defs/qc_threshold_options"
+        },
+        {
+            "$ref": "#/$defs/ld_pruning_options"
+        },
+        {
+            "$ref": "#/$defs/sample_qc_options"
         },
         {
             "$ref": "#/$defs/institutional_config_options"

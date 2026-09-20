@@ -1,0 +1,440 @@
+{
+    "gwasqc fixtures - two strata - stub": {
+        "content": [
+            {
+                "het": [
+                    [
+                        {
+                            "ancestry": "AFR",
+                            "id": "study_afr"
+                        },
+                        "study_afr.het:md5,d41d8cd98f00b204e9800998ecf8427e"
+                    ],
+                    [
+                        {
+                            "ancestry": "EUR",
+                            "id": "study_eur"
+                        },
+                        "study_eur.het:md5,d41d8cd98f00b204e9800998ecf8427e"
+                    ]
+                ],
+                "het_sex_scatter": [
+                    [
+                        {
+                            "ancestry": "AFR",
+                            "id": "study_afr"
+                        },
+                        "study_afr.het_sex_scatter.tsv:md5,23647538bcfbf89e9a8f465226f59b2e"
+                    ],
+                    [
+                        {
+                            "ancestry": "EUR",
+                            "id": "study_eur"
+                        },
+                        "study_eur.het_sex_scatter.tsv:md5,23647538bcfbf89e9a8f465226f59b2e"
+                    ]
+                ],
+                "highld_exclude": [
+                    [
+                        {
+                            "ancestry": "AFR",
+                            "id": "study_afr"
+                        },
+                        "study_afr.highld_exclude.txt:md5,d41d8cd98f00b204e9800998ecf8427e"
+                    ],
+                    [
+                        {
+                            "ancestry": "EUR",
+                            "id": "study_eur"
+                        },
+                        "study_eur.highld_exclude.txt:md5,d41d8cd98f00b204e9800998ecf8427e"
+                    ]
+                ],
+                "kin0": [
+                    [
+                        {
+                            "ancestry": "AFR",
+                            "id": "study_afr"
+                        },
+                        "study_afr.kin0:md5,d41d8cd98f00b204e9800998ecf8427e"
+                    ],
+                    [
+                        {
+                            "ancestry": "EUR",
+                            "id": "study_eur"
+                        },
+                        "study_eur.kin0:md5,d41d8cd98f00b204e9800998ecf8427e"
+                    ]
+                ],
+                "prune_in": [
+                    [
+                        {
+                            "ancestry": "AFR",
+                            "id": "study_afr"
+                        },
+                        "study_afr.prune.in:md5,d41d8cd98f00b204e9800998ecf8427e"
+                    ],
+                    [
+                        {
+                            "ancestry": "EUR",
+                            "id": "study_eur"
+                        },
+                        "study_eur.prune.in:md5,d41d8cd98f00b204e9800998ecf8427e"
+                    ]
+                ],
+                "prune_out": [
+                    [
+                        {
+                            "ancestry": "AFR",
+                            "id": "study_afr"
+                        },
+                        "study_afr.prune.out:md5,d41d8cd98f00b204e9800998ecf8427e"
+                    ],
+                    [
+                        {
+                            "ancestry": "EUR",
+                            "id": "study_eur"
+                        },
+                        "study_eur.prune.out:md5,d41d8cd98f00b204e9800998ecf8427e"
+                    ]
+                ],
+                "relatedness_indiv": [
+                    [
+                        {
+                            "ancestry": "AFR",
+                            "id": "study_afr"
+                        },
+                        "study_afr.relatedness_indiv.tsv:md5,d5f51b506234a057e08f1649e3976aea"
+                    ],
+                    [
+                        {
+                            "ancestry": "EUR",
+                            "id": "study_eur"
+                        },
+                        "study_eur.relatedness_indiv.tsv:md5,d5f51b506234a057e08f1649e3976aea"
+                    ]
+                ],
+                "relatedness_outliers": [
+                    [
+                        {
+                            "ancestry": "AFR",
+                            "id": "study_afr"
+                        },
+                        "study_afr.relatedness_outliers.txt:md5,d41d8cd98f00b204e9800998ecf8427e"
+                    ],
+                    [
+                        {
+                            "ancestry": "EUR",
+                            "id": "study_eur"
+                        },
+                        "study_eur.relatedness_outliers.txt:md5,d41d8cd98f00b204e9800998ecf8427e"
+                    ]
+                ],
+                "relatedness_pairs": [
+                    [
+                        {
+                            "ancestry": "AFR",
+                            "id": "study_afr"
+                        },
+                        "study_afr.relatedness_pairs.tsv:md5,152da2d9cc69b79644dbbe908a97289e"
+                    ],
+                    [
+                        {
+                            "ancestry": "EUR",
+                            "id": "study_eur"
+                        },
+                        "study_eur.relatedness_pairs.tsv:md5,152da2d9cc69b79644dbbe908a97289e"
+                    ]
+                ],
+                "relatedness_remove": [
+                    [
+                        {
+                            "ancestry": "AFR",
+                            "id": "study_afr"
+                        },
+                        "study_afr.relatedness_remove.txt:md5,d41d8cd98f00b204e9800998ecf8427e"
+                    ],
+                    [
+                        {
+                            "ancestry": "EUR",
+                            "id": "study_eur"
+                        },
+                        "study_eur.relatedness_remove.txt:md5,d41d8cd98f00b204e9800998ecf8427e"
+                    ]
+                ],
+                "sex_mismatch": [
+                    [
+                        {
+                            "ancestry": "AFR",
+                            "id": "study_afr"
+                        },
+                        "study_afr.sex_mismatch.tsv:md5,29b1911eee36b4bc4173efc6d444765b"
+                    ],
+                    [
+                        {
+                            "ancestry": "EUR",
+                            "id": "study_eur"
+                        },
+                        "study_eur.sex_mismatch.tsv:md5,29b1911eee36b4bc4173efc6d444765b"
+                    ]
+                ],
+                "sex_remove": [
+                    [
+                        {
+                            "ancestry": "AFR",
+                            "id": "study_afr"
+                        },
+                        "study_afr.sex_mismatch_remove.txt:md5,d41d8cd98f00b204e9800998ecf8427e"
+                    ],
+                    [
+                        {
+                            "ancestry": "EUR",
+                            "id": "study_eur"
+                        },
+                        "study_eur.sex_mismatch_remove.txt:md5,d41d8cd98f00b204e9800998ecf8427e"
+                    ]
+                ],
+                "sexcheck": [
+                    [
+                        {
+                            "ancestry": "AFR",
+                            "id": "study_afr"
+                        },
+                        "study_afr.sexcheck:md5,d41d8cd98f00b204e9800998ecf8427e"
+                    ],
+                    [
+                        {
+                            "ancestry": "EUR",
+                            "id": "study_eur"
+                        },
+                        "study_eur.sexcheck:md5,d41d8cd98f00b204e9800998ecf8427e"
+                    ]
+                ]
+            }
+        ],
+        "timestamp": "2026-09-20T15:27:13.181219072",
+        "meta": {
+            "nf-test": "0.9.5",
+            "nextflow": "26.04.4"
+        }
+    },
+    "gwasqc fixtures - two strata": {
+        "content": [
+            {
+                "het": [
+                    [
+                        {
+                            "ancestry": "AFR",
+                            "id": "study_afr"
+                        },
+                        "study_afr.het:md5,9c5898bce987a6c34894cc79b1acb275"
+                    ],
+                    [
+                        {
+                            "ancestry": "EUR",
+                            "id": "study_eur"
+                        },
+                        "study_eur.het:md5,25f9118b3c44b403e90faae1159f41d6"
+                    ]
+                ],
+                "het_sex_scatter": [
+                    [
+                        {
+                            "ancestry": "AFR",
+                            "id": "study_afr"
+                        },
+                        "study_afr.het_sex_scatter.tsv:md5,9d87eb44f863f2c781bca9b106872840"
+                    ],
+                    [
+                        {
+                            "ancestry": "EUR",
+                            "id": "study_eur"
+                        },
+                        "study_eur.het_sex_scatter.tsv:md5,3c638f966cf32af9ccabf7ee464bd58f"
+                    ]
+                ],
+                "highld_exclude": [
+                    [
+                        {
+                            "ancestry": "AFR",
+                            "id": "study_afr"
+                        },
+                        "study_afr.highld_exclude.txt:md5,c2430f79277e7059211d9d03d6e877de"
+                    ],
+                    [
+                        {
+                            "ancestry": "EUR",
+                            "id": "study_eur"
+                        },
+                        "study_eur.highld_exclude.txt:md5,20606a3ef430e338b05e872a7970d435"
+                    ]
+                ],
+                "kin0": [
+                    [
+                        {
+                            "ancestry": "AFR",
+                            "id": "study_afr"
+                        },
+                        "study_afr.kin0:md5,df42aed4fed8bcf002e06c6f701d7ee2"
+                    ],
+                    [
+                        {
+                            "ancestry": "EUR",
+                            "id": "study_eur"
+                        },
+                        "study_eur.kin0:md5,272d7b82d1914c5372552d2ca66cf2c6"
+                    ]
+                ],
+                "prune_in": [
+                    [
+                        {
+                            "ancestry": "AFR",
+                            "id": "study_afr"
+                        },
+                        "study_afr.prune.in:md5,b34c71e351bc767084d5ac13438418b3"
+                    ],
+                    [
+                        {
+                            "ancestry": "EUR",
+                            "id": "study_eur"
+                        },
+                        "study_eur.prune.in:md5,e240b55faa6d85fcf2c6472ccc1eb546"
+                    ]
+                ],
+                "prune_out": [
+                    [
+                        {
+                            "ancestry": "AFR",
+                            "id": "study_afr"
+                        },
+                        "study_afr.prune.out:md5,31ac0676c467eff60d27ff1ec975b6e8"
+                    ],
+                    [
+                        {
+                            "ancestry": "EUR",
+                            "id": "study_eur"
+                        },
+                        "study_eur.prune.out:md5,174ae125f87e3949f7991bbdcca47bb9"
+                    ]
+                ],
+                "relatedness_indiv": [
+                    [
+                        {
+                            "ancestry": "AFR",
+                            "id": "study_afr"
+                        },
+                        "study_afr.relatedness_indiv.tsv:md5,00d01f1ccccdcd8cb72e858c10ebed3b"
+                    ],
+                    [
+                        {
+                            "ancestry": "EUR",
+                            "id": "study_eur"
+                        },
+                        "study_eur.relatedness_indiv.tsv:md5,7498afbb969ad7380ebe79d197bba998"
+                    ]
+                ],
+                "relatedness_outliers": [
+                    [
+                        {
+                            "ancestry": "AFR",
+                            "id": "study_afr"
+                        },
+                        "study_afr.relatedness_outliers.txt:md5,6e6e0dc18917998f347fd209971f4a87"
+                    ],
+                    [
+                        {
+                            "ancestry": "EUR",
+                            "id": "study_eur"
+                        },
+                        "study_eur.relatedness_outliers.txt:md5,767fc70be5f26018dc6f777a442c118a"
+                    ]
+                ],
+                "relatedness_pairs": [
+                    [
+                        {
+                            "ancestry": "AFR",
+                            "id": "study_afr"
+                        },
+                        "study_afr.relatedness_pairs.tsv:md5,8ec93e8cec2ad0e9f465abfb2d318960"
+                    ],
+                    [
+                        {
+                            "ancestry": "EUR",
+                            "id": "study_eur"
+                        },
+                        "study_eur.relatedness_pairs.tsv:md5,eb21ddf6a5cf91e5ace6acb6b6db982e"
+                    ]
+                ],
+                "relatedness_remove": [
+                    [
+                        {
+                            "ancestry": "AFR",
+                            "id": "study_afr"
+                        },
+                        "study_afr.relatedness_remove.txt:md5,2681ec5c1e5d5f794f8411eaf23d7ee6"
+                    ],
+                    [
+                        {
+                            "ancestry": "EUR",
+                            "id": "study_eur"
+                        },
+                        "study_eur.relatedness_remove.txt:md5,38f20fd14ce58747ed2a1b11256059c0"
+                    ]
+                ],
+                "sex_mismatch": [
+                    [
+                        {
+                            "ancestry": "AFR",
+                            "id": "study_afr"
+                        },
+                        "study_afr.sex_mismatch.tsv:md5,4884076140d25f0786f1b9a10f631f55"
+                    ],
+                    [
+                        {
+                            "ancestry": "EUR",
+                            "id": "study_eur"
+                        },
+                        "study_eur.sex_mismatch.tsv:md5,689ac7faf48e0729a31bb31a42e5dd6c"
+                    ]
+                ],
+                "sex_remove": [
+                    [
+                        {
+                            "ancestry": "AFR",
+                            "id": "study_afr"
+                        },
+                        "study_afr.sex_mismatch_remove.txt:md5,70e6cbea58571d12303f9ac70eae6f7e"
+                    ],
+                    [
+                        {
+                            "ancestry": "EUR",
+                            "id": "study_eur"
+                        },
+                        "study_eur.sex_mismatch_remove.txt:md5,a15cb4ea5ae0beb9ffc14c624d142f0e"
+                    ]
+                ],
+                "sexcheck": [
+                    [
+                        {
+                            "ancestry": "AFR",
+                            "id": "study_afr"
+                        },
+                        "study_afr.sexcheck:md5,5c0dcb5d3bbd5ecdb693b88f885c8722"
+                    ],
+                    [
+                        {
+                            "ancestry": "EUR",
+                            "id": "study_eur"
+                        },
+                        "study_eur.sexcheck:md5,138090ffc7008416cd84f53690124e0b"
+                    ]
+                ]
+            }
+        ],
+        "timestamp": "2026-09-20T15:26:24.972502767",
+        "meta": {
+            "nf-test": "0.9.5",
+            "nextflow": "26.04.4"
+        }
+    }
+}

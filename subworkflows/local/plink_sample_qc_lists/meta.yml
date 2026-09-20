@@ -1,0 +1,126 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/nf-core/modules/master/subworkflows/yaml-schema.json
+name: plink_sample_qc_lists
+description: Derive the LD-pruned variant set, the long-range LD and non-autosomal exclusion, the sex mismatch, heterozygosity and KING relatedness reports and their decision lists of one PLINK fileset per stratum from stats-only plink2 runs on the filter chain's lists
+keywords:
+  - plink
+  - quality control
+  - linkage disequilibrium
+  - sex check
+  - heterozygosity
+  - relatedness
+components:
+  - plink2/indeppairwise
+  - highld_exclude
+  - plink2/checksex
+  - sex_check_decisions
+  - plink2/het
+  - heterozygosity_plots
+  - plink2/makekingtable
+  - relatedness_decisions
+input:
+  - ch_genotypes:
+      description: One PLINK 1 fileset per stratum with the filter chain's lists; extract is the keep-list, exclude the list of exclusion lists, remove the mind removal list and smiss the sample missingness report over the geno-retained variants; meta.id must be unique across strata
+      structure: [map meta, path bed, path bim, path fam, path extract, list exclude, path remove, path smiss]
+      pattern: "*.{bed,bim,fam,snplist,txt,smiss}"
+      ontologies: []
+  - high_ld_regions:
+      description: BED of long-range LD regions, 0-based half-open, bare chromosome codes
+      structure: path high_ld_regions
+  - ld_window_size:
+      description: Window of --indep-pairwise, in variants
+      structure: integer ld_window_size
+  - ld_step_size:
+      description: Step of --indep-pairwise, in variants
+      structure: integer ld_step_size
+  - ld_r2:
+      description: r-squared threshold of --indep-pairwise
+      structure: number ld_r2
+  - relatedness_indiv_sd:
+      description: Standard deviations above the cohort mean kinship at which an individual is an outlier
+      structure: number relatedness_indiv_sd
+  - relatedness_po_ibs0_max:
+      description: IBS0 at or below which a first-degree pair is parent-offspring rather than full sibling
+      structure: number relatedness_po_ibs0_max
+output:
+  - prune_in:
+      type: file
+      description: Variants retained by LD pruning of the QC'd set over every chromosome
+      structure: [map meta, path prune_in]
+      pattern: "*.prune.in"
+      ontologies: []
+  - prune_out:
+      type: file
+      description: Variants removed by LD pruning
+      structure: [map meta, path prune_out]
+      pattern: "*.prune.out"
+      ontologies: []
+  - highld_exclude:
+      type: file
+      description: Pruned variants inside a long-range LD region or off the autosomes, for plink2 --exclude
+      structure: [map meta, path highld_exclude]
+      pattern: "*.highld_exclude.txt"
+      ontologies: []
+  - sexcheck:
+      type: file
+      description: plink2 --check-sex report over the pruned set after the PAR split
+      structure: [map meta, path sexcheck]
+      pattern: "*.sexcheck"
+      ontologies: []
+  - sex_mismatch:
+      type: file
+      description: The PROBLEM rows of the sex check, header only when there is none
+      structure: [map meta, path sex_mismatch]
+      pattern: "*.sex_mismatch.tsv"
+      ontologies: []
+  - sex_remove:
+      type: file
+      description: Sex mismatches as FID IID pairs for plink2 --remove
+      structure: [map meta, path sex_remove]
+      pattern: "*.sex_mismatch_remove.txt"
+      ontologies: []
+  - het:
+      type: file
+      description: plink2 --het report over the pruned autosomal set outside the long-range LD regions
+      structure: [map meta, path het]
+      pattern: "*.het"
+      ontologies: []
+  - het_sex_scatter:
+      type: file
+      description: Per-sample heterozygosity F and sex-check F, joined on the sample IDs
+      structure: [map meta, path scatter_data]
+      pattern: "*.het_sex_scatter.tsv"
+      ontologies: []
+  - kin0:
+      type: file
+      description: plink2 --make-king-table report over the same set, restricted by the kinship filter configured on PLINK2_MAKEKINGTABLE
+      structure: [map meta, path kin0]
+      pattern: "*.kin0"
+      ontologies: []
+  - relatedness_pairs:
+      type: file
+      description: The kinship report with the degree and relationship of every pair
+      structure: [map meta, path pairs]
+      pattern: "*.relatedness_pairs.tsv"
+      ontologies: []
+  - relatedness_indiv:
+      type: file
+      description: Per-sample mean kinship with the outlier flag
+      structure: [map meta, path indiv]
+      pattern: "*.relatedness_indiv.tsv"
+      ontologies: []
+  - relatedness_remove:
+      type: file
+      description: One member of every duplicate/MZ pair, the one with the higher missing-call rate, for plink2 --remove
+      structure: [map meta, path relatedness_remove]
+      pattern: "*.relatedness_remove.txt"
+      ontologies: []
+  - relatedness_outliers:
+      type: file
+      description: Mean-kinship outliers as FID IID pairs; published, not applied
+      structure: [map meta, path outliers]
+      pattern: "*.relatedness_outliers.txt"
+      ontologies: []
+authors:
+  - "@lyh970817"
+maintainers:
+  - "@lyh970817"

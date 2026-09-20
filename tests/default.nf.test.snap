@@ -2,23 +2,68 @@
     "-profile test - stub": {
         "content": [
             {
+                "GENO_DECISIONS": {
+                    "r-base": "4.3.1"
+                },
+                "GENO_DECISIONS_LADDER": {
+                    "r-base": "4.3.1"
+                },
+                "HETEROZYGOSITY_PLOTS": {
+                    "r-base": "4.4.3",
+                    "r-data.table": "1.17.8",
+                    "r-ggplot2": "3.5.2"
+                },
+                "HIGHLD_EXCLUDE": {
+                    "gawk": "5.3.1"
+                },
                 "HWE_DECISIONS": {
                     "r-base": "4.3.1"
                 },
-                "MISSINGNESS_DECISIONS": {
+                "MIND_DECISIONS": {
                     "r-base": "4.3.1"
                 },
+                "MISSINGNESS_LADDER": {
+                    "r-base": "4.3.1"
+                },
+                "PLINK2_CHECKSEX": {
+                    "plink2": "2.0.0-a.6.9LM"
+                },
                 "PLINK2_HARDY": {
+                    "plink2": "2.0.0-a.6.9LM"
+                },
+                "PLINK2_HET": {
+                    "plink2": "2.0.0-a.6.9LM"
+                },
+                "PLINK2_INDEPPAIRWISE": {
                     "plink2": "2.0.0-a.6.9LM"
                 },
                 "PLINK2_MAKEBED": {
                     "plink2": "2.0.0-a.6.9LM"
                 },
-                "PLINK2_MISSING": {
+                "PLINK2_MAKEKINGTABLE": {
+                    "plink2": "2.0.0-a.6.9LM"
+                },
+                "PLINK2_MISSING_LADDER": {
+                    "plink2": "2.0.0-a.6.9LM"
+                },
+                "PLINK2_MISSING_SAMPLES": {
+                    "plink2": "2.0.0-a.6.9LM"
+                },
+                "PLINK2_MISSING_VARIANTS": {
                     "plink2": "2.0.0-a.6.9LM"
                 },
                 "PLINK2_WRITESNPLIST": {
                     "plink2": "2.0.0-a.6.9LM"
+                },
+                "RELATEDNESS_DECISIONS": {
+                    "r-base": "4.4.3",
+                    "r-data.table": "1.17.8",
+                    "r-ggplot2": "3.5.2"
+                },
+                "SEX_CHECK_DECISIONS": {
+                    "r-base": "4.4.3",
+                    "r-data.table": "1.17.8",
+                    "r-ggplot2": "3.5.2"
                 },
                 "Workflow": {
                     "nf-core/gwasqc": "v1.0.0dev"
@@ -44,10 +89,22 @@
                 "pipeline_info/nf_core_gwasqc_software_mqc_versions.yml",
                 "qc",
                 "qc/study_afr",
+                "qc/study_afr/heterozygosity",
+                "qc/study_afr/heterozygosity/study_afr.het",
+                "qc/study_afr/heterozygosity/study_afr.het_hist.pdf",
+                "qc/study_afr/heterozygosity/study_afr.het_hist.png",
+                "qc/study_afr/heterozygosity/study_afr.het_hist.tsv",
+                "qc/study_afr/heterozygosity/study_afr.het_sex_scatter.pdf",
+                "qc/study_afr/heterozygosity/study_afr.het_sex_scatter.png",
+                "qc/study_afr/heterozygosity/study_afr.het_sex_scatter.tsv",
                 "qc/study_afr/hwe",
                 "qc/study_afr/hwe/study_afr.hardy",
                 "qc/study_afr/hwe/study_afr.hardy.x",
                 "qc/study_afr/hwe/study_afr.hwe_exclude.txt",
+                "qc/study_afr/ld_pruning",
+                "qc/study_afr/ld_pruning/study_afr.highld_exclude.txt",
+                "qc/study_afr/ld_pruning/study_afr.prune.in",
+                "qc/study_afr/ld_pruning/study_afr.prune.out",
                 "qc/study_afr/maf",
                 "qc/study_afr/maf/study_afr.maf.snplist",
                 "qc/study_afr/missingness",
@@ -56,11 +113,39 @@
                 "qc/study_afr/missingness/study_afr.missingness_ladder.tsv",
                 "qc/study_afr/missingness/study_afr.smiss",
                 "qc/study_afr/missingness/study_afr.vmiss",
+                "qc/study_afr/relatedness",
+                "qc/study_afr/relatedness/study_afr.kin0",
+                "qc/study_afr/relatedness/study_afr.relatedness_hist.pdf",
+                "qc/study_afr/relatedness/study_afr.relatedness_hist.png",
+                "qc/study_afr/relatedness/study_afr.relatedness_hist.tsv",
+                "qc/study_afr/relatedness/study_afr.relatedness_indiv.tsv",
+                "qc/study_afr/relatedness/study_afr.relatedness_outliers.txt",
+                "qc/study_afr/relatedness/study_afr.relatedness_pairs.tsv",
+                "qc/study_afr/relatedness/study_afr.relatedness_remove.txt",
+                "qc/study_afr/sex_check",
+                "qc/study_afr/sex_check/study_afr.sex_check_hist.pdf",
+                "qc/study_afr/sex_check/study_afr.sex_check_hist.png",
+                "qc/study_afr/sex_check/study_afr.sex_check_hist.tsv",
+                "qc/study_afr/sex_check/study_afr.sex_mismatch.tsv",
+                "qc/study_afr/sex_check/study_afr.sex_mismatch_remove.txt",
+                "qc/study_afr/sex_check/study_afr.sexcheck",
                 "qc/study_eur",
+                "qc/study_eur/heterozygosity",
+                "qc/study_eur/heterozygosity/study_eur.het",
+                "qc/study_eur/heterozygosity/study_eur.het_hist.pdf",
+                "qc/study_eur/heterozygosity/study_eur.het_hist.png",
+                "qc/study_eur/heterozygosity/study_eur.het_hist.tsv",
+                "qc/study_eur/heterozygosity/study_eur.het_sex_scatter.pdf",
+                "qc/study_eur/heterozygosity/study_eur.het_sex_scatter.png",
+                "qc/study_eur/heterozygosity/study_eur.het_sex_scatter.tsv",
                 "qc/study_eur/hwe",
                 "qc/study_eur/hwe/study_eur.hardy",
                 "qc/study_eur/hwe/study_eur.hardy.x",
                 "qc/study_eur/hwe/study_eur.hwe_exclude.txt",
+                "qc/study_eur/ld_pruning",
+                "qc/study_eur/ld_pruning/study_eur.highld_exclude.txt",
+                "qc/study_eur/ld_pruning/study_eur.prune.in",
+                "qc/study_eur/ld_pruning/study_eur.prune.out",
                 "qc/study_eur/maf",
                 "qc/study_eur/maf/study_eur.maf.snplist",
                 "qc/study_eur/missingness",
@@ -68,10 +153,26 @@
                 "qc/study_eur/missingness/study_eur.mind_remove.txt",
                 "qc/study_eur/missingness/study_eur.missingness_ladder.tsv",
                 "qc/study_eur/missingness/study_eur.smiss",
-                "qc/study_eur/missingness/study_eur.vmiss"
+                "qc/study_eur/missingness/study_eur.vmiss",
+                "qc/study_eur/relatedness",
+                "qc/study_eur/relatedness/study_eur.kin0",
+                "qc/study_eur/relatedness/study_eur.relatedness_hist.pdf",
+                "qc/study_eur/relatedness/study_eur.relatedness_hist.png",
+                "qc/study_eur/relatedness/study_eur.relatedness_hist.tsv",
+                "qc/study_eur/relatedness/study_eur.relatedness_indiv.tsv",
+                "qc/study_eur/relatedness/study_eur.relatedness_outliers.txt",
+                "qc/study_eur/relatedness/study_eur.relatedness_pairs.tsv",
+                "qc/study_eur/relatedness/study_eur.relatedness_remove.txt",
+                "qc/study_eur/sex_check",
+                "qc/study_eur/sex_check/study_eur.sex_check_hist.pdf",
+                "qc/study_eur/sex_check/study_eur.sex_check_hist.png",
+                "qc/study_eur/sex_check/study_eur.sex_check_hist.tsv",
+                "qc/study_eur/sex_check/study_eur.sex_mismatch.tsv",
+                "qc/study_eur/sex_check/study_eur.sex_mismatch_remove.txt",
+                "qc/study_eur/sex_check/study_eur.sexcheck"
             ]
         ],
-        "timestamp": "2026-09-20T13:36:09.874607538",
+        "timestamp": "2026-09-20T15:38:57.394431917",
         "meta": {
             "nf-test": "0.9.5",
             "nextflow": "26.04.4"
@@ -80,23 +181,68 @@
     "-profile test": {
         "content": [
             {
+                "GENO_DECISIONS": {
+                    "r-base": "4.3.1"
+                },
+                "GENO_DECISIONS_LADDER": {
+                    "r-base": "4.3.1"
+                },
+                "HETEROZYGOSITY_PLOTS": {
+                    "r-base": "4.4.3",
+                    "r-data.table": "1.17.8",
+                    "r-ggplot2": "3.5.2"
+                },
+                "HIGHLD_EXCLUDE": {
+                    "gawk": "5.3.1"
+                },
                 "HWE_DECISIONS": {
                     "r-base": "4.3.1"
                 },
-                "MISSINGNESS_DECISIONS": {
+                "MIND_DECISIONS": {
                     "r-base": "4.3.1"
                 },
+                "MISSINGNESS_LADDER": {
+                    "r-base": "4.3.1"
+                },
+                "PLINK2_CHECKSEX": {
+                    "plink2": "2.0.0-a.6.9LM"
+                },
                 "PLINK2_HARDY": {
+                    "plink2": "2.0.0-a.6.9LM"
+                },
+                "PLINK2_HET": {
+                    "plink2": "2.0.0-a.6.9LM"
+                },
+                "PLINK2_INDEPPAIRWISE": {
                     "plink2": "2.0.0-a.6.9LM"
                 },
                 "PLINK2_MAKEBED": {
                     "plink2": "2.0.0-a.6.9LM"
                 },
-                "PLINK2_MISSING": {
+                "PLINK2_MAKEKINGTABLE": {
+                    "plink2": "2.0.0-a.6.9LM"
+                },
+                "PLINK2_MISSING_LADDER": {
+                    "plink2": "2.0.0-a.6.9LM"
+                },
+                "PLINK2_MISSING_SAMPLES": {
+                    "plink2": "2.0.0-a.6.9LM"
+                },
+                "PLINK2_MISSING_VARIANTS": {
                     "plink2": "2.0.0-a.6.9LM"
                 },
                 "PLINK2_WRITESNPLIST": {
                     "plink2": "2.0.0-a.6.9LM"
+                },
+                "RELATEDNESS_DECISIONS": {
+                    "r-base": "4.4.3",
+                    "r-data.table": "1.17.8",
+                    "r-ggplot2": "3.5.2"
+                },
+                "SEX_CHECK_DECISIONS": {
+                    "r-base": "4.4.3",
+                    "r-data.table": "1.17.8",
+                    "r-ggplot2": "3.5.2"
                 },
                 "Workflow": {
                     "nf-core/gwasqc": "v1.0.0dev"
@@ -126,10 +272,22 @@
                 "pipeline_info/nf_core_gwasqc_software_mqc_versions.yml",
                 "qc",
                 "qc/study_afr",
+                "qc/study_afr/heterozygosity",
+                "qc/study_afr/heterozygosity/study_afr.het",
+                "qc/study_afr/heterozygosity/study_afr.het_hist.pdf",
+                "qc/study_afr/heterozygosity/study_afr.het_hist.png",
+                "qc/study_afr/heterozygosity/study_afr.het_hist.tsv",
+                "qc/study_afr/heterozygosity/study_afr.het_sex_scatter.pdf",
+                "qc/study_afr/heterozygosity/study_afr.het_sex_scatter.png",
+                "qc/study_afr/heterozygosity/study_afr.het_sex_scatter.tsv",
                 "qc/study_afr/hwe",
                 "qc/study_afr/hwe/study_afr.hardy",
                 "qc/study_afr/hwe/study_afr.hardy.x",
                 "qc/study_afr/hwe/study_afr.hwe_exclude.txt",
+                "qc/study_afr/ld_pruning",
+                "qc/study_afr/ld_pruning/study_afr.highld_exclude.txt",
+                "qc/study_afr/ld_pruning/study_afr.prune.in",
+                "qc/study_afr/ld_pruning/study_afr.prune.out",
                 "qc/study_afr/maf",
                 "qc/study_afr/maf/study_afr.maf.snplist",
                 "qc/study_afr/missingness",
@@ -138,11 +296,39 @@
                 "qc/study_afr/missingness/study_afr.missingness_ladder.tsv",
                 "qc/study_afr/missingness/study_afr.smiss",
                 "qc/study_afr/missingness/study_afr.vmiss",
+                "qc/study_afr/relatedness",
+                "qc/study_afr/relatedness/study_afr.kin0",
+                "qc/study_afr/relatedness/study_afr.relatedness_hist.pdf",
+                "qc/study_afr/relatedness/study_afr.relatedness_hist.png",
+                "qc/study_afr/relatedness/study_afr.relatedness_hist.tsv",
+                "qc/study_afr/relatedness/study_afr.relatedness_indiv.tsv",
+                "qc/study_afr/relatedness/study_afr.relatedness_outliers.txt",
+                "qc/study_afr/relatedness/study_afr.relatedness_pairs.tsv",
+                "qc/study_afr/relatedness/study_afr.relatedness_remove.txt",
+                "qc/study_afr/sex_check",
+                "qc/study_afr/sex_check/study_afr.sex_check_hist.pdf",
+                "qc/study_afr/sex_check/study_afr.sex_check_hist.png",
+                "qc/study_afr/sex_check/study_afr.sex_check_hist.tsv",
+                "qc/study_afr/sex_check/study_afr.sex_mismatch.tsv",
+                "qc/study_afr/sex_check/study_afr.sex_mismatch_remove.txt",
+                "qc/study_afr/sex_check/study_afr.sexcheck",
                 "qc/study_eur",
+                "qc/study_eur/heterozygosity",
+                "qc/study_eur/heterozygosity/study_eur.het",
+                "qc/study_eur/heterozygosity/study_eur.het_hist.pdf",
+                "qc/study_eur/heterozygosity/study_eur.het_hist.png",
+                "qc/study_eur/heterozygosity/study_eur.het_hist.tsv",
+                "qc/study_eur/heterozygosity/study_eur.het_sex_scatter.pdf",
+                "qc/study_eur/heterozygosity/study_eur.het_sex_scatter.png",
+                "qc/study_eur/heterozygosity/study_eur.het_sex_scatter.tsv",
                 "qc/study_eur/hwe",
                 "qc/study_eur/hwe/study_eur.hardy",
                 "qc/study_eur/hwe/study_eur.hardy.x",
                 "qc/study_eur/hwe/study_eur.hwe_exclude.txt",
+                "qc/study_eur/ld_pruning",
+                "qc/study_eur/ld_pruning/study_eur.highld_exclude.txt",
+                "qc/study_eur/ld_pruning/study_eur.prune.in",
+                "qc/study_eur/ld_pruning/study_eur.prune.out",
                 "qc/study_eur/maf",
                 "qc/study_eur/maf/study_eur.maf.snplist",
                 "qc/study_eur/missingness",
@@ -150,37 +336,85 @@
                 "qc/study_eur/missingness/study_eur.mind_remove.txt",
                 "qc/study_eur/missingness/study_eur.missingness_ladder.tsv",
                 "qc/study_eur/missingness/study_eur.smiss",
-                "qc/study_eur/missingness/study_eur.vmiss"
+                "qc/study_eur/missingness/study_eur.vmiss",
+                "qc/study_eur/relatedness",
+                "qc/study_eur/relatedness/study_eur.kin0",
+                "qc/study_eur/relatedness/study_eur.relatedness_hist.pdf",
+                "qc/study_eur/relatedness/study_eur.relatedness_hist.png",
+                "qc/study_eur/relatedness/study_eur.relatedness_hist.tsv",
+                "qc/study_eur/relatedness/study_eur.relatedness_indiv.tsv",
+                "qc/study_eur/relatedness/study_eur.relatedness_outliers.txt",
+                "qc/study_eur/relatedness/study_eur.relatedness_pairs.tsv",
+                "qc/study_eur/relatedness/study_eur.relatedness_remove.txt",
+                "qc/study_eur/sex_check",
+                "qc/study_eur/sex_check/study_eur.sex_check_hist.pdf",
+                "qc/study_eur/sex_check/study_eur.sex_check_hist.png",
+                "qc/study_eur/sex_check/study_eur.sex_check_hist.tsv",
+                "qc/study_eur/sex_check/study_eur.sex_mismatch.tsv",
+                "qc/study_eur/sex_check/study_eur.sex_mismatch_remove.txt",
+                "qc/study_eur/sex_check/study_eur.sexcheck"
             ],
             [
-                "study_afr.qc.bed:md5,3bb83fd91acd70af2f6d6f1dbbbcc713",
+                "study_afr.qc.bed:md5,6f52b9709aa206bacc312ab9a8e445b2",
                 "study_afr.qc.bim:md5,33f14dfcc5a0fcf1b3c4d503eb0013c5",
-                "study_afr.qc.fam:md5,80d9814370c0ebe5d042b79bbbeb47ee",
-                "study_eur.qc.bed:md5,3165fd524d7b787cd91f9ccb82324063",
+                "study_afr.qc.fam:md5,20515aeb1d656acdaa21f4f951d5950f",
+                "study_eur.qc.bed:md5,95a12cd08e057ec0406891ec2293e5f1",
                 "study_eur.qc.bim:md5,89df2f6732f81fc60ef43abc2be36355",
-                "study_eur.qc.fam:md5,6fe787141dcaedf646aacb0b1cbd241c",
+                "study_eur.qc.fam:md5,222ef1adda2a6ad4f165129f9ba122c9",
                 "multiqc_citations.txt:md5,4c806e63a283ec1b7e78cdae3a923d4f",
-                "study_afr.hardy:md5,7c1b1754b1cc3c7e1ad61685b552a8e9",
-                "study_afr.hardy.x:md5,4c2b4b26cdc715d49d79273b4a50ee6e",
+                "study_afr.het:md5,9c5898bce987a6c34894cc79b1acb275",
+                "study_afr.het_hist.tsv:md5,05b0b66bfd9a54ea96746b598387bc20",
+                "study_afr.het_sex_scatter.tsv:md5,9d87eb44f863f2c781bca9b106872840",
+                "study_afr.hardy:md5,48446f14b45f6fed07bec225d4f046b5",
+                "study_afr.hardy.x:md5,f1392683d7473bcc5df7c8541ee3b902",
                 "study_afr.hwe_exclude.txt:md5,5c5c7bb5cc1ca307c582e2e9a5062ed3",
+                "study_afr.highld_exclude.txt:md5,c2430f79277e7059211d9d03d6e877de",
+                "study_afr.prune.in:md5,b34c71e351bc767084d5ac13438418b3",
+                "study_afr.prune.out:md5,31ac0676c467eff60d27ff1ec975b6e8",
                 "study_afr.maf.snplist:md5,610b5acd571d2bf7c7bc9acf8555f9e7",
                 "study_afr.geno_exclude.txt:md5,306ebae029a8d020020a2f3978a8bf8c",
-                "study_afr.mind_remove.txt:md5,5fdbdc854fcbd317135f87efc6ad182d",
-                "study_afr.missingness_ladder.tsv:md5,b9f7149ce37eceba735d659b40dbb457",
-                "study_afr.smiss:md5,151fb604f83220fc679b9f851407f9b7",
+                "study_afr.mind_remove.txt:md5,517e189d70d03694e22dc434cf8d7f7d",
+                "study_afr.missingness_ladder.tsv:md5,d066e418aaf6047defadc4c15887878f",
+                "study_afr.smiss:md5,3bf83021eb1e89746b250509f85f3caf",
                 "study_afr.vmiss:md5,5812f5eda3d0d23cd3a5650c8db64615",
-                "study_eur.hardy:md5,6ceeee5eac7e25c5cfea99b7938ed1a4",
-                "study_eur.hardy.x:md5,e773432a02a72293c177a6ec2b00d961",
+                "study_afr.kin0:md5,df42aed4fed8bcf002e06c6f701d7ee2",
+                "study_afr.relatedness_hist.tsv:md5,e37682d137756b7876f3040aad6e7fe4",
+                "study_afr.relatedness_indiv.tsv:md5,00d01f1ccccdcd8cb72e858c10ebed3b",
+                "study_afr.relatedness_outliers.txt:md5,6e6e0dc18917998f347fd209971f4a87",
+                "study_afr.relatedness_pairs.tsv:md5,8ec93e8cec2ad0e9f465abfb2d318960",
+                "study_afr.relatedness_remove.txt:md5,2681ec5c1e5d5f794f8411eaf23d7ee6",
+                "study_afr.sex_check_hist.tsv:md5,f205ba3df57e9b693041d2e75f584a7c",
+                "study_afr.sex_mismatch.tsv:md5,4884076140d25f0786f1b9a10f631f55",
+                "study_afr.sex_mismatch_remove.txt:md5,70e6cbea58571d12303f9ac70eae6f7e",
+                "study_afr.sexcheck:md5,5c0dcb5d3bbd5ecdb693b88f885c8722",
+                "study_eur.het:md5,25f9118b3c44b403e90faae1159f41d6",
+                "study_eur.het_hist.tsv:md5,73ad2b8eab126d8c871558b83e48811c",
+                "study_eur.het_sex_scatter.tsv:md5,3c638f966cf32af9ccabf7ee464bd58f",
+                "study_eur.hardy:md5,d3dcccb5ecf820795c42faca038c874f",
+                "study_eur.hardy.x:md5,695be05c13fd662e156aadbd3af91f9c",
                 "study_eur.hwe_exclude.txt:md5,5c5c7bb5cc1ca307c582e2e9a5062ed3",
+                "study_eur.highld_exclude.txt:md5,20606a3ef430e338b05e872a7970d435",
+                "study_eur.prune.in:md5,e240b55faa6d85fcf2c6472ccc1eb546",
+                "study_eur.prune.out:md5,174ae125f87e3949f7991bbdcca47bb9",
                 "study_eur.maf.snplist:md5,6873b91a6fe3c9066a90b572089641d2",
                 "study_eur.geno_exclude.txt:md5,3da7987f6f7096b36350eabe2e8f8882",
-                "study_eur.mind_remove.txt:md5,6052c5a2225990a800497de7c0f0f3a8",
-                "study_eur.missingness_ladder.tsv:md5,52850676d2776af1a58e8501a77b653c",
-                "study_eur.smiss:md5,3226482e5392f56ee289f39220e9408c",
-                "study_eur.vmiss:md5,66ba3c6e0470c1bece269544178ae032"
+                "study_eur.mind_remove.txt:md5,448301c601adc8a7c6d42a36aafd4159",
+                "study_eur.missingness_ladder.tsv:md5,3adcfa9ead6ef939e3a281f0e270c5f2",
+                "study_eur.smiss:md5,09c1955f2bf1ec8e48342a8a8cc2b843",
+                "study_eur.vmiss:md5,66ba3c6e0470c1bece269544178ae032",
+                "study_eur.kin0:md5,272d7b82d1914c5372552d2ca66cf2c6",
+                "study_eur.relatedness_hist.tsv:md5,94ca50094207652aaf9e8e75a514515d",
+                "study_eur.relatedness_indiv.tsv:md5,7498afbb969ad7380ebe79d197bba998",
+                "study_eur.relatedness_outliers.txt:md5,767fc70be5f26018dc6f777a442c118a",
+                "study_eur.relatedness_pairs.tsv:md5,eb21ddf6a5cf91e5ace6acb6b6db982e",
+                "study_eur.relatedness_remove.txt:md5,38f20fd14ce58747ed2a1b11256059c0",
+                "study_eur.sex_check_hist.tsv:md5,457095000a0607f6529b61862ca55cb0",
+                "study_eur.sex_mismatch.tsv:md5,689ac7faf48e0729a31bb31a42e5dd6c",
+                "study_eur.sex_mismatch_remove.txt:md5,a15cb4ea5ae0beb9ffc14c624d142f0e",
+                "study_eur.sexcheck:md5,138090ffc7008416cd84f53690124e0b"
             ]
         ],
-        "timestamp": "2026-09-20T13:35:32.964214065",
+        "timestamp": "2026-09-20T15:38:01.935692388",
         "meta": {
             "nf-test": "0.9.5",
             "nextflow": "26.04.4"

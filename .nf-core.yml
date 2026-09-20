@@ -12,6 +12,11 @@ lint:
     # stops the `withName:` check reading it.
     - conf/modules.config
   modules_config: false
+  nextflow_config:
+    # The default long-range LD asset lives in the pipeline and is addressed through `${projectDir}`, which
+    # the schema cannot resolve; the schema records the same expression for documentation.
+    - config_defaults:
+        - params.high_ld_regions
 
 template:
   org: nf-core

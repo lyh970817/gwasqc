@@ -10,6 +10,12 @@
 
 ## Pipeline tools
 
+- [GNU Awk](https://www.gnu.org/software/gawk/)
+
+- [KING](https://doi.org/10.1093/bioinformatics/btq559)
+
+  > Manichaikul A, Mychaleckyj JC, Rich SS, Daly K, Sale M, Chen WM. Robust relationship inference in genome-wide association studies. Bioinformatics. 2010;26(22):2867-2873. doi: 10.1093/bioinformatics/btq559. PubMed PMID: 20926424; PubMed Central PMCID: PMC3025716.
+
 - [MultiQC](https://pubmed.ncbi.nlm.nih.gov/27312411/)
 
 > Ewels P, Magnusson M, Lundin S, Käller M. MultiQC: summarize analysis results for multiple tools and samples in a single report. Bioinformatics. 2016 Oct 1;32(19):3047-8. doi: 10.1093/bioinformatics/btw354. Epub 2016 Jun 16. PubMed PMID: 27312411; PubMed Central PMCID: PMC5039924.
@@ -21,6 +27,16 @@
 - [R](https://www.r-project.org/)
 
   > R Core Team (2023). R: A language and environment for statistical computing. R Foundation for Statistical Computing, Vienna, Austria.
+
+## R packages
+
+- [data.table](https://r-datatable.com/)
+
+  > Barrett T, Dowle M, Srinivasan A, Gorecki J, Chirico M, Hocking T, Schwendinger B, Krylov I (2025). data.table: Extension of `data.frame`. R package.
+
+- [ggplot2](https://ggplot2.tidyverse.org/)
+
+  > Wickham H. ggplot2: Elegant Graphics for Data Analysis. Springer-Verlag New York, 2016. ISBN 978-3-319-24277-4.
 
 ## Software packaging/containerisation tools
 

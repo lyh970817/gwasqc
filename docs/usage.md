@@ -34,7 +34,16 @@ An [example samplesheet](../assets/samplesheet.csv) has been provided with the p
 
 ### QC thresholds
 
-The foundation chain applies four thresholds, each a pipeline parameter: `--maf` (variants below this minor allele frequency are dropped), `--geno` (variants whose missing-call rate exceeds this value are dropped), `--mind` (samples whose missing-call rate exceeds this value are dropped) and `--hwe` (variants whose Hardy-Weinberg exact-test p-value is below this value are dropped). Every comparison is strict, as in plink2 itself. The decision lists are published beside the statistics they were derived from, and the QC'd fileset is written once, at the end, from the original fileset and those lists.
+The variant filter chain applies four thresholds, each a pipeline parameter: `--maf` (variants below this minor allele frequency are dropped), `--geno` (variants whose missing-call rate exceeds this value are dropped), `--mind` (samples whose missing-call rate, measured over the variants that survive `--geno`, exceeds this value are dropped) and `--hwe` (variants whose Hardy-Weinberg exact-test p-value is below this value are dropped). Every comparison is strict, as in plink2 itself. The decision lists are published beside the statistics they were derived from, and the QC'd fileset is written once, at the end, from the original fileset and those lists.
+
+### Sample checks
+
+The sample checks run on an LD-pruned subset of the QC'd variants (`--ld_window_size`, `--ld_step_size`, `--ld_r2` are the `--indep-pairwise` settings) and, for the heterozygosity and relatedness reports, outside the long-range LD regions of `--high_ld_regions` and off the sex chromosomes. The sex check splits the chromosome X pseudo-autosomal regions for `--genome_build` and applies the four `--sex_check_*` thresholds through plink2 `--check-sex`; the relatedness table holds the pairs at or above `--king_table_filter`, classifies them on KING's kinship boundaries with `--relatedness_po_ibs0_max` telling parent-offspring from full-sib pairs, and flags individuals `--relatedness_indiv_sd` standard deviations above the cohort mean kinship.
+
+Every sample check publishes its decision list, but only the missingness removals are applied by default, as in the legacy chain. With `--apply_sample_removals`, the sex mismatches and one member of each duplicate/MZ pair are removed from the QC'd fileset as well; the mean-kinship outliers and the heterozygosity report are never applied.
+
+> [!NOTE]
+> The default `--high_ld_regions` asset is GRCh38. A cohort on another build needs both `--genome_build` and a matching region file.
 
 ## Running the pipeline
 

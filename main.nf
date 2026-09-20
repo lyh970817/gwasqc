@@ -15,7 +15,7 @@
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 */
 
-include { GWASQC  } from './workflows/gwasqc'
+include { GWASQC                  } from './workflows/gwasqc'
 include { PIPELINE_INITIALISATION } from './subworkflows/local/utils_nfcore_gwasqc_pipeline'
 include { PIPELINE_COMPLETION     } from './subworkflows/local/utils_nfcore_gwasqc_pipeline'
 /*
@@ -28,7 +28,6 @@ include { PIPELINE_COMPLETION     } from './subworkflows/local/utils_nfcore_gwas
 // WORKFLOW: Run main analysis pipeline depending on type of input
 //
 workflow NFCORE_GWASQC {
-
     take:
     samplesheet // channel: samplesheet read in from --input
 
@@ -37,16 +36,24 @@ workflow NFCORE_GWASQC {
     //
     // WORKFLOW: Run pipeline
     //
-    GWASQC (
+    GWASQC(
         samplesheet,
         params.geno,
         params.mind,
         params.hwe,
+        params.high_ld_regions,
+        params.ld_window_size,
+        params.ld_step_size,
+        params.ld_r2,
+        params.relatedness_indiv_sd,
+        params.relatedness_po_ibs0_max,
+        params.apply_sample_removals,
         params.multiqc_config,
         params.multiqc_logo,
         params.multiqc_methods_description,
         params.outdir,
     )
+
     emit:
     multiqc_report = GWASQC.out.multiqc_report // channel: /path/to/multiqc_report.html
 }
@@ -57,12 +64,10 @@ workflow NFCORE_GWASQC {
 */
 
 workflow {
-
-    main:
     //
     // SUBWORKFLOW: Run initialisation tasks
     //
-    PIPELINE_INITIALISATION (
+    PIPELINE_INITIALISATION(
         params.version,
         params.validate_params,
         params.monochrome_logs,
@@ -71,25 +76,25 @@ workflow {
         params.input,
         params.help,
         params.help_full,
-        params.show_hidden
+        params.show_hidden,
     )
 
     //
     // WORKFLOW: Run main workflow
     //
-    NFCORE_GWASQC (
+    NFCORE_GWASQC(
         PIPELINE_INITIALISATION.out.samplesheet
     )
     //
     // SUBWORKFLOW: Run completion tasks
     //
-    PIPELINE_COMPLETION (
+    PIPELINE_COMPLETION(
         params.email,
         params.email_on_fail,
         params.plaintext_email,
         params.outdir,
         params.monochrome_logs,
-        NFCORE_GWASQC.out.multiqc_report
+        NFCORE_GWASQC.out.multiqc_report,
     )
 }
 
