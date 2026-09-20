@@ -1,0 +1,108 @@
+{
+    "ref_panel - bed - stub": {
+        "content": [
+            {
+                "acount": [
+                    [
+                        {
+                            "id": "ref_panel"
+                        },
+                        "ref_panel.acount:md5,d41d8cd98f00b204e9800998ecf8427e"
+                    ]
+                ],
+                "allele_weights": [
+                    [
+                        {
+                            "id": "ref_panel"
+                        },
+                        "ref_panel.eigenvec.allele:md5,d41d8cd98f00b204e9800998ecf8427e"
+                    ]
+                ],
+                "eigenval": [
+                    [
+                        {
+                            "id": "ref_panel"
+                        },
+                        "ref_panel.eigenval:md5,d41d8cd98f00b204e9800998ecf8427e"
+                    ]
+                ],
+                "eigenvec": [
+                    [
+                        {
+                            "id": "ref_panel"
+                        },
+                        "ref_panel.eigenvec:md5,d41d8cd98f00b204e9800998ecf8427e"
+                    ]
+                ],
+                "log": [
+                    [
+                        {
+                            "id": "ref_panel"
+                        },
+                        "ref_panel.log:md5,d41d8cd98f00b204e9800998ecf8427e"
+                    ]
+                ],
+                "versions_plink2": [
+                    [
+                        "PLINK2_PCAWTS",
+                        "plink2",
+                        "2.0.0-a.6.9LM"
+                    ]
+                ]
+            }
+        ],
+        "timestamp": "2026-09-20T20:21:36.621336165",
+        "meta": {
+            "nf-test": "0.9.5",
+            "nextflow": "26.04.4"
+        }
+    },
+    "ref_panel - bed - extract list and default columns": {
+        "content": [
+            [
+                [
+                    {
+                        "id": "ref_panel_common"
+                    },
+                    "ref_panel_common.acount:md5,619e06d49405890eccea78bbb35b3b76"
+                ]
+            ],
+            [
+                [
+                    "PLINK2_PCAWTS",
+                    "plink2",
+                    "2.0.0-a.6.9LM"
+                ]
+            ]
+        ],
+        "timestamp": "2026-09-20T20:21:23.949112992",
+        "meta": {
+            "nf-test": "0.9.5",
+            "nextflow": "26.04.4"
+        }
+    },
+    "ref_panel - bed - vcols=chrom,ref,alt": {
+        "content": [
+            [
+                [
+                    {
+                        "id": "ref_panel"
+                    },
+                    "ref_panel.acount:md5,b69f00c649d848226b187276bb5e51f3"
+                ]
+            ],
+            [
+                [
+                    "PLINK2_PCAWTS",
+                    "plink2",
+                    "2.0.0-a.6.9LM"
+                ]
+            ]
+        ],
+        "timestamp": "2026-09-20T20:21:12.239429166",
+        "meta": {
+            "nf-test": "0.9.5",
+            "nextflow": "26.04.4"
+        }
+    }
+}

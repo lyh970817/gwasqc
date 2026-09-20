@@ -1,0 +1,170 @@
+nextflow_process {
+
+    name "Test Process PLINK2_SCORE"
+    script "../main.nf"
+    process "PLINK2_SCORE"
+    config "./nextflow.config"
+
+    tag "modules"
+    tag "modules_nfcore"
+    tag "plink2"
+    tag "plink2/score"
+
+    // The weights and allele counts come from a --pca allele-wts run on the gwasqc fixture reference, written
+    // in the documented projection layout (ID column 2, allele column 5, weights from column 6).
+    setup {
+        run("PLINK2_PCAWTS") {
+            script "../../pcawts/main.nf"
+            process {
+                """
+                input[0] = [
+                    [ id:'ref_pca' ],
+                    file(params.pipelines_testdata_base_path + 'data/gwasqc/reference/ref_panel.bed', checkIfExists: true),
+                    file(params.pipelines_testdata_base_path + 'data/gwasqc/reference/ref_panel.bim', checkIfExists: true),
+                    file(params.pipelines_testdata_base_path + 'data/gwasqc/reference/ref_panel.fam', checkIfExists: true),
+                    [],
+                    [],
+                    [],
+                    [],
+                ]
+                input[1] = 4
+                """
+            }
+        }
+    }
+
+    test("ref_panel - bed - projection with read-freq and list-variants") {
+
+        when {
+            params {
+                module_args  = '--score-col-nums 6-9'
+                module_args2 = '2 5 header-read no-mean-imputation variance-standardize list-variants'
+            }
+            process {
+                """
+                input[0] = PLINK2_PCAWTS.out.allele_weights.join(PLINK2_PCAWTS.out.acount).map { _meta, weights, acount ->
+                    [
+                        [ id:'ref_panel' ],
+                        file(params.pipelines_testdata_base_path + 'data/gwasqc/reference/ref_panel.bed', checkIfExists: true),
+                        file(params.pipelines_testdata_base_path + 'data/gwasqc/reference/ref_panel.bim', checkIfExists: true),
+                        file(params.pipelines_testdata_base_path + 'data/gwasqc/reference/ref_panel.fam', checkIfExists: true),
+                        [],
+                        [],
+                        [],
+                        [],
+                        weights,
+                        acount,
+                    ]
+                }
+                """
+            }
+        }
+
+        then {
+            def log = path(process.out.log.get(0).get(1)).text
+            def command = path(process.out.log.get(0).get(1)).parent.resolve('.command.sh').text
+            def sscore = path(process.out.sscore.get(0).get(1)).readLines()
+            assertAll(
+                { assert process.success },
+                { assert command.contains('--read-freq ref_pca.acount') },
+                { assert command.contains('--score ref_pca.eigenvec.allele 2 5 header-read no-mean-imputation variance-standardize list-variants') },
+                { assert command.contains('--score-col-nums 6-9') },
+                // Every weighted variant is scored with the reference's own frequencies, and the scored set
+                // is listed.
+                { assert log.contains('--read-freq: Frequencies for 3632 variants loaded.') },
+                { assert log.contains('--score: 3632 variants processed.') },
+                { assert !log.contains('skipped') },
+                { assert sscore[0].split('\t').toList() == ['#FID', 'IID', 'ALLELE_CT', 'NAMED_ALLELE_DOSAGE_SUM', 'PC1_AVG', 'PC2_AVG', 'PC3_AVG', 'PC4_AVG'] },
+                { assert sscore.size() == 251 },
+                { assert path(process.out.variants.get(0).get(1)).readLines().size() == 3632 },
+                { assert snapshot(process.out.variants, process.out.versions_plink2).match() },
+            )
+        }
+    }
+
+    test("study_eur - bed - mismatched alleles are skipped, no read-freq") {
+
+        when {
+            params {
+                module_args  = '--score-col-nums 6-9'
+                module_args2 = '2 5 header-read no-mean-imputation variance-standardize'
+            }
+            process {
+                """
+                // The study fileset carries 54 strand-flipped variants against the reference; without
+                // harmonisation plink2 skips them with a warning rather than failing.
+                def remove_list = file("${workDir}/study_eur_remove.txt")
+                remove_list.text = 'EUR_S001 EUR_S001\\nEUR_S002 EUR_S002\\n'
+                input[0] = PLINK2_PCAWTS.out.allele_weights.map { _meta, weights ->
+                    [
+                        [ id:'study_eur', ancestry:'EUR' ],
+                        file(params.pipelines_testdata_base_path + 'data/gwasqc/genotypes/study_eur.bed', checkIfExists: true),
+                        file(params.pipelines_testdata_base_path + 'data/gwasqc/genotypes/study_eur.bim', checkIfExists: true),
+                        file(params.pipelines_testdata_base_path + 'data/gwasqc/genotypes/study_eur.fam', checkIfExists: true),
+                        [],
+                        [],
+                        [],
+                        remove_list,
+                        weights,
+                        [],
+                    ]
+                }
+                """
+            }
+        }
+
+        then {
+            def log = path(process.out.log.get(0).get(1)).text
+            def command = path(process.out.log.get(0).get(1)).parent.resolve('.command.sh').text
+            assertAll(
+                { assert process.success },
+                { assert !command.contains('--read-freq') },
+                { assert command.contains('--remove study_eur_remove.txt') },
+                { assert log.contains('--remove: 123 samples remaining.') },
+                // Two weight rows per variant, so the 54 flipped variants are 108 skipped entries.
+                { assert log.contains('--score: 3578 variants processed.') },
+                { assert log.contains('108 entries in ref_pca.eigenvec.allele were skipped due to') },
+                { assert path(process.out.sscore.get(0).get(1)).readLines().size() == 124 },
+                { assert process.out.variants.isEmpty() },
+                { assert snapshot(process.out.versions_plink2).match() },
+            )
+        }
+    }
+
+    test("ref_panel - bed - stub") {
+
+        options "-stub"
+
+        when {
+            params {
+                module_args  = '--score-col-nums 6-9'
+                module_args2 = '2 5 header-read no-mean-imputation variance-standardize list-variants'
+            }
+            process {
+                """
+                input[0] = PLINK2_PCAWTS.out.allele_weights.join(PLINK2_PCAWTS.out.acount).map { _meta, weights, acount ->
+                    [
+                        [ id:'ref_panel' ],
+                        file(params.pipelines_testdata_base_path + 'data/gwasqc/reference/ref_panel.bed', checkIfExists: true),
+                        file(params.pipelines_testdata_base_path + 'data/gwasqc/reference/ref_panel.bim', checkIfExists: true),
+                        file(params.pipelines_testdata_base_path + 'data/gwasqc/reference/ref_panel.fam', checkIfExists: true),
+                        [],
+                        [],
+                        [],
+                        [],
+                        weights,
+                        acount,
+                    ]
+                }
+                """
+            }
+        }
+
+        then {
+            assertAll(
+                { assert process.success },
+                { assert snapshot(sanitizeOutput(process.out)).match() },
+            )
+        }
+    }
+}

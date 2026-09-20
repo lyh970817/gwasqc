@@ -1,0 +1,90 @@
+{
+    "ref_panel - two filesets - stub": {
+        "content": [
+            {
+                "log": [
+                    [
+                        {
+                            "id": "ref_merged"
+                        },
+                        "ref_merged.log:md5,d41d8cd98f00b204e9800998ecf8427e"
+                    ]
+                ],
+                "pgen": [
+                    [
+                        {
+                            "id": "ref_merged"
+                        },
+                        "ref_merged.pgen:md5,d41d8cd98f00b204e9800998ecf8427e",
+                        "ref_merged.pvar:md5,d41d8cd98f00b204e9800998ecf8427e",
+                        "ref_merged.psam:md5,d41d8cd98f00b204e9800998ecf8427e"
+                    ]
+                ],
+                "versions_plink2": [
+                    [
+                        "PLINK2_PMERGELIST",
+                        "plink2",
+                        "2.0.0-a.6.9LM"
+                    ]
+                ]
+            }
+        ],
+        "timestamp": "2026-09-20T20:15:44.562587932",
+        "meta": {
+            "nf-test": "0.9.5",
+            "nextflow": "26.04.4"
+        }
+    },
+    "ref_panel - two filesets - extract and update-alleles": {
+        "content": [
+            [
+                [
+                    {
+                        "id": "ref_merged"
+                    },
+                    "ref_merged.pgen:md5,f484e98d7a0293fad84a96cd37d8bcc6",
+                    "ref_merged.pvar:md5,0973967a2b7500bf87353a2104d3c54d",
+                    "ref_merged.psam:md5,d39c0902c907a2b402c7f20728a8d2f5"
+                ]
+            ],
+            [
+                [
+                    "PLINK2_PMERGELIST",
+                    "plink2",
+                    "2.0.0-a.6.9LM"
+                ]
+            ]
+        ],
+        "timestamp": "2026-09-20T20:18:25.873854703",
+        "meta": {
+            "nf-test": "0.9.5",
+            "nextflow": "26.04.4"
+        }
+    },
+    "ref_panel - single fileset - bfile route": {
+        "content": [
+            [
+                [
+                    {
+                        "id": "ref_single"
+                    },
+                    "ref_single.pgen:md5,7b1d146332cc45d669bfc10d799367a4",
+                    "ref_single.pvar:md5,0973967a2b7500bf87353a2104d3c54d",
+                    "ref_single.psam:md5,3709d5c6a65ae85e01120f4bc6fa84ae"
+                ]
+            ],
+            [
+                [
+                    "PLINK2_PMERGELIST",
+                    "plink2",
+                    "2.0.0-a.6.9LM"
+                ]
+            ]
+        ],
+        "timestamp": "2026-09-20T20:15:21.457749919",
+        "meta": {
+            "nf-test": "0.9.5",
+            "nextflow": "26.04.4"
+        }
+    }
+}

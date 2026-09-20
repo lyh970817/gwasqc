@@ -1,0 +1,198 @@
+nextflow_process {
+
+    name "Test Process PLINK2_PMERGELIST"
+    script "../main.nf"
+    process "PLINK2_PMERGELIST"
+    config "./nextflow.config"
+
+    tag "modules"
+    tag "modules_nfcore"
+    tag "plink2"
+    tag "plink2/pmergelist"
+
+    // Two chromosome halves of the gwasqc fixture reference stand in for a per-chromosome panel; the keep-list
+    // is the reference's common variants, so the extract has work to do on the merged set.
+    setup {
+        run("PLINK2_MAKEBED", alias: "PLINK2_MAKEBED_FIRST") {
+            script "../../makebed/main.nf"
+            process {
+                """
+                input[0] = [
+                    [ id:'ref_first' ],
+                    file(params.pipelines_testdata_base_path + 'data/gwasqc/reference/ref_panel.bed', checkIfExists: true),
+                    file(params.pipelines_testdata_base_path + 'data/gwasqc/reference/ref_panel.bim', checkIfExists: true),
+                    file(params.pipelines_testdata_base_path + 'data/gwasqc/reference/ref_panel.fam', checkIfExists: true),
+                    [],
+                    [],
+                    [],
+                    [],
+                ]
+                """
+            }
+        }
+        run("PLINK2_MAKEBED", alias: "PLINK2_MAKEBED_SECOND") {
+            script "../../makebed/main.nf"
+            process {
+                """
+                input[0] = [
+                    [ id:'ref_second' ],
+                    file(params.pipelines_testdata_base_path + 'data/gwasqc/reference/ref_panel.bed', checkIfExists: true),
+                    file(params.pipelines_testdata_base_path + 'data/gwasqc/reference/ref_panel.bim', checkIfExists: true),
+                    file(params.pipelines_testdata_base_path + 'data/gwasqc/reference/ref_panel.fam', checkIfExists: true),
+                    [],
+                    [],
+                    [],
+                    [],
+                ]
+                """
+            }
+        }
+        run("PLINK2_WRITESNPLIST") {
+            script "../../writesnplist/main.nf"
+            process {
+                """
+                input[0] = [
+                    [ id:'ref_common' ],
+                    file(params.pipelines_testdata_base_path + 'data/gwasqc/reference/ref_panel.bed', checkIfExists: true),
+                    file(params.pipelines_testdata_base_path + 'data/gwasqc/reference/ref_panel.bim', checkIfExists: true),
+                    file(params.pipelines_testdata_base_path + 'data/gwasqc/reference/ref_panel.fam', checkIfExists: true),
+                    [],
+                    [],
+                    [],
+                    [],
+                ]
+                """
+            }
+        }
+    }
+
+    test("ref_panel - two filesets - extract and update-alleles") {
+
+        when {
+            process {
+                """
+                // rs1000514 is C/T in the reference; the update complements it to G/A.
+                def update = file("${workDir}/ref_update.txt")
+                update.text = 'rs1000514\\tC\\tT\\tG\\tA\\n'
+                input[0] = PLINK2_MAKEBED_FIRST.out.bed
+                    .mix(PLINK2_MAKEBED_SECOND.out.bed)
+                    .map { _meta, bed, bim, fam -> [bed, bim, fam] }
+                    .collect(flat: false)
+                    .map { filesets -> [filesets] }
+                    .combine(PLINK2_WRITESNPLIST.out.snplist.map { _meta, snplist -> snplist })
+                    .map { filesets, snplist ->
+                        [
+                            [ id:'ref_merged' ],
+                            filesets.collect { fileset -> fileset[0] },
+                            filesets.collect { fileset -> fileset[1] },
+                            filesets.collect { fileset -> fileset[2] },
+                            snplist,
+                            [],
+                            [],
+                            [],
+                            update,
+                        ]
+                    }
+                """
+            }
+        }
+
+        then {
+            def work_dir = path(process.out.log.get(0).get(1)).parent
+            def command = work_dir.resolve('.command.sh').text
+            def merge_list = work_dir.resolve('ref_merged.mergelist.txt').readLines()
+            def pvar = path(process.out.pgen.get(0).get(2)).readLines().findAll { line -> !line.startsWith('#') }.collect { line -> line.split('\t') }
+            def snplist = path(process.out.log.get(0).get(1)).parent.resolve('ref_common.snplist').readLines()
+            assertAll(
+                { assert process.success },
+                { assert command.contains('--pmerge-list ref_merged.mergelist.txt') },
+                { assert command.contains('--update-alleles ref_update.txt') },
+                { assert merge_list == ['input/ref_first.bed input/ref_first.bim input/ref_first.fam', 'input/ref_second.bed input/ref_second.bim input/ref_second.fam'] },
+                // The extract applies to the merged fileset: exactly the keep-list survives, in position order.
+                { assert pvar.collect { fields -> fields[2] } == snplist },
+                { assert pvar.find { fields -> fields[2] == 'rs1000514' }[3..4] == ['G', 'A'] },
+                { assert path(process.out.pgen.get(0).get(3)).readLines().size() == 251 },
+                { assert path(process.out.log.get(0).get(1)).text.contains('--pmerge-list: 2 filesets specified.') },
+                { assert path(process.out.log.get(0).get(1)).text.contains('--update-alleles: 1 variant updated.') },
+                { assert snapshot(process.out.pgen, process.out.versions_plink2).match() },
+            )
+        }
+    }
+
+    test("ref_panel - single fileset - bfile route") {
+
+        when {
+            process {
+                """
+                def update = file("${workDir}/ref_update_single.txt")
+                update.text = 'rs1000514\\tC\\tT\\tG\\tA\\n'
+                input[0] = PLINK2_WRITESNPLIST.out.snplist.map { _meta, snplist ->
+                    [
+                        [ id:'ref_single' ],
+                        file(params.pipelines_testdata_base_path + 'data/gwasqc/reference/ref_panel.bed', checkIfExists: true),
+                        file(params.pipelines_testdata_base_path + 'data/gwasqc/reference/ref_panel.bim', checkIfExists: true),
+                        file(params.pipelines_testdata_base_path + 'data/gwasqc/reference/ref_panel.fam', checkIfExists: true),
+                        snplist,
+                        [],
+                        [],
+                        [],
+                        update,
+                    ]
+                }
+                """
+            }
+        }
+
+        then {
+            def work_dir = path(process.out.log.get(0).get(1)).parent
+            def command = work_dir.resolve('.command.sh').text
+            def pvar = path(process.out.pgen.get(0).get(2)).readLines().findAll { line -> !line.startsWith('#') }.collect { line -> line.split('\t') }
+            assertAll(
+                { assert process.success },
+                // plink2 refuses a one-fileset merge list, so the fileset is read directly with the same lists.
+                { assert command.contains('--bfile input/ref_panel') },
+                { assert !command.contains('--pmerge-list') },
+                { assert !work_dir.resolve('ref_single.mergelist.txt').exists() },
+                { assert pvar.collect { fields -> fields[2] } == work_dir.resolve('ref_common.snplist').readLines() },
+                { assert pvar.find { fields -> fields[2] == 'rs1000514' }[3..4] == ['G', 'A'] },
+                { assert snapshot(process.out.pgen, process.out.versions_plink2).match() },
+            )
+        }
+    }
+
+    test("ref_panel - two filesets - stub") {
+
+        options "-stub"
+
+        when {
+            process {
+                """
+                input[0] = PLINK2_MAKEBED_FIRST.out.bed
+                    .mix(PLINK2_MAKEBED_SECOND.out.bed)
+                    .map { _meta, bed, bim, fam -> [bed, bim, fam] }
+                    .collect(flat: false)
+                    .map { filesets ->
+                        [
+                            [ id:'ref_merged' ],
+                            filesets.collect { fileset -> fileset[0] },
+                            filesets.collect { fileset -> fileset[1] },
+                            filesets.collect { fileset -> fileset[2] },
+                            [],
+                            [],
+                            [],
+                            [],
+                            [],
+                        ]
+                    }
+                """
+            }
+        }
+
+        then {
+            assertAll(
+                { assert process.success },
+                { assert snapshot(sanitizeOutput(process.out)).match() },
+            )
+        }
+    }
+}

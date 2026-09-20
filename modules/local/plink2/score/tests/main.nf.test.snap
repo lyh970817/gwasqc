@@ -1,0 +1,84 @@
+{
+    "ref_panel - bed - stub": {
+        "content": [
+            {
+                "log": [
+                    [
+                        {
+                            "id": "ref_panel"
+                        },
+                        "ref_panel.log:md5,d41d8cd98f00b204e9800998ecf8427e"
+                    ]
+                ],
+                "sscore": [
+                    [
+                        {
+                            "id": "ref_panel"
+                        },
+                        "ref_panel.sscore:md5,d41d8cd98f00b204e9800998ecf8427e"
+                    ]
+                ],
+                "variants": [
+                    [
+                        {
+                            "id": "ref_panel"
+                        },
+                        "ref_panel.sscore.vars:md5,d41d8cd98f00b204e9800998ecf8427e"
+                    ]
+                ],
+                "versions_plink2": [
+                    [
+                        "PLINK2_SCORE",
+                        "plink2",
+                        "2.0.0-a.6.9LM"
+                    ]
+                ]
+            }
+        ],
+        "timestamp": "2026-09-20T20:21:43.78566425",
+        "meta": {
+            "nf-test": "0.9.5",
+            "nextflow": "26.04.4"
+        }
+    },
+    "study_eur - bed - mismatched alleles are skipped, no read-freq": {
+        "content": [
+            [
+                [
+                    "PLINK2_SCORE",
+                    "plink2",
+                    "2.0.0-a.6.9LM"
+                ]
+            ]
+        ],
+        "timestamp": "2026-09-20T20:21:35.537337891",
+        "meta": {
+            "nf-test": "0.9.5",
+            "nextflow": "26.04.4"
+        }
+    },
+    "ref_panel - bed - projection with read-freq and list-variants": {
+        "content": [
+            [
+                [
+                    {
+                        "id": "ref_panel"
+                    },
+                    "ref_panel.sscore.vars:md5,adbb53a1481c2f5dc7cb86465601fb47"
+                ]
+            ],
+            [
+                [
+                    "PLINK2_SCORE",
+                    "plink2",
+                    "2.0.0-a.6.9LM"
+                ]
+            ]
+        ],
+        "timestamp": "2026-09-20T20:21:20.152450291",
+        "meta": {
+            "nf-test": "0.9.5",
+            "nextflow": "26.04.4"
+        }
+    }
+}

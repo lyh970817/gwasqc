@@ -1,0 +1,160 @@
+nextflow_process {
+
+    name "Test Process PLINK2_PCAWTS"
+    script "../main.nf"
+    process "PLINK2_PCAWTS"
+    config "./nextflow.config"
+
+    tag "modules"
+    tag "modules_nfcore"
+    tag "plink2"
+    tag "plink2/pcawts"
+
+    test("ref_panel - bed - vcols=chrom,ref,alt") {
+
+        when {
+            params {
+                module_args2 = 'vcols=chrom,ref,alt'
+            }
+            process {
+                """
+                input[0] = [
+                    [ id:'ref_panel' ],
+                    file(params.pipelines_testdata_base_path + 'data/gwasqc/reference/ref_panel.bed', checkIfExists: true),
+                    file(params.pipelines_testdata_base_path + 'data/gwasqc/reference/ref_panel.bim', checkIfExists: true),
+                    file(params.pipelines_testdata_base_path + 'data/gwasqc/reference/ref_panel.fam', checkIfExists: true),
+                    [],
+                    [],
+                    [],
+                    [],
+                ]
+                input[1] = 4
+                """
+            }
+        }
+
+        then {
+            def command = path(process.out.log.get(0).get(1)).parent.resolve('.command.sh').text
+            def weights = path(process.out.allele_weights.get(0).get(1)).readLines()
+            def eigenvec = path(process.out.eigenvec.get(0).get(1)).readLines()
+            def eigenval = path(process.out.eigenval.get(0).get(1)).readLines().collect { line -> line as Double }
+            def acount = path(process.out.acount.get(0).get(1)).readLines()
+            assertAll(
+                { assert process.success },
+                { assert command.contains('--bfile ref_panel') },
+                { assert command.contains('--freq counts') },
+                { assert command.contains('--pca 4 allele-wts vcols=chrom,ref,alt') },
+                // The documented projection layout: ID in column 2, the weighted allele in column 5, weights
+                // from column 6; two rows per variant, one per allele.
+                { assert weights[0].split('\t').toList() == ['#CHROM', 'ID', 'REF', 'ALT', 'A1', 'PC1', 'PC2', 'PC3', 'PC4'] },
+                { assert weights.size() == 1 + 2 * 3632 },
+                { assert eigenvec[0].split('\t').toList() == ['#FID', 'IID', 'PC1', 'PC2', 'PC3', 'PC4'] },
+                { assert eigenvec.size() == 251 },
+                // Five super-populations give four structure components; the fifth is not requested.
+                { assert eigenval.size() == 4 },
+                { assert eigenval == eigenval.toSorted().reverse() },
+                { assert eigenval[3] > 5 },
+                // The allele counts cover exactly the variants the components were computed from.
+                { assert acount[0].split('\t').toList() == ['#CHROM', 'ID', 'REF', 'ALT', 'PROVISIONAL_REF?', 'ALT_CTS', 'OBS_CT'] },
+                { assert acount.size() == 1 + 3632 },
+                { assert snapshot(process.out.acount, process.out.versions_plink2).match() },
+            )
+        }
+    }
+
+    test("ref_panel - bed - extract list and default columns") {
+
+        setup {
+            run("PLINK2_WRITESNPLIST") {
+                script "../../writesnplist/main.nf"
+                process {
+                    """
+                    input[0] = [
+                        [ id:'ref_common' ],
+                        file(params.pipelines_testdata_base_path + 'data/gwasqc/reference/ref_panel.bed', checkIfExists: true),
+                        file(params.pipelines_testdata_base_path + 'data/gwasqc/reference/ref_panel.bim', checkIfExists: true),
+                        file(params.pipelines_testdata_base_path + 'data/gwasqc/reference/ref_panel.fam', checkIfExists: true),
+                        [],
+                        [],
+                        [],
+                        [],
+                    ]
+                    """
+                }
+            }
+        }
+
+        when {
+            params {
+                module_args2 = ''
+            }
+            process {
+                """
+                input[0] = PLINK2_WRITESNPLIST.out.snplist.map { _meta, snplist ->
+                    [
+                        [ id:'ref_panel_common' ],
+                        file(params.pipelines_testdata_base_path + 'data/gwasqc/reference/ref_panel.bed', checkIfExists: true),
+                        file(params.pipelines_testdata_base_path + 'data/gwasqc/reference/ref_panel.bim', checkIfExists: true),
+                        file(params.pipelines_testdata_base_path + 'data/gwasqc/reference/ref_panel.fam', checkIfExists: true),
+                        snplist,
+                        [],
+                        [],
+                        [],
+                    ]
+                }
+                input[1] = 2
+                """
+            }
+        }
+
+        then {
+            def work_dir = path(process.out.log.get(0).get(1)).parent
+            def snplist = work_dir.resolve('ref_common.snplist').readLines()
+            def weights = path(process.out.allele_weights.get(0).get(1)).readLines()
+            def acount = path(process.out.acount.get(0).get(1)).readLines()
+            assertAll(
+                { assert process.success },
+                { assert work_dir.resolve('.command.sh').text.contains('--extract ref_common.snplist') },
+                // Without vcols plink2 adds PROVISIONAL_REF?, moving A1 to column 6 and the weights to 7.
+                { assert weights[0].split('\t').toList() == ['#CHROM', 'ID', 'REF', 'ALT', 'PROVISIONAL_REF?', 'A1', 'PC1', 'PC2'] },
+                { assert weights.size() == 1 + 2 * snplist.size() },
+                { assert acount.size() == 1 + snplist.size() },
+                { assert acount.drop(1).collect { line -> line.split('\t')[1] } == snplist },
+                { assert snapshot(process.out.acount, process.out.versions_plink2).match() },
+            )
+        }
+    }
+
+    test("ref_panel - bed - stub") {
+
+        options "-stub"
+
+        when {
+            params {
+                module_args2 = 'vcols=chrom,ref,alt'
+            }
+            process {
+                """
+                input[0] = [
+                    [ id:'ref_panel' ],
+                    file(params.pipelines_testdata_base_path + 'data/gwasqc/reference/ref_panel.bed', checkIfExists: true),
+                    file(params.pipelines_testdata_base_path + 'data/gwasqc/reference/ref_panel.bim', checkIfExists: true),
+                    file(params.pipelines_testdata_base_path + 'data/gwasqc/reference/ref_panel.fam', checkIfExists: true),
+                    [],
+                    [],
+                    [],
+                    [],
+                ]
+                input[1] = 4
+                """
+            }
+        }
+
+        then {
+            assertAll(
+                { assert process.success },
+                { assert snapshot(sanitizeOutput(process.out)).match() },
+            )
+        }
+    }
+}

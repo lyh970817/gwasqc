@@ -1,0 +1,138 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/nf-core/modules/master/modules/meta-schema.json
+name: "plink2_pmergelist"
+description: Merge two or more PLINK 1 or PLINK 2 filesets into one PLINK 2 fileset with `--pmerge-list`, applying any variant and sample filter lists and an optional allele-code update to the merged result; a single fileset is filtered and updated the same way through `--bfile`/`--pfile`
+keywords:
+  - plink2
+  - merge
+  - pmerge
+  - concatenate
+  - pgen
+  - genotype
+tools:
+  - "plink2":
+      description: "Whole genome association analysis toolset designed for large-scale genetic analyses."
+      homepage: "https://www.cog-genomics.org/plink/2.0/"
+      documentation: "https://www.cog-genomics.org/plink/2.0/data#merge"
+      tool_dev_url: "https://github.com/chrchang/plink-ng"
+      licence: ["GPL-3.0-or-later"]
+      identifier: "biotools:plink"
+input:
+  - - meta:
+        type: map
+        description: |
+          Groovy map containing fileset metadata
+          e.g. `[ id:'plink_simulated' ]`
+    - plink_genotype_files:
+        type: file
+        description: One or more PLINK 1 or PLINK 2 binary genotype tables, one per fileset; the three members of each fileset must share one basename, and the filesets are merged in basename order
+        pattern: "*.{bed,pgen}"
+        ontologies: []
+    - plink_variant_files:
+        type: file
+        description: The PLINK 1 extended MAP files or uncompressed PLINK 2 variant information files of the same filesets
+        pattern: "*.{bim,pvar}"
+        ontologies: []
+    - plink_sample_files:
+        type: file
+        description: The PLINK 1 or PLINK 2 sample information files of the same filesets
+        pattern: "*.{fam,psam}"
+        ontologies: []
+    - extract:
+        type: file
+        description: Optional variant ID list file(s) passed to `--extract`; plink2 applies the list to the merged fileset and keeps the union of the listed variants; use `[]` when absent
+        pattern: "*"
+        ontologies: []
+    - exclude:
+        type: file
+        description: Optional variant ID list file(s) passed to `--exclude`; plink2 drops the union of the listed variants from the merged fileset; use `[]` when absent
+        pattern: "*"
+        ontologies: []
+    - keep:
+        type: file
+        description: Optional sample ID list file(s) passed to `--keep`; plink2 keeps the union of the listed samples; use `[]` when absent
+        pattern: "*"
+        ontologies: []
+    - remove:
+        type: file
+        description: Optional sample ID list file(s) passed to `--remove`; plink2 drops the union of the listed samples; use `[]` when absent
+        pattern: "*"
+        ontologies: []
+    - update_alleles:
+        type: file
+        description: Optional allele-code update file passed to `--update-alleles`, five whitespace-separated columns per line (variant ID, the two current allele codes in either order, the two new codes in the same order); a row whose current codes do not match is skipped and logged; use `[]` when absent
+        pattern: "*"
+        ontologies:
+          - edam: "http://edamontology.org/format_2330" # Text
+output:
+  pgen:
+    - - meta:
+          type: map
+          description: |
+            Groovy map containing fileset metadata
+            e.g. `[ id:'plink_simulated' ]`
+      - "${prefix}.pgen":
+          type: file
+          description: PLINK 2 binary genotype table of the merged, filtered and updated fileset
+          pattern: "*.pgen"
+          ontologies: []
+      - "${prefix}.pvar":
+          type: file
+          description: PLINK 2 variant information file of the merged fileset
+          pattern: "*.pvar"
+          ontologies: []
+      - "${prefix}.psam":
+          type: file
+          description: PLINK 2 sample information file of the merged fileset
+          pattern: "*.psam"
+          ontologies: []
+  log:
+    - - meta:
+          type: map
+          description: |
+            Groovy map containing fileset metadata
+            e.g. `[ id:'plink_simulated' ]`
+      - "${prefix}.log":
+          type: file
+          description: PLINK 2 run log
+          pattern: "*.log"
+          ontologies:
+            - edam: "http://edamontology.org/format_2330" # Text
+  versions_plink2:
+    - - "${task.process}":
+          type: string
+          description: The process the version was collected from
+      - "plink2":
+          type: string
+          description: The tool name
+      - "plink2 --version 2>&1 | sed 's/^PLINK v//; s/ 64.*\\$//'":
+          type: eval
+          description: The command used to retrieve the PLINK 2 version
+topics:
+  versions:
+    - - ${task.process}:
+          type: string
+          description: The process the version was collected from
+      - plink2:
+          type: string
+          description: The tool name
+      - "plink2 --version 2>&1 | sed 's/^PLINK v//; s/ 64.*\\$//'":
+          type: eval
+          description: The command used to retrieve the PLINK 2 version
+authors:
+  - "@lyh970817"
+maintainers:
+  - "@lyh970817"
+containers:
+  conda:
+    linux/amd64:
+      lock_file: "modules/nf-core/plink2/pmergelist/.conda-lock/linux_amd64-bd-e6710830a4b7f0c6_1.txt"
+  docker:
+    linux/amd64:
+      build_id: "bd-e6710830a4b7f0c6_1"
+      name: "community.wave.seqera.io/library/plink2:2.0.0a.6.9--e6710830a4b7f0c6"
+      scan_id: "sc-c6b7ce6ed60d6033_1"
+  singularity:
+    linux/amd64:
+      build_id: "bd-038e91647305849b_1"
+      name: "oras://community.wave.seqera.io/library/plink2:2.0.0a.6.9--038e91647305849b"
+      https: "https://community-cr-prod.seqera.io/docker/registry/v2/blobs/sha256/22/22dd30b4bc53d1ba88fcd146a2dd562659c9aaa3f0f1712542fb2b4048b454b7/data"
