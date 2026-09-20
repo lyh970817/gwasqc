@@ -3,7 +3,10 @@ nextflow_pipeline {
     name "Test pipeline"
     script "../main.nf"
     tag "pipeline"
+    tag "default"
 
+    // The profile owns the fixture samplesheet; `outdir` is the only override, so this exercises the same
+    // configuration a researcher invokes directly.
     test("-profile test") {
 
         when {
@@ -17,8 +20,27 @@ nextflow_pipeline {
             def stable_path = getAllFilesFromDir(params.outdir, relative: true, includeDir: true, ignore: ['pipeline_info/*.{html,json,txt}'])
             // stable_content: All files in ${params.outdir}/ with stable content
             def stable_content = getAllFilesFromDir(params.outdir, ignoreFile: 'tests/.nftignore')
-            assert workflow.success
+            def lines = { relative -> new File("${params.outdir}/${relative}").readLines() }
+            def strata = ['study_eur', 'study_afr']
             assertAll(
+                { assert workflow.success },
+                { assert new File("${params.outdir}").list().toList().sort() == ['genotypes', 'multiqc', 'pipeline_info', 'qc'] },
+                // Planted defects from the fixture README, for both strata: the two high-missingness samples and
+                // the borderline one at the 0.05 threshold, the same five gross HWE violations, and one fileset
+                // written once whose sizes reconcile with the lists it was built from.
+                { assert lines('qc/study_eur/missingness/study_eur.mind_remove.txt') == ['EUR_S040 EUR_S040', 'EUR_S041 EUR_S041', 'EUR_S042 EUR_S042'] },
+                { assert lines('qc/study_afr/missingness/study_afr.mind_remove.txt') == ['AFR_S040 AFR_S040', 'AFR_S041 AFR_S041', 'AFR_S042 AFR_S042'] },
+                { assert strata.every { id -> lines("qc/${id}/hwe/${id}.hwe_exclude.txt") == ['rs1667531', 'rs1668208', 'rs1668410', 'rs1668428', 'rs1668730'] } },
+                { assert strata.every { id -> lines("qc/${id}/missingness/${id}.geno_exclude.txt").size() >= 20 } },
+                { assert strata.every { id -> lines("qc/${id}/missingness/${id}.missingness_ladder.tsv").size() == 21 } },
+                {
+                    assert strata.every { id ->
+                        def kept = lines("qc/${id}/maf/${id}.maf.snplist").size() - lines("qc/${id}/missingness/${id}.geno_exclude.txt").size() - lines("qc/${id}/hwe/${id}.hwe_exclude.txt").size()
+                        lines("genotypes/${id}/${id}.qc.bim").size() == kept
+                    }
+                },
+                { assert strata.every { id -> lines("genotypes/${id}/${id}.qc.fam").size() == 125 - lines("qc/${id}/missingness/${id}.mind_remove.txt").size() } },
+                { assert workflow.trace.tasks().findAll { task -> task.name.contains('PLINK2_MAKEBED') }.size() == 2 },
                 { assert snapshot(
                     // pipeline versions.yml file for multiqc from which Nextflow version is removed because we test pipelines on multiple Nextflow versions
                     removeNextflowVersion("$outputDir/pipeline_info/nf_core_gwasqc_software_mqc_versions.yml"),
@@ -26,6 +48,31 @@ nextflow_pipeline {
                     stable_path,
                     // All files with stable contents
                     stable_content
+                ).match() }
+            )
+        }
+    }
+
+    // Stubs are driven from the same scenario with narrowed assertions: the file tree, not the content.
+    test("-profile test - stub") {
+
+        options "-stub"
+
+        when {
+            params {
+                outdir = "$outputDir"
+            }
+        }
+
+        then {
+            def stable_path = getAllFilesFromDir(params.outdir, relative: true, includeDir: true, ignore: ['pipeline_info/*.{html,json,txt}'])
+            assertAll(
+                { assert workflow.success },
+                { assert new File("${params.outdir}").list().toList().sort() == ['genotypes', 'multiqc', 'pipeline_info', 'qc'] },
+                { assert workflow.trace.tasks().findAll { task -> task.name.contains('PLINK2_MAKEBED') }.size() == 2 },
+                { assert snapshot(
+                    removeNextflowVersion("$outputDir/pipeline_info/nf_core_gwasqc_software_mqc_versions.yml"),
+                    stable_path
                 ).match() }
             )
         }
