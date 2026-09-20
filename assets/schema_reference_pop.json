@@ -1,0 +1,37 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "https://raw.githubusercontent.com/nf-core/gwasqc/master/assets/schema_reference_pop.json",
+    "title": "nf-core/gwasqc pipeline - params.reference_pop_data schema",
+    "description": "Schema for the reference population table provided with params.reference_pop_data. One row labels one reference sample with its population and super-population; the super-population labels are the groups the ancestry classifier learns and the labels a samplesheet ancestry column is matched against.",
+    "type": "array",
+    "items": {
+        "type": "object",
+        "properties": {
+            "FID": {
+                "type": "string",
+                "pattern": "^\\S+$",
+                "description": "Family ID of the reference sample, as in its fam file.",
+                "errorMessage": "FID must be provided and cannot contain spaces"
+            },
+            "IID": {
+                "type": "string",
+                "pattern": "^\\S+$",
+                "description": "Individual ID of the reference sample, as in its fam file.",
+                "errorMessage": "IID must be provided and cannot contain spaces"
+            },
+            "pop": {
+                "type": "string",
+                "pattern": "^\\S+$",
+                "description": "Population label of the sample, such as GBR or YRI; carried into the projection table.",
+                "errorMessage": "pop must be provided and cannot contain spaces"
+            },
+            "super_pop": {
+                "type": "string",
+                "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]*$",
+                "description": "Super-population label of the sample, such as EUR or AFR; the group the classifier assigns study samples to and the vocabulary of the samplesheet ancestry column.",
+                "errorMessage": "super_pop must be provided, must start with a letter or digit and may contain only letters, digits, underscores, dots and dashes"
+            }
+        },
+        "required": ["FID", "IID", "pop", "super_pop"]
+    }
+}

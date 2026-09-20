@@ -1,0 +1,46 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "https://raw.githubusercontent.com/nf-core/gwasqc/master/assets/schema_reference.json",
+    "title": "nf-core/gwasqc pipeline - params.reference_panel schema",
+    "description": "Schema for the reference panel samplesheet provided with params.reference_panel. One row declares one PLINK 1 bed/bim/fam fileset of the reference panel: either a single whole-genome fileset or one fileset per chromosome; the rows are merged into one reference per stratum.",
+    "type": "array",
+    "uniqueEntries": ["id"],
+    "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+            "id": {
+                "type": "string",
+                "pattern": "^\\S+$",
+                "description": "Unique identifier of the fileset, such as a chromosome or `all`; used as the prefix of the per-fileset intersect and as the merge order.",
+                "errorMessage": "Reference fileset id must be provided, must be unique across the samplesheet and cannot contain spaces",
+                "meta": ["id"]
+            },
+            "bed": {
+                "type": "string",
+                "format": "file-path",
+                "exists": true,
+                "pattern": "^\\S+\\.bed$",
+                "description": "PLINK 1 binary genotype file of the reference fileset; must share its basename with the bim and fam files.",
+                "errorMessage": "PLINK 1 genotype file must be provided, must exist, cannot contain spaces and must have extension '.bed'"
+            },
+            "bim": {
+                "type": "string",
+                "format": "file-path",
+                "exists": true,
+                "pattern": "^\\S+\\.bim$",
+                "description": "PLINK 1 extended MAP file accompanying the bed file.",
+                "errorMessage": "PLINK 1 variant file must be provided, must exist, cannot contain spaces and must have extension '.bim'"
+            },
+            "fam": {
+                "type": "string",
+                "format": "file-path",
+                "exists": true,
+                "pattern": "^\\S+\\.fam$",
+                "description": "PLINK 1 sample information file accompanying the bed file.",
+                "errorMessage": "PLINK 1 sample file must be provided, must exist, cannot contain spaces and must have extension '.fam'"
+            }
+        },
+        "required": ["id", "bed", "bim", "fam"]
+    }
+}

@@ -76,6 +76,43 @@ Decided 2026-09-20 with the foundation milestone of the legacy port; the tuple c
   removal. Heterozygosity is report-only. Relatedness pairs are classified on KING's inference boundaries; the
   removal list holds one member of each duplicate/MZ pair, the one with the higher missing-call rate over the
   geno-retained variants, and the mean-kinship outlier list is published without ever being applied. Under
-  `apply_sample_removals`, the sex-mismatch and relatedness removal lists join the mind list in the terminal
-  `--remove`; the ancestry keep-lists of the next milestone take the terminal `--keep` slot under the same
-  gate.
+  `apply_sample_removals`, the sex-mismatch, relatedness and ancestry mismatch removal lists join the mind list
+  in the terminal `--remove`; every sample decision is a removal list, so the gate is one union at one slot and
+  `--keep` stays empty.
+
+### Ancestry route
+
+Decided 2026-09-20 with the ancestry milestone of the legacy port.
+
+- **[MUST]** The reference panel is a schema-declared samplesheet of PLINK 1 filesets, one whole-genome fileset
+  or one per chromosome, and its population table a schema-declared TSV of `FID`, `IID`, `pop` and
+  `super_pop`; the `super_pop` labels are the classifier's groups and the vocabulary of the samplesheet
+  `ancestry` column. No reference path or population list is hardcoded anywhere.
+- **[MUST]** The stratum reaches the reference as its QC'd variant set, the filter chain's lists, not as a
+  separate target QC: the legacy `nrow(fam) > 100` switch, which dropped the MAF and HWE filters on small
+  targets, chose which filters to *compute*, and the pipeline has computed them for every stratum before
+  ancestry runs. The study fileset is never materialised; its samples are projected from the original fileset
+  with the pruned list under `--extract` and the mind removals under `--remove`, and no other sample list.
+- **[MUST]** The reference is the one materialised intermediate of the route, and it is materialised twice
+  per stratum: once per fileset restricted to the stratum's variants, because plink2 applies `--extract` only
+  after `--pmerge-list` has concatenated its inputs in full (verified on 2.0.0a.6.9), and once merged,
+  restricted to the harmonised variants and flipped onto the stratum's strand by `--update-alleles`, because
+  pruning, the decomposition and the reference projection all read that fileset. Neither is published. The
+  reference-side filters are the pipeline's `--maf` and `--geno`, never `--hwe`: on a pooled multi-population
+  panel that test measures population structure.
+- **[MUST]** Harmonisation is by variant ID, position and alleles: A/T and C/G pairs are dropped even when the
+  alleles agree, the flip list is exactly what `--update-alleles` applies to the reference, and the study side
+  is never flipped. The long-range LD and non-autosomal exclusion is applied to the merged reference before
+  `--indep-pairwise`, as the legacy ancestry branch ordered the two.
+- **[MUST]** Projection follows the plink2 recipe: `--freq counts` and `--pca allele-wts vcols=chrom,ref,alt`
+  in one run over the pruned reference, then one `--score <weights> 2 5 header-read no-mean-imputation
+  variance-standardize` with `--read-freq` of those counts for the reference samples and for the study samples
+  alike, so that both sets of coordinates share one scale and the study is standardised with the reference's
+  frequencies rather than its own.
+- **[MUST]** Assignment is linear discriminant analysis on the projected reference coordinates with equal group
+  priors; a study sample is assigned when its largest posterior reaches `ancestry_prob_threshold` and is
+  otherwise unassigned, and the optional centroid rule (`ancestry_sd_filter`, off by default) unassigns rather
+  than relabels. Every count the summary reports names the rule that produced it. The mismatch removal list
+  holds the study samples not assigned to the stratum's `ancestry`, the unassigned included, and joins the
+  terminal `--remove` under `apply_sample_removals` when `ancestry_remove_mismatched` holds; a stratum label
+  outside the reference vocabulary is rejected at ingress under that gate and warned about otherwise.

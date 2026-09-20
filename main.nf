@@ -30,6 +30,7 @@ include { PIPELINE_COMPLETION     } from './subworkflows/local/utils_nfcore_gwas
 workflow NFCORE_GWASQC {
     take:
     samplesheet // channel: samplesheet read in from --input
+    reference // channel: reference filesets read in from --reference_panel, empty when ancestry is skipped
 
     main:
 
@@ -38,16 +39,26 @@ workflow NFCORE_GWASQC {
     //
     GWASQC(
         samplesheet,
+        reference,
         params.geno,
         params.mind,
         params.hwe,
         params.high_ld_regions,
+        params.reference_pop_data,
         params.ld_window_size,
         params.ld_step_size,
         params.ld_r2,
         params.relatedness_indiv_sd,
         params.relatedness_po_ibs0_max,
+        params.skip_ancestry,
+        params.ancestry_ld_window_size,
+        params.ancestry_ld_step_size,
+        params.ancestry_ld_r2,
+        params.ancestry_n_pcs,
+        params.ancestry_prob_threshold,
+        params.ancestry_sd_filter,
         params.apply_sample_removals,
+        params.ancestry_remove_mismatched,
         params.multiqc_config,
         params.multiqc_logo,
         params.multiqc_methods_description,
@@ -74,6 +85,11 @@ workflow {
         args,
         params.outdir,
         params.input,
+        params.reference_panel,
+        params.reference_pop_data,
+        params.skip_ancestry,
+        params.apply_sample_removals,
+        params.ancestry_remove_mismatched,
         params.help,
         params.help_full,
         params.show_hidden,
@@ -83,7 +99,8 @@ workflow {
     // WORKFLOW: Run main workflow
     //
     NFCORE_GWASQC(
-        PIPELINE_INITIALISATION.out.samplesheet
+        PIPELINE_INITIALISATION.out.samplesheet,
+        PIPELINE_INITIALISATION.out.reference,
     )
     //
     // SUBWORKFLOW: Run completion tasks

@@ -10,6 +10,7 @@ include { PLINK2_MAKEBED         } from '../modules/local/plink2/makebed/main'
 // SUBWORKFLOW: Local to the pipeline
 include { PLINK_QC_FILTER_LISTS  } from '../subworkflows/local/plink_qc_filter_lists'
 include { PLINK_SAMPLE_QC_LISTS  } from '../subworkflows/local/plink_sample_qc_lists'
+include { ANCESTRY_INFERENCE     } from '../subworkflows/local/ancestry_inference'
 include { methodsDescriptionText } from '../subworkflows/local/utils_nfcore_gwasqc_pipeline'
 
 // MODULE: Installed directly from nf-core/modules
@@ -31,16 +32,26 @@ include { paramsSummaryMap       } from 'plugin/nf-schema'
 workflow GWASQC {
     take:
     ch_samplesheet // channel: [ val(meta), path(bed), path(bim), path(fam) ]
+    ch_reference // channel: [ val(meta), path(bed), path(bim), path(fam) ], one item per reference fileset; empty when ancestry is skipped
     geno // value: maximum per-variant missing-call rate
     mind // value: maximum per-sample missing-call rate
     hwe // value: Hardy-Weinberg exact-test p-value floor
     high_ld_regions // value: path to the BED of long-range LD regions
+    reference_pop_data // value: path to the TSV of FID, IID, pop and super_pop per reference sample, or null when ancestry is skipped
     ld_window_size // value: --indep-pairwise window, in variants
     ld_step_size // value: --indep-pairwise step, in variants
     ld_r2 // value: --indep-pairwise r-squared threshold
     relatedness_indiv_sd // value: standard deviations above the cohort mean kinship that flag an individual
     relatedness_po_ibs0_max // value: IBS0 at or below which a first-degree pair is parent-offspring
-    apply_sample_removals // boolean: apply the sex and relatedness removal lists to the QC'd fileset
+    skip_ancestry // boolean: skip the ancestry inference against the reference panel
+    ancestry_ld_window_size // value: --indep-pairwise window on the merged reference, in variants
+    ancestry_ld_step_size // value: --indep-pairwise step on the merged reference, in variants
+    ancestry_ld_r2 // value: --indep-pairwise r-squared threshold on the merged reference
+    ancestry_n_pcs // value: number of reference principal components computed and projected
+    ancestry_prob_threshold // value: posterior probability at or above which a study sample is assigned
+    ancestry_sd_filter // value: standard deviations of the centroid rule, or null when the rule is off
+    apply_sample_removals // boolean: apply the sex, relatedness and ancestry removal lists to the QC'd fileset
+    ancestry_remove_mismatched // boolean: under apply_sample_removals, also remove the samples not assigned to the stratum's ancestry
     multiqc_config
     multiqc_logo
     multiqc_methods_description
@@ -88,19 +99,46 @@ workflow GWASQC {
     )
 
     //
+    // SUBWORKFLOW: Ancestry inference against the reference panel, per stratum
+    //
+    // The stratum reaches the reference as its QC'd variant set, the filter chain's lists, and its samples
+    // are projected with the mind removals applied; the mismatch removal list is the one product the
+    // terminal materialisation may consume. When the stage is skipped every stratum carries an empty slot.
+    def ch_ancestry_remove_by_id = ch_samplesheet.map { meta, _bed, _bim, _fam -> [meta.id, []] }
+    if (!skip_ancestry) {
+        ANCESTRY_INFERENCE(
+            ch_filter_lists_by_id.map { _id, meta, bed, bim, fam, maf_snplist, geno_exclude, hwe_exclude, mind_remove ->
+                [meta, bed, bim, fam, maf_snplist, [geno_exclude, hwe_exclude], mind_remove]
+            },
+            ch_reference,
+            file(reference_pop_data),
+            file(high_ld_regions),
+            ancestry_ld_window_size,
+            ancestry_ld_step_size,
+            ancestry_ld_r2,
+            ancestry_n_pcs,
+            ancestry_prob_threshold,
+            ancestry_sd_filter ?: 0,
+        )
+        ch_ancestry_remove_by_id = ANCESTRY_INFERENCE.out.mismatch_remove.map { meta, mismatch_remove -> [meta.id, mismatch_remove] }
+    }
+
+    //
     // MODULE: Materialise the QC'd fileset exactly once
     //
     // Variant lists: `--extract` keeps the MAF keep-list and `--exclude` drops the union of the geno and HWE
     // exclusions, so a variant survives only when it passed all three. Sample lists: `--remove` drops the mind
     // removals, which the legacy chain applied unconditionally; the sex-mismatch and relatedness removals join
-    // the `--remove` set only under `apply_sample_removals`, as the legacy chain never applied them. The
-    // ancestry keep-lists of the next milestone take the `--keep` slot, which stays empty here, under the
-    // same gate.
+    // the `--remove` set only under `apply_sample_removals`, as the legacy chain never applied them, and the
+    // ancestry mismatch removals join it under the same gate when `ancestry_remove_mismatched` holds. Every
+    // sample decision is a removal list, so the gate is one union at one slot and `--keep` stays empty.
     def ch_makebed_inputs = ch_filter_lists_by_id
         .join(PLINK_SAMPLE_QC_LISTS.out.sex_remove.map { meta, sex_remove -> [meta.id, sex_remove] }, by: 0, failOnDuplicate: true, failOnMismatch: true)
         .join(PLINK_SAMPLE_QC_LISTS.out.relatedness_remove.map { meta, relatedness_remove -> [meta.id, relatedness_remove] }, by: 0, failOnDuplicate: true, failOnMismatch: true)
-        .map { _id, meta, bed, bim, fam, maf_snplist, geno_exclude, hwe_exclude, mind_remove, sex_remove, relatedness_remove ->
-            def remove = apply_sample_removals ? [mind_remove, sex_remove, relatedness_remove] : mind_remove
+        .join(ch_ancestry_remove_by_id, by: 0, failOnDuplicate: true, failOnMismatch: true)
+        .map { _id, meta, bed, bim, fam, maf_snplist, geno_exclude, hwe_exclude, mind_remove, sex_remove, relatedness_remove, ancestry_remove ->
+            def gated = [sex_remove, relatedness_remove] + (ancestry_remove_mismatched && ancestry_remove ? [ancestry_remove] : [])
+            def remove = apply_sample_removals ? [mind_remove] + gated : mind_remove
             [meta, bed, bim, fam, maf_snplist, [geno_exclude, hwe_exclude], [], remove]
         }
 

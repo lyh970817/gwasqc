@@ -1,0 +1,173 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/nf-core/modules/master/subworkflows/yaml-schema.json
+name: ancestry_inference
+description: Infer the ancestry of every sample of one PLINK fileset per stratum against a labelled reference panel, from the intersect and strand harmonisation of the reference filesets through their merge, pruning and decomposition to the projection of reference and study samples and the assignment of each study sample to a super-population
+keywords:
+  - plink
+  - ancestry
+  - principal components
+  - reference panel
+  - population structure
+  - quality control
+components:
+  - plink2/makebed
+  - ancestry_harmonise
+  - plink2/pmergelist
+  - highld_exclude
+  - plink2/indeppairwise
+  - plink2/pcawts
+  - plink2/score
+  - ancestry_assign
+input:
+  - ch_genotypes:
+      description: One PLINK 1 fileset per stratum with the filter chain's lists; extract is the keep-list, exclude the list of exclusion lists and remove the mind removal list; meta.id must be unique across strata and meta.ancestry names the stratum's own super-population
+      structure: [map meta, path bed, path bim, path fam, path extract, list exclude, path remove]
+      pattern: "*.{bed,bim,fam,snplist,txt}"
+      ontologies: []
+  - ch_reference:
+      description: One PLINK 1 fileset per reference row, a whole-genome fileset or one per chromosome; meta.id must be unique across rows and the three members of each fileset must share one basename
+      structure: [map meta, path bed, path bim, path fam]
+      pattern: "*.{bed,bim,fam}"
+      ontologies: []
+  - reference_pop_data:
+      description: Tab-separated table with FID, IID, pop and super_pop for every reference sample
+      structure: path reference_pop_data
+  - high_ld_regions:
+      description: BED of long-range LD regions, 0-based half-open, bare chromosome codes
+      structure: path high_ld_regions
+  - ld_window_size:
+      description: Window of --indep-pairwise on the merged reference, in variants
+      structure: integer ld_window_size
+  - ld_step_size:
+      description: Step of --indep-pairwise, in variants
+      structure: integer ld_step_size
+  - ld_r2:
+      description: r-squared threshold of --indep-pairwise
+      structure: number ld_r2
+  - n_pcs:
+      description: Number of principal components computed on the reference and projected
+      structure: integer n_pcs
+  - prob_threshold:
+      description: Posterior probability at or above which a study sample is assigned to its most probable super-population
+      structure: number prob_threshold
+  - sd_filter:
+      description: Standard deviations of the centroid rule that unassigns an assigned sample lying too far from its group on any component; 0 switches the rule off
+      structure: number sd_filter
+output:
+  - harmonisation:
+      type: file
+      description: One row per reference variant of the intersect with its class
+      structure: [map meta, path harmonisation]
+      pattern: "*.ancestry_harmonisation.tsv"
+      ontologies: []
+  - harmonisation_summary:
+      type: file
+      description: Variant counts per harmonisation class
+      structure: [map meta, path harmonisation_summary]
+      pattern: "*.ancestry_harmonisation_summary.tsv"
+      ontologies: []
+  - harmonised_snplist:
+      type: file
+      description: The retained reference variants, for plink2 --extract
+      structure: [map meta, path snplist]
+      pattern: "*.ancestry_harmonised.snplist"
+      ontologies: []
+  - flip_update:
+      type: file
+      description: The allele update that flips the reference onto the stratum's strand, for plink2 --update-alleles
+      structure: [map meta, path flip_update]
+      pattern: "*.ancestry_flip_update.txt"
+      ontologies: []
+  - reference_genotypes:
+      type: file
+      description: The merged reference fileset restricted to the harmonised variants and flipped onto the stratum's strand, the one materialised intermediate of the route
+      structure: [map meta, path pgen, path pvar, path psam]
+      pattern: "*.{pgen,pvar,psam}"
+      ontologies: []
+  - highld_exclude:
+      type: file
+      description: Harmonised variants inside a long-range LD region or off the autosomes, excluded before pruning
+      structure: [map meta, path highld_exclude]
+      pattern: "*.highld_exclude.txt"
+      ontologies: []
+  - prune_in:
+      type: file
+      description: Variants retained by LD pruning of the merged reference, the set the components are computed and projected on
+      structure: [map meta, path prune_in]
+      pattern: "*.prune.in"
+      ontologies: []
+  - allele_weights:
+      type: file
+      description: plink2 --pca allele-wts per-allele weights of the pruned reference
+      structure: [map meta, path allele_weights]
+      pattern: "*.eigenvec.allele"
+      ontologies: []
+  - eigenval:
+      type: file
+      description: Eigenvalues of the reference components
+      structure: [map meta, path eigenval]
+      pattern: "*.eigenval"
+      ontologies: []
+  - reference_scores:
+      type: file
+      description: plink2 --score projection of the reference samples onto the components
+      structure: [map meta, path sscore]
+      pattern: "*.sscore"
+      ontologies: []
+  - reference_variants:
+      type: file
+      description: The variants the reference projection used, present when list-variants is configured on the score run
+      structure: [map meta, path sscore_vars]
+      pattern: "*.sscore.vars"
+      ontologies: []
+  - study_scores:
+      type: file
+      description: plink2 --score projection of the study samples with the same weights, reference allele counts and modifiers
+      structure: [map meta, path sscore]
+      pattern: "*.sscore"
+      ontologies: []
+  - study_variants:
+      type: file
+      description: The variants the study projection used, present when list-variants is configured on the score run
+      structure: [map meta, path sscore_vars]
+      pattern: "*.sscore.vars"
+      ontologies: []
+  - assignment:
+      type: file
+      description: Per study sample, the assigned super-population, its status, the largest posterior, the centroid distance and every posterior
+      structure: [map meta, path assignment]
+      pattern: "*.ancestry_assignment.tsv"
+      ontologies: []
+  - summary:
+      type: file
+      description: Reference and study sample counts per group, each row stating the rule that produced its count
+      structure: [map meta, path summary]
+      pattern: "*.ancestry_summary.tsv"
+      ontologies: []
+  - model:
+      type: file
+      description: Leave-one-out confusion of the classifier on the reference samples
+      structure: [map meta, path model]
+      pattern: "*.ancestry_model.tsv"
+      ontologies: []
+  - keep_lists:
+      type: file
+      description: One keep-list per super-population with the study samples assigned to it, as FID IID pairs
+      structure: [map meta, list keep]
+      pattern: "*.ancestry_*.keep"
+      ontologies: []
+  - mismatch_remove:
+      type: file
+      description: The study samples not assigned to the stratum's own super-population, the unassigned included, as FID IID pairs for plink2 --remove
+      structure: [map meta, path mismatch_remove]
+      pattern: "*.ancestry_mismatch_remove.txt"
+      ontologies: []
+  - pca_data:
+      type: file
+      description: Reference and study coordinates with their labels, the data behind the projection plots
+      structure: [map meta, path pca_data]
+      pattern: "*.ancestry_pca.tsv"
+      ontologies: []
+authors:
+  - "@lyh970817"
+maintainers:
+  - "@lyh970817"

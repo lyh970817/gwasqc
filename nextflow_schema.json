@@ -64,9 +64,31 @@
                     "mimetype": "text/plain",
                     "pattern": "^\\S+\\.bed$",
                     "default": "${projectDir}/assets/high_ld_regions_b38.bed",
-                    "description": "BED file of long-range linkage-disequilibrium regions whose pruned variants are excluded, together with every non-autosomal variant, from the heterozygosity and relatedness reports.",
+                    "description": "BED file of long-range linkage-disequilibrium regions whose pruned variants are excluded, together with every non-autosomal variant, from the heterozygosity and relatedness reports and from the reference panel before its pruning.",
                     "help_text": "Zero-based, half-open intervals with bare chromosome codes (1-22). The default asset is derived from the legacy `highLDregions4bim_b38.awk` rules; see the file header for the derivation.",
                     "fa_icon": "fas fa-map"
+                },
+                "reference_panel": {
+                    "type": "string",
+                    "format": "file-path",
+                    "exists": true,
+                    "schema": "assets/schema_reference.json",
+                    "mimetype": "text/csv",
+                    "pattern": "^\\S+\\.(csv|tsv)$",
+                    "description": "Path to the samplesheet declaring the PLINK 1 filesets of the ancestry reference panel, one row per fileset; required unless `--skip_ancestry` is set.",
+                    "help_text": "A comma- or tab-separated file with the columns `id,bed,bim,fam` and a header row. A whole-genome panel is one row; the legacy per-chromosome 1000 Genomes layout is one row per chromosome. Every fileset is intersected with each stratum's QC'd variants and the intersects are merged, so the rows must share their samples and carry disjoint variants. See [usage docs](https://nf-co.re/gwasqc/usage#reference-panel).",
+                    "fa_icon": "fas fa-file-csv"
+                },
+                "reference_pop_data": {
+                    "type": "string",
+                    "format": "file-path",
+                    "exists": true,
+                    "schema": "assets/schema_reference_pop.json",
+                    "mimetype": "text/tab-separated-values",
+                    "pattern": "^\\S+\\.tsv$",
+                    "description": "Path to the tab-separated table labelling every reference sample with the columns `FID`, `IID`, `pop` and `super_pop`; required unless `--skip_ancestry` is set.",
+                    "help_text": "The `super_pop` labels are the groups the ancestry classifier learns and the vocabulary a samplesheet `ancestry` label is matched against; every sample of the reference panel must be labelled.",
+                    "fa_icon": "fas fa-users"
                 }
             }
         },
@@ -205,8 +227,74 @@
                 "apply_sample_removals": {
                     "type": "boolean",
                     "default": false,
-                    "description": "Apply the sex-mismatch and duplicate/MZ relatedness removal lists, which the legacy chain only reported, when writing the QC'd fileset; the missingness removals are always applied.",
+                    "description": "Apply the sex-mismatch, duplicate/MZ relatedness and, unless `--ancestry_remove_mismatched` is off, ancestry mismatch removal lists, which the legacy chain only reported, when writing the QC'd fileset; the missingness removals are always applied.",
                     "help_text": "The lists are published either way. The mean-kinship outlier list is published but never applied.",
+                    "fa_icon": "fas fa-user-slash"
+                }
+            }
+        },
+        "ancestry_options": {
+            "title": "Ancestry options",
+            "type": "object",
+            "fa_icon": "fas fa-globe",
+            "description": "Inference of every sample's super-population against the reference panel: pruning and decomposition of the harmonised reference, projection of both sample sets, and the assignment rule.",
+            "properties": {
+                "skip_ancestry": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Skip the ancestry inference; `--reference_panel` and `--reference_pop_data` are then not needed.",
+                    "fa_icon": "fas fa-forward"
+                },
+                "ancestry_ld_window_size": {
+                    "type": "integer",
+                    "default": 1000,
+                    "minimum": 2,
+                    "description": "Window size of `--indep-pairwise` on the merged reference, in variants.",
+                    "fa_icon": "fas fa-arrows-alt-h"
+                },
+                "ancestry_ld_step_size": {
+                    "type": "integer",
+                    "default": 5,
+                    "minimum": 1,
+                    "description": "Number of variants the reference pruning window shifts at each step.",
+                    "fa_icon": "fas fa-step-forward"
+                },
+                "ancestry_ld_r2": {
+                    "type": "number",
+                    "default": 0.2,
+                    "minimum": 0,
+                    "maximum": 1,
+                    "description": "Pairwise r-squared above which one variant of a reference pair is pruned.",
+                    "fa_icon": "fas fa-percentage"
+                },
+                "ancestry_n_pcs": {
+                    "type": "integer",
+                    "default": 10,
+                    "minimum": 4,
+                    "description": "Number of reference principal components computed with `--pca allele-wts` and projected onto both sample sets; the classifier uses all of them and the plots the first four.",
+                    "help_text": "plink2 refuses `--pca` on fewer than 50 reference samples, and recommends its `approx` modifier, available through `ext.args` of `PLINK2_PCAWTS`, on panels far beyond 5000 samples.",
+                    "fa_icon": "fas fa-project-diagram"
+                },
+                "ancestry_prob_threshold": {
+                    "type": "number",
+                    "default": 0.5,
+                    "minimum": 0,
+                    "maximum": 1,
+                    "description": "Posterior probability at or above which a study sample is assigned to its most probable super-population; below it the sample is unassigned.",
+                    "fa_icon": "fas fa-percentage"
+                },
+                "ancestry_sd_filter": {
+                    "type": "number",
+                    "exclusiveMinimum": 0,
+                    "description": "When set, an assigned study sample whose coordinate on any component lies more than this many standard deviations from its super-population's reference mean becomes unassigned; off by default.",
+                    "help_text": "The legacy script reported this rule at 3 standard deviations while leaving it commented out. Here the summary states which rule produced every count.",
+                    "fa_icon": "fas fa-ruler-combined"
+                },
+                "ancestry_remove_mismatched": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Under `--apply_sample_removals`, also remove the study samples not assigned to their stratum's `ancestry` label, the unassigned included; the list is published either way.",
+                    "help_text": "With this on, every stratum's `ancestry` label must be one of the `super_pop` labels of `--reference_pop_data`, or the run stops before anything is computed.",
                     "fa_icon": "fas fa-user-slash"
                 }
             }
@@ -377,6 +465,9 @@
         },
         {
             "$ref": "#/$defs/sample_qc_options"
+        },
+        {
+            "$ref": "#/$defs/ancestry_options"
         },
         {
             "$ref": "#/$defs/institutional_config_options"

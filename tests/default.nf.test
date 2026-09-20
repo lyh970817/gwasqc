@@ -27,10 +27,28 @@ nextflow_pipeline {
                 lines("qc/${id}/relatedness/${id}.relatedness_pairs.tsv").drop(1).collect { line -> line.split('\t') }.collectEntries { fields -> [([fields[1], fields[3]].sort().join('/')): fields[9]] }
             }
             def mhc_block = ['rs1691803', 'rs1692225', 'rs1692986', 'rs1693180', 'rs1693565', 'rs1694305', 'rs1695168', 'rs1695930', 'rs1696394', 'rs1696687', 'rs1697113', 'rs1697536', 'rs1697583', 'rs1698450', 'rs1699148', 'rs1699176', 'rs1699973', 'rs1700763', 'rs1701059', 'rs1701798', 'rs1701848', 'rs1702222', 'rs1702918', 'rs1703899', 'rs1704251', 'rs1704269', 'rs1704945', 'rs1705262', 'rs1705437', 'rs1706350', 'rs1706917', 'rs1707913', 'rs1708405', 'rs1708542', 'rs1709245', 'rs1709713', 'rs1710071', 'rs1710602']
+            def flipped = ['rs1019157', 'rs1084781', 'rs1090252', 'rs1097655', 'rs1145782', 'rs1159607', 'rs1163718', 'rs1273151', 'rs1360139', 'rs1389123', 'rs1436911', 'rs1452101', 'rs1467337', 'rs1549826', 'rs1578801', 'rs1677459', 'rs1680161', 'rs1722029', 'rs1723746', 'rs1762883', 'rs1776206', 'rs1803389', 'rs1862912', 'rs1916892', 'rs1941077', 'rs1988230', 'rs1996775', 'rs2027882', 'rs2109777', 'rs2130274', 'rs2144516', 'rs2150265', 'rs2164106', 'rs2169905', 'rs2281679', 'rs2294093', 'rs2309898', 'rs2314061', 'rs2347169', 'rs2362593', 'rs2389678', 'rs2439958', 'rs2469140', 'rs2504154', 'rs2515327', 'rs2516136', 'rs2517896', 'rs2524188', 'rs2526561', 'rs2637925', 'rs2675388', 'rs2729284', 'rs2781271', 'rs2789194']
+            def ambiguous = ['rs1008974', 'rs1111502', 'rs1117409', 'rs1212885', 'rs1239733', 'rs1301534', 'rs1323806', 'rs1325713', 'rs1462042', 'rs1515061', 'rs1532976', 'rs1540256', 'rs1617881', 'rs1630597', 'rs1648278', 'rs1658669', 'rs1676231', 'rs1678804', 'rs1685698', 'rs1719304', 'rs1801805', 'rs1810040', 'rs1880092', 'rs2032830', 'rs2036157', 'rs2115243', 'rs2140434', 'rs2173298', 'rs2239178', 'rs2293247', 'rs2339427', 'rs2417072', 'rs2489817', 'rs2586694', 'rs2670145', 'rs2679890', 'rs2693456', 'rs2696100', 'rs2779816', 'rs2814949']
+            def planted = [study_eur: [EUR_S050: 'EAS', EUR_S051: 'AFR', EUR_S052: 'AMR'], study_afr: [AFR_S050: 'EUR', AFR_S051: 'CSA', AFR_S052: 'EAS']]
+            def harmonisation = { id -> lines("qc/${id}/ancestry/${id}.ancestry_harmonisation.tsv").drop(1).collect { line -> line.split('\t', -1) }.collectEntries { fields -> [(fields[0]): fields[7]] } }
+            def assigned = { id -> lines("qc/${id}/ancestry/${id}.ancestry_assignment.tsv").drop(1).collect { line -> line.split('\t') }.collectEntries { fields -> [(fields[1]): fields[2]] } }
             assertAll(
                 { assert workflow.success },
                 { assert new File("${params.outdir}").list().toList().sort() == ['genotypes', 'multiqc', 'pipeline_info', 'qc'] },
-                { assert strata.every { id -> new File("${params.outdir}/qc/${id}").list().toList().sort() == ['heterozygosity', 'hwe', 'ld_pruning', 'maf', 'missingness', 'relatedness', 'sex_check'] } },
+                { assert strata.every { id -> new File("${params.outdir}/qc/${id}").list().toList().sort() == ['ancestry', 'heterozygosity', 'hwe', 'ld_pruning', 'maf', 'missingness', 'relatedness', 'sex_check'] } },
+                // Ancestry: the documented strand flips are the flip list and the ambiguous pairs are dropped,
+                // within the intersect of the reference with the QC'd variant set; the reference classifies
+                // itself perfectly leave-one-out; exactly the planted outliers leave the stratum's label, each to
+                // the super-population it was drawn from, and every other projected sample keeps it.
+                { assert strata.every { id -> harmonisation(id).findAll { _variant, group -> group == 'flip' }.keySet().sort() == flipped.intersect(harmonisation(id).keySet()).sort() } },
+                { assert strata.every { id -> harmonisation(id).findAll { _variant, group -> group == 'ambiguous' }.keySet().sort() == ambiguous.intersect(harmonisation(id).keySet()).sort() } },
+                { assert strata.every { id -> lines("qc/${id}/ancestry/${id}.ancestry_harmonised.snplist").intersect(ambiguous).isEmpty() } },
+                { assert strata.every { id -> lines("qc/${id}/ancestry/${id}.ancestry_flip_update.txt").collect { line -> line.split('\t')[0] }.sort() == flipped.intersect(harmonisation(id).keySet()).sort() } },
+                { assert strata.every { id -> lines("qc/${id}/ancestry/${id}.ancestry_model.tsv").drop(1).collect { line -> line.split('\t') }.findAll { fields -> fields[0] == fields[1] }.sum { fields -> fields[2] as Integer } == 250 } },
+                { assert strata.every { id -> assigned(id).findAll { _iid, group -> group != prefix(id) } == planted[id] } },
+                { assert strata.every { id -> assigned(id).size() == 125 - lines("qc/${id}/missingness/${id}.mind_remove.txt").size() } },
+                { assert strata.every { id -> lines("qc/${id}/ancestry/${id}.ancestry_mismatch_remove.txt") == planted[id].keySet().collect { iid -> "${iid} ${iid}".toString() } } },
+                { assert strata.every { id -> lines("qc/${id}/ancestry/${id}.ancestry_${prefix(id)}.keep").size() == assigned(id).size() - 3 } },
                 // Planted defects from the fixture README, for both strata. Missingness in the legacy order: the
                 // two high-missingness samples fall, and the borderline one survives because its rate over the
                 // geno-retained variants drops below the threshold; the twenty planted variants fall at geno.
@@ -60,7 +78,7 @@ nextflow_pipeline {
                     }
                 },
                 { assert strata.every { id -> lines("genotypes/${id}/${id}.qc.fam").size() == 125 - lines("qc/${id}/missingness/${id}.mind_remove.txt").size() } },
-                { assert workflow.trace.tasks().findAll { task -> task.name.contains('PLINK2_MAKEBED') }.size() == 2 },
+                { assert workflow.trace.tasks().findAll { task -> task.name.contains('GWASQC:PLINK2_MAKEBED (') }.size() == 2 },
                 { assert snapshot(
                     // pipeline versions.yml file for multiqc from which Nextflow version is removed because we test pipelines on multiple Nextflow versions
                     removeNextflowVersion("$outputDir/pipeline_info/nf_core_gwasqc_software_mqc_versions.yml"),
@@ -89,7 +107,7 @@ nextflow_pipeline {
             assertAll(
                 { assert workflow.success },
                 { assert new File("${params.outdir}").list().toList().sort() == ['genotypes', 'multiqc', 'pipeline_info', 'qc'] },
-                { assert workflow.trace.tasks().findAll { task -> task.name.contains('PLINK2_MAKEBED') }.size() == 2 },
+                { assert workflow.trace.tasks().findAll { task -> task.name.contains('GWASQC:PLINK2_MAKEBED (') }.size() == 2 },
                 { assert snapshot(
                     removeNextflowVersion("$outputDir/pipeline_info/nf_core_gwasqc_software_mqc_versions.yml"),
                     stable_path

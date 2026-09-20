@@ -15,6 +15,7 @@ The pipeline is built using [Nextflow](https://www.nextflow.io/) and processes d
 - [Sex check](#sex-check) - The plink2 sex check, the mismatch table and removal list, and the F histogram
 - [Heterozygosity](#heterozygosity) - The heterozygosity report and its plots, report-only
 - [Relatedness](#relatedness) - The KING kinship table, the classified pairs, the duplicate removal list and the mean-kinship outliers
+- [Ancestry](#ancestry) - The harmonisation of the reference panel, the projections, the assignment of every study sample to a super-population, the keep-lists and the mismatch removal list
 - [QC'd genotypes](#qcd-genotypes) - The filtered PLINK 1 fileset of each stratum, written once from the original fileset and the decision lists
 - [MultiQC](#multiqc) - Aggregate report describing results and QC from the whole pipeline
 - [Pipeline information](#pipeline-information) - Report metrics generated during the workflow execution
@@ -103,6 +104,32 @@ Heterozygosity is report-only: no threshold is applied and no sample is listed.
 
 </details>
 
+### Ancestry
+
+<details markdown="1">
+<summary>Output files</summary>
+
+- `qc/<id>/ancestry/`
+  - `<id>.ancestry_harmonisation.tsv`: One row per reference variant of the intersect with the stratum's QC'd variants: chromosome, position, the reference and stratum alleles and its class (`match`, `swap`, `flip`, `ambiguous`, `allele_mismatch`, `non_snp`, `position_mismatch`, `absent_from_target`, `duplicate_id`).
+  - `<id>.ancestry_harmonisation_summary.tsv`: Variant count per class and whether the class is retained.
+  - `<id>.ancestry_harmonised.snplist`: The retained variants (`match`, `swap`, `flip`), one ID per line.
+  - `<id>.ancestry_flip_update.txt`: The strand-flipped variants with their reference alleles and the complements applied to the reference through `--update-alleles`; empty when nothing flips.
+  - `<id>.ancestry.highld_exclude.txt`: Harmonised variants inside a long-range LD region of `--high_ld_regions` or off the autosomes, excluded from the reference before pruning.
+  - `<id>.ancestry.prune.in`: Variants retained by [plink2 `--indep-pairwise`](https://www.cog-genomics.org/plink/2.0/ld#indep) over the merged reference; the components are computed and projected on exactly this set.
+  - `<id>.ancestry.eigenval`: Eigenvalues of the reference components, one per line.
+  - `<id>.ancestry_reference.sscore`, `<id>.ancestry_study.sscore`: [plink2 `--score`](https://www.cog-genomics.org/plink/2.0/score) projections of the reference and study samples onto the components, one `PC<k>_AVG` column per component; both runs use the same weights, the reference allele counts and the same modifiers, so the two tables share one scale.
+  - `<id>.ancestry_model.tsv`: Leave-one-out confusion of the classifier on the reference samples.
+  - `<id>.ancestry_assignment.tsv`: Per study sample, `ASSIGNED` (a super-population or `unassigned`), `STATUS` (`assigned`, `below_threshold`, `outside_sd`), `MAX_PROB`, `MAX_ABS_Z` (the largest per-component distance from the nearest group's reference mean, in that group's standard deviations) and `PROB_<group>` for every super-population.
+  - `<id>.ancestry_summary.tsv`: Reference and study sample counts per group, then the unassigned study samples; every row states the rule that produced its count.
+  - `<id>.ancestry_<group>.keep`: The study samples assigned to each super-population as `FID IID` pairs, one file per label of `--reference_pop_data`.
+  - `<id>.ancestry_mismatch_remove.txt`: The study samples not assigned to the stratum's `ancestry` label, the unassigned included, as `FID IID` pairs; applied to the QC'd fileset only under `--apply_sample_removals` with `--ancestry_remove_mismatched`.
+  - `<id>.ancestry_pca.tsv`: Reference and study coordinates with `SOURCE`, `POP`, `SUPER_POP` and `ASSIGNED`, the data behind the plots.
+  - `<id>.ancestry_pc1_pc2.pdf`, `<id>.ancestry_pc1_pc2.png`, `<id>.ancestry_pc3_pc4.pdf`, `<id>.ancestry_pc3_pc4.png`: The projections, reference populations in their own colours and the study samples drawn above them in orange with a dark outline.
+
+</details>
+
+Each reference fileset of `--reference_panel` is restricted to the stratum's QC'd variants, the intersect is harmonised onto the stratum's strand (A/T and C/G pairs are dropped, flips are applied to the reference), the filesets are merged into one reference per stratum, and that reference is pruned outside the long-range LD regions and decomposed with [plink2 `--pca allele-wts`](https://www.cog-genomics.org/plink/2.0/strat#pca). Reference and study samples are then projected with one `--score` run each, following plink2's documented recipe, and a linear discriminant classifier trained on the reference labels (equal priors) assigns every study sample the super-population of its largest posterior when that reaches `--ancestry_prob_threshold`. With `--ancestry_sd_filter` set, an assigned sample more than that many standard deviations from its group's reference mean on any component becomes unassigned. The merged reference is the one intermediate fileset the pipeline writes, and it is not published.
+
 ### QC'd genotypes
 
 <details markdown="1">
@@ -115,7 +142,7 @@ Heterozygosity is report-only: no threshold is applied and no sample is listed.
 
 </details>
 
-The fileset keeps the MAF-passing variants minus the `--geno` and `--hwe` exclusions, and drops the `--mind` removals. With `--apply_sample_removals` it also drops the sex mismatches and the listed duplicate members.
+The fileset keeps the MAF-passing variants minus the `--geno` and `--hwe` exclusions, and drops the `--mind` removals. With `--apply_sample_removals` it also drops the sex mismatches, the listed duplicate members and, unless `--ancestry_remove_mismatched` is off, the ancestry mismatches.
 
 ### MultiQC
 

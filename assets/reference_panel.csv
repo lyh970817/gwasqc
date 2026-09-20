@@ -1,0 +1,3 @@
+id,bed,bim,fam
+chr1,/path/to/reference/1KG_Phase3.chr1.bed,/path/to/reference/1KG_Phase3.chr1.bim,/path/to/reference/1KG_Phase3.chr1.fam
+chr2,/path/to/reference/1KG_Phase3.chr2.bed,/path/to/reference/1KG_Phase3.chr2.bim,/path/to/reference/1KG_Phase3.chr2.fam

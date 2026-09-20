@@ -40,10 +40,40 @@ The variant filter chain applies four thresholds, each a pipeline parameter: `--
 
 The sample checks run on an LD-pruned subset of the QC'd variants (`--ld_window_size`, `--ld_step_size`, `--ld_r2` are the `--indep-pairwise` settings) and, for the heterozygosity and relatedness reports, outside the long-range LD regions of `--high_ld_regions` and off the sex chromosomes. The sex check splits the chromosome X pseudo-autosomal regions for `--genome_build` and applies the four `--sex_check_*` thresholds through plink2 `--check-sex`; the relatedness table holds the pairs at or above `--king_table_filter`, classifies them on KING's kinship boundaries with `--relatedness_po_ibs0_max` telling parent-offspring from full-sib pairs, and flags individuals `--relatedness_indiv_sd` standard deviations above the cohort mean kinship.
 
-Every sample check publishes its decision list, but only the missingness removals are applied by default, as in the legacy chain. With `--apply_sample_removals`, the sex mismatches and one member of each duplicate/MZ pair are removed from the QC'd fileset as well; the mean-kinship outliers and the heterozygosity report are never applied.
+Every sample check publishes its decision list, but only the missingness removals are applied by default, as in the legacy chain. With `--apply_sample_removals`, the sex mismatches, one member of each duplicate/MZ pair and, unless `--ancestry_remove_mismatched` is switched off, the ancestry mismatches are removed from the QC'd fileset as well; the mean-kinship outliers and the heterozygosity report are never applied.
 
 > [!NOTE]
 > The default `--high_ld_regions` asset is GRCh38. A cohort on another build needs both `--genome_build` and a matching region file.
+
+### Reference panel
+
+Ancestry inference needs a labelled reference panel on the same genome build as the cohort, declared by two parameters. `--reference_panel` is a samplesheet of the panel's PLINK 1 filesets, one row per fileset: a single whole-genome fileset is one row, and the per-chromosome 1000 Genomes layout of the legacy pipeline is one row per chromosome. The rows must share their samples and carry disjoint variants, because each is intersected with a stratum's QC'd variants and the intersects are then concatenated into one reference per stratum.
+
+```csv title="reference_panel.csv"
+id,bed,bim,fam
+chr1,/path/to/reference/1KG_Phase3.chr1.bed,/path/to/reference/1KG_Phase3.chr1.bim,/path/to/reference/1KG_Phase3.chr1.fam
+chr2,/path/to/reference/1KG_Phase3.chr2.bed,/path/to/reference/1KG_Phase3.chr2.bim,/path/to/reference/1KG_Phase3.chr2.fam
+```
+
+| Column | Description                                                                                                    |
+| ------ | -------------------------------------------------------------------------------------------------------------- |
+| `id`   | Unique identifier of the fileset without spaces, such as a chromosome or `all`; the filesets merge in id order. |
+| `bed`  | Full path to the PLINK 1 binary genotype file of the fileset.                                                  |
+| `bim`  | Full path to the PLINK 1 variant file. It must share its basename with the `bed` and `fam` files.              |
+| `fam`  | Full path to the PLINK 1 sample file. It must share its basename with the `bed` and `bim` files.               |
+
+`--reference_pop_data` is a tab-separated table with a header row and the columns `FID`, `IID`, `pop` and `super_pop`, one row per reference sample; every sample of the panel must be listed. The `super_pop` labels are the groups the classifier learns, and the `ancestry` column of the samplesheet is matched against them: a stratum whose label is not one of them has every sample listed as an ancestry mismatch, which is a warning when the list is only published and an error when `--apply_sample_removals` would apply it.
+
+```tsv title="ref_pop.tsv"
+FID	IID	pop	super_pop
+HG00096	HG00096	GBR	EUR
+NA19625	NA19625	ASW	AFR
+```
+
+The reference is restricted to each stratum's QC'd variants with the pipeline's `--maf` and `--geno` (no Hardy-Weinberg filter, which on a pooled multi-population panel measures population structure), harmonised onto the stratum's strand (A/T and C/G pairs are dropped), pruned with `--ancestry_ld_window_size`, `--ancestry_ld_step_size` and `--ancestry_ld_r2` outside the long-range LD regions, and decomposed into `--ancestry_n_pcs` components; reference and study samples are projected onto them with plink2's documented `--score` recipe. A study sample is assigned the super-population of its largest posterior probability when that reaches `--ancestry_prob_threshold`; `--ancestry_sd_filter`, off by default, additionally unassigns a sample more than that many standard deviations from its group's reference mean on any component. `--skip_ancestry` leaves the stage out, and the two reference parameters are then not needed.
+
+> [!NOTE]
+> plink2 refuses `--pca` on fewer than 50 reference samples and recommends its `approx` modifier on panels far beyond 5000 samples; the modifier reaches the decomposition through `ext.args` of `PLINK2_PCAWTS` in a custom config.
 
 ## Running the pipeline
 

@@ -2,6 +2,15 @@
     "-profile test --apply_sample_removals": {
         "content": [
             {
+                "ANCESTRY_ASSIGN": {
+                    "r-base": "4.4.3",
+                    "r-data.table": "1.17.8",
+                    "r-ggplot2": "3.5.2",
+                    "r-mass": "7.3.66"
+                },
+                "ANCESTRY_HARMONISE": {
+                    "r-base": "4.3.1"
+                },
                 "GENO_DECISIONS": {
                     "r-base": "4.3.1"
                 },
@@ -14,6 +23,9 @@
                     "r-ggplot2": "3.5.2"
                 },
                 "HIGHLD_EXCLUDE": {
+                    "gawk": "5.3.1"
+                },
+                "HIGHLD_EXCLUDE_REFERENCE": {
                     "gawk": "5.3.1"
                 },
                 "HWE_DECISIONS": {
@@ -37,7 +49,13 @@
                 "PLINK2_INDEPPAIRWISE": {
                     "plink2": "2.0.0-a.6.9LM"
                 },
+                "PLINK2_INDEPPAIRWISE_REFERENCE": {
+                    "plink2": "2.0.0-a.6.9LM"
+                },
                 "PLINK2_MAKEBED": {
+                    "plink2": "2.0.0-a.6.9LM"
+                },
+                "PLINK2_MAKEBED_REFERENCE": {
                     "plink2": "2.0.0-a.6.9LM"
                 },
                 "PLINK2_MAKEKINGTABLE": {
@@ -50,6 +68,18 @@
                     "plink2": "2.0.0-a.6.9LM"
                 },
                 "PLINK2_MISSING_VARIANTS": {
+                    "plink2": "2.0.0-a.6.9LM"
+                },
+                "PLINK2_PCAWTS": {
+                    "plink2": "2.0.0-a.6.9LM"
+                },
+                "PLINK2_PMERGELIST": {
+                    "plink2": "2.0.0-a.6.9LM"
+                },
+                "PLINK2_SCORE_REFERENCE": {
+                    "plink2": "2.0.0-a.6.9LM"
+                },
+                "PLINK2_SCORE_STUDY": {
                     "plink2": "2.0.0-a.6.9LM"
                 },
                 "PLINK2_WRITESNPLIST": {
@@ -70,11 +100,11 @@
                 }
             },
             [
-                "study_eur.qc.fam:md5,7ed507f470e967bf62ab34cf42d3bce2",
-                "study_afr.qc.fam:md5,66ff9a5d957516066323f9617e0110a3"
+                "study_eur.qc.fam:md5,2d176744c5d3b8acf028fe347aa27388",
+                "study_afr.qc.fam:md5,788a6f9b7623044546a44749094ae095"
             ]
         ],
-        "timestamp": "2026-09-20T15:37:04.990972833",
+        "timestamp": "2026-09-20T20:35:43.908912985",
         "meta": {
             "nf-test": "0.9.5",
             "nextflow": "26.04.4"

@@ -2,6 +2,15 @@
     "-profile test - stub": {
         "content": [
             {
+                "ANCESTRY_ASSIGN": {
+                    "r-base": "4.4.3",
+                    "r-data.table": "1.17.8",
+                    "r-ggplot2": "3.5.2",
+                    "r-mass": "7.3.66"
+                },
+                "ANCESTRY_HARMONISE": {
+                    "r-base": "4.3.1"
+                },
                 "GENO_DECISIONS": {
                     "r-base": "4.3.1"
                 },
@@ -14,6 +23,9 @@
                     "r-ggplot2": "3.5.2"
                 },
                 "HIGHLD_EXCLUDE": {
+                    "gawk": "5.3.1"
+                },
+                "HIGHLD_EXCLUDE_REFERENCE": {
                     "gawk": "5.3.1"
                 },
                 "HWE_DECISIONS": {
@@ -37,7 +49,13 @@
                 "PLINK2_INDEPPAIRWISE": {
                     "plink2": "2.0.0-a.6.9LM"
                 },
+                "PLINK2_INDEPPAIRWISE_REFERENCE": {
+                    "plink2": "2.0.0-a.6.9LM"
+                },
                 "PLINK2_MAKEBED": {
+                    "plink2": "2.0.0-a.6.9LM"
+                },
+                "PLINK2_MAKEBED_REFERENCE": {
                     "plink2": "2.0.0-a.6.9LM"
                 },
                 "PLINK2_MAKEKINGTABLE": {
@@ -50,6 +68,18 @@
                     "plink2": "2.0.0-a.6.9LM"
                 },
                 "PLINK2_MISSING_VARIANTS": {
+                    "plink2": "2.0.0-a.6.9LM"
+                },
+                "PLINK2_PCAWTS": {
+                    "plink2": "2.0.0-a.6.9LM"
+                },
+                "PLINK2_PMERGELIST": {
+                    "plink2": "2.0.0-a.6.9LM"
+                },
+                "PLINK2_SCORE_REFERENCE": {
+                    "plink2": "2.0.0-a.6.9LM"
+                },
+                "PLINK2_SCORE_STUDY": {
                     "plink2": "2.0.0-a.6.9LM"
                 },
                 "PLINK2_WRITESNPLIST": {
@@ -89,6 +119,26 @@
                 "pipeline_info/nf_core_gwasqc_software_mqc_versions.yml",
                 "qc",
                 "qc/study_afr",
+                "qc/study_afr/ancestry",
+                "qc/study_afr/ancestry/study_afr.ancestry.eigenval",
+                "qc/study_afr/ancestry/study_afr.ancestry.highld_exclude.txt",
+                "qc/study_afr/ancestry/study_afr.ancestry.prune.in",
+                "qc/study_afr/ancestry/study_afr.ancestry_AFR.keep",
+                "qc/study_afr/ancestry/study_afr.ancestry_assignment.tsv",
+                "qc/study_afr/ancestry/study_afr.ancestry_flip_update.txt",
+                "qc/study_afr/ancestry/study_afr.ancestry_harmonisation.tsv",
+                "qc/study_afr/ancestry/study_afr.ancestry_harmonisation_summary.tsv",
+                "qc/study_afr/ancestry/study_afr.ancestry_harmonised.snplist",
+                "qc/study_afr/ancestry/study_afr.ancestry_mismatch_remove.txt",
+                "qc/study_afr/ancestry/study_afr.ancestry_model.tsv",
+                "qc/study_afr/ancestry/study_afr.ancestry_pc1_pc2.pdf",
+                "qc/study_afr/ancestry/study_afr.ancestry_pc1_pc2.png",
+                "qc/study_afr/ancestry/study_afr.ancestry_pc3_pc4.pdf",
+                "qc/study_afr/ancestry/study_afr.ancestry_pc3_pc4.png",
+                "qc/study_afr/ancestry/study_afr.ancestry_pca.tsv",
+                "qc/study_afr/ancestry/study_afr.ancestry_reference.sscore",
+                "qc/study_afr/ancestry/study_afr.ancestry_study.sscore",
+                "qc/study_afr/ancestry/study_afr.ancestry_summary.tsv",
                 "qc/study_afr/heterozygosity",
                 "qc/study_afr/heterozygosity/study_afr.het",
                 "qc/study_afr/heterozygosity/study_afr.het_hist.pdf",
@@ -130,6 +180,26 @@
                 "qc/study_afr/sex_check/study_afr.sex_mismatch_remove.txt",
                 "qc/study_afr/sex_check/study_afr.sexcheck",
                 "qc/study_eur",
+                "qc/study_eur/ancestry",
+                "qc/study_eur/ancestry/study_eur.ancestry.eigenval",
+                "qc/study_eur/ancestry/study_eur.ancestry.highld_exclude.txt",
+                "qc/study_eur/ancestry/study_eur.ancestry.prune.in",
+                "qc/study_eur/ancestry/study_eur.ancestry_EUR.keep",
+                "qc/study_eur/ancestry/study_eur.ancestry_assignment.tsv",
+                "qc/study_eur/ancestry/study_eur.ancestry_flip_update.txt",
+                "qc/study_eur/ancestry/study_eur.ancestry_harmonisation.tsv",
+                "qc/study_eur/ancestry/study_eur.ancestry_harmonisation_summary.tsv",
+                "qc/study_eur/ancestry/study_eur.ancestry_harmonised.snplist",
+                "qc/study_eur/ancestry/study_eur.ancestry_mismatch_remove.txt",
+                "qc/study_eur/ancestry/study_eur.ancestry_model.tsv",
+                "qc/study_eur/ancestry/study_eur.ancestry_pc1_pc2.pdf",
+                "qc/study_eur/ancestry/study_eur.ancestry_pc1_pc2.png",
+                "qc/study_eur/ancestry/study_eur.ancestry_pc3_pc4.pdf",
+                "qc/study_eur/ancestry/study_eur.ancestry_pc3_pc4.png",
+                "qc/study_eur/ancestry/study_eur.ancestry_pca.tsv",
+                "qc/study_eur/ancestry/study_eur.ancestry_reference.sscore",
+                "qc/study_eur/ancestry/study_eur.ancestry_study.sscore",
+                "qc/study_eur/ancestry/study_eur.ancestry_summary.tsv",
                 "qc/study_eur/heterozygosity",
                 "qc/study_eur/heterozygosity/study_eur.het",
                 "qc/study_eur/heterozygosity/study_eur.het_hist.pdf",
@@ -172,7 +242,7 @@
                 "qc/study_eur/sex_check/study_eur.sexcheck"
             ]
         ],
-        "timestamp": "2026-09-20T15:38:57.394431917",
+        "timestamp": "2026-09-20T20:36:53.288268912",
         "meta": {
             "nf-test": "0.9.5",
             "nextflow": "26.04.4"
@@ -181,6 +251,15 @@
     "-profile test": {
         "content": [
             {
+                "ANCESTRY_ASSIGN": {
+                    "r-base": "4.4.3",
+                    "r-data.table": "1.17.8",
+                    "r-ggplot2": "3.5.2",
+                    "r-mass": "7.3.66"
+                },
+                "ANCESTRY_HARMONISE": {
+                    "r-base": "4.3.1"
+                },
                 "GENO_DECISIONS": {
                     "r-base": "4.3.1"
                 },
@@ -193,6 +272,9 @@
                     "r-ggplot2": "3.5.2"
                 },
                 "HIGHLD_EXCLUDE": {
+                    "gawk": "5.3.1"
+                },
+                "HIGHLD_EXCLUDE_REFERENCE": {
                     "gawk": "5.3.1"
                 },
                 "HWE_DECISIONS": {
@@ -216,7 +298,13 @@
                 "PLINK2_INDEPPAIRWISE": {
                     "plink2": "2.0.0-a.6.9LM"
                 },
+                "PLINK2_INDEPPAIRWISE_REFERENCE": {
+                    "plink2": "2.0.0-a.6.9LM"
+                },
                 "PLINK2_MAKEBED": {
+                    "plink2": "2.0.0-a.6.9LM"
+                },
+                "PLINK2_MAKEBED_REFERENCE": {
                     "plink2": "2.0.0-a.6.9LM"
                 },
                 "PLINK2_MAKEKINGTABLE": {
@@ -229,6 +317,18 @@
                     "plink2": "2.0.0-a.6.9LM"
                 },
                 "PLINK2_MISSING_VARIANTS": {
+                    "plink2": "2.0.0-a.6.9LM"
+                },
+                "PLINK2_PCAWTS": {
+                    "plink2": "2.0.0-a.6.9LM"
+                },
+                "PLINK2_PMERGELIST": {
+                    "plink2": "2.0.0-a.6.9LM"
+                },
+                "PLINK2_SCORE_REFERENCE": {
+                    "plink2": "2.0.0-a.6.9LM"
+                },
+                "PLINK2_SCORE_STUDY": {
                     "plink2": "2.0.0-a.6.9LM"
                 },
                 "PLINK2_WRITESNPLIST": {
@@ -272,6 +372,30 @@
                 "pipeline_info/nf_core_gwasqc_software_mqc_versions.yml",
                 "qc",
                 "qc/study_afr",
+                "qc/study_afr/ancestry",
+                "qc/study_afr/ancestry/study_afr.ancestry.eigenval",
+                "qc/study_afr/ancestry/study_afr.ancestry.highld_exclude.txt",
+                "qc/study_afr/ancestry/study_afr.ancestry.prune.in",
+                "qc/study_afr/ancestry/study_afr.ancestry_AFR.keep",
+                "qc/study_afr/ancestry/study_afr.ancestry_AMR.keep",
+                "qc/study_afr/ancestry/study_afr.ancestry_CSA.keep",
+                "qc/study_afr/ancestry/study_afr.ancestry_EAS.keep",
+                "qc/study_afr/ancestry/study_afr.ancestry_EUR.keep",
+                "qc/study_afr/ancestry/study_afr.ancestry_assignment.tsv",
+                "qc/study_afr/ancestry/study_afr.ancestry_flip_update.txt",
+                "qc/study_afr/ancestry/study_afr.ancestry_harmonisation.tsv",
+                "qc/study_afr/ancestry/study_afr.ancestry_harmonisation_summary.tsv",
+                "qc/study_afr/ancestry/study_afr.ancestry_harmonised.snplist",
+                "qc/study_afr/ancestry/study_afr.ancestry_mismatch_remove.txt",
+                "qc/study_afr/ancestry/study_afr.ancestry_model.tsv",
+                "qc/study_afr/ancestry/study_afr.ancestry_pc1_pc2.pdf",
+                "qc/study_afr/ancestry/study_afr.ancestry_pc1_pc2.png",
+                "qc/study_afr/ancestry/study_afr.ancestry_pc3_pc4.pdf",
+                "qc/study_afr/ancestry/study_afr.ancestry_pc3_pc4.png",
+                "qc/study_afr/ancestry/study_afr.ancestry_pca.tsv",
+                "qc/study_afr/ancestry/study_afr.ancestry_reference.sscore",
+                "qc/study_afr/ancestry/study_afr.ancestry_study.sscore",
+                "qc/study_afr/ancestry/study_afr.ancestry_summary.tsv",
                 "qc/study_afr/heterozygosity",
                 "qc/study_afr/heterozygosity/study_afr.het",
                 "qc/study_afr/heterozygosity/study_afr.het_hist.pdf",
@@ -313,6 +437,30 @@
                 "qc/study_afr/sex_check/study_afr.sex_mismatch_remove.txt",
                 "qc/study_afr/sex_check/study_afr.sexcheck",
                 "qc/study_eur",
+                "qc/study_eur/ancestry",
+                "qc/study_eur/ancestry/study_eur.ancestry.eigenval",
+                "qc/study_eur/ancestry/study_eur.ancestry.highld_exclude.txt",
+                "qc/study_eur/ancestry/study_eur.ancestry.prune.in",
+                "qc/study_eur/ancestry/study_eur.ancestry_AFR.keep",
+                "qc/study_eur/ancestry/study_eur.ancestry_AMR.keep",
+                "qc/study_eur/ancestry/study_eur.ancestry_CSA.keep",
+                "qc/study_eur/ancestry/study_eur.ancestry_EAS.keep",
+                "qc/study_eur/ancestry/study_eur.ancestry_EUR.keep",
+                "qc/study_eur/ancestry/study_eur.ancestry_assignment.tsv",
+                "qc/study_eur/ancestry/study_eur.ancestry_flip_update.txt",
+                "qc/study_eur/ancestry/study_eur.ancestry_harmonisation.tsv",
+                "qc/study_eur/ancestry/study_eur.ancestry_harmonisation_summary.tsv",
+                "qc/study_eur/ancestry/study_eur.ancestry_harmonised.snplist",
+                "qc/study_eur/ancestry/study_eur.ancestry_mismatch_remove.txt",
+                "qc/study_eur/ancestry/study_eur.ancestry_model.tsv",
+                "qc/study_eur/ancestry/study_eur.ancestry_pc1_pc2.pdf",
+                "qc/study_eur/ancestry/study_eur.ancestry_pc1_pc2.png",
+                "qc/study_eur/ancestry/study_eur.ancestry_pc3_pc4.pdf",
+                "qc/study_eur/ancestry/study_eur.ancestry_pc3_pc4.png",
+                "qc/study_eur/ancestry/study_eur.ancestry_pca.tsv",
+                "qc/study_eur/ancestry/study_eur.ancestry_reference.sscore",
+                "qc/study_eur/ancestry/study_eur.ancestry_study.sscore",
+                "qc/study_eur/ancestry/study_eur.ancestry_summary.tsv",
                 "qc/study_eur/heterozygosity",
                 "qc/study_eur/heterozygosity/study_eur.het",
                 "qc/study_eur/heterozygosity/study_eur.het_hist.pdf",
@@ -362,6 +510,25 @@
                 "study_eur.qc.bim:md5,89df2f6732f81fc60ef43abc2be36355",
                 "study_eur.qc.fam:md5,222ef1adda2a6ad4f165129f9ba122c9",
                 "multiqc_citations.txt:md5,4c806e63a283ec1b7e78cdae3a923d4f",
+                "study_afr.ancestry.eigenval:md5,47b3461ebc5acb734bf81e5cc8670f1e",
+                "study_afr.ancestry.highld_exclude.txt:md5,fbb6734da1ab108f1ce9ab407a72afe0",
+                "study_afr.ancestry.prune.in:md5,25998a869cff8c96aa45d30c14901d7e",
+                "study_afr.ancestry_AFR.keep:md5,647f4ee4d149cb2e7c9c078af1982513",
+                "study_afr.ancestry_AMR.keep:md5,d41d8cd98f00b204e9800998ecf8427e",
+                "study_afr.ancestry_CSA.keep:md5,10d0dda461d134021930bb6de2f5f250",
+                "study_afr.ancestry_EAS.keep:md5,6adc4d29536c18b607321f9dff6fd4d1",
+                "study_afr.ancestry_EUR.keep:md5,9f48f3ab81225644bc34922e3e2ca38d",
+                "study_afr.ancestry_assignment.tsv:md5,b2b1965b4e60719b4ba5540a21a70c7f",
+                "study_afr.ancestry_flip_update.txt:md5,2ffcb0888e521c734c95f0730187cac2",
+                "study_afr.ancestry_harmonisation.tsv:md5,2dd9062e58fb76c8edcb2fa2d9b1d09c",
+                "study_afr.ancestry_harmonisation_summary.tsv:md5,743e46f6159145508040b9278f86f721",
+                "study_afr.ancestry_harmonised.snplist:md5,a5456224818be9cb274faa7ea2594405",
+                "study_afr.ancestry_mismatch_remove.txt:md5,bdf050d9373336ddbf8880f019c650e0",
+                "study_afr.ancestry_model.tsv:md5,2d61366fc4cf2212caefdbd9c993489e",
+                "study_afr.ancestry_pca.tsv:md5,39d9b477c6a7ca9c0be9e2c1565d00b5",
+                "study_afr.ancestry_reference.sscore:md5,61e850aa89b70203d8eab39e2b5b1601",
+                "study_afr.ancestry_study.sscore:md5,ed015a8b51c97f0ef549208d61196c2e",
+                "study_afr.ancestry_summary.tsv:md5,ce1ba450be5d96b6b0ffbe4df0d127cd",
                 "study_afr.het:md5,9c5898bce987a6c34894cc79b1acb275",
                 "study_afr.het_hist.tsv:md5,05b0b66bfd9a54ea96746b598387bc20",
                 "study_afr.het_sex_scatter.tsv:md5,9d87eb44f863f2c781bca9b106872840",
@@ -387,6 +554,25 @@
                 "study_afr.sex_mismatch.tsv:md5,4884076140d25f0786f1b9a10f631f55",
                 "study_afr.sex_mismatch_remove.txt:md5,70e6cbea58571d12303f9ac70eae6f7e",
                 "study_afr.sexcheck:md5,5c0dcb5d3bbd5ecdb693b88f885c8722",
+                "study_eur.ancestry.eigenval:md5,5eeaf0a1e357b1d270cdae83d43659c8",
+                "study_eur.ancestry.highld_exclude.txt:md5,fbb6734da1ab108f1ce9ab407a72afe0",
+                "study_eur.ancestry.prune.in:md5,3b3dd4ab181286bad32a8cadc28f4b2d",
+                "study_eur.ancestry_AFR.keep:md5,55720118d33d7b9f07aeced9aa1b6c96",
+                "study_eur.ancestry_AMR.keep:md5,4ee65a6f6ad802594205ca0544033923",
+                "study_eur.ancestry_CSA.keep:md5,d41d8cd98f00b204e9800998ecf8427e",
+                "study_eur.ancestry_EAS.keep:md5,4a8586764d6ae32a67755e5e0fb68b05",
+                "study_eur.ancestry_EUR.keep:md5,fb302934e6ea5075c8a8e6995ff3af34",
+                "study_eur.ancestry_assignment.tsv:md5,de35d89839d411a33cb2ed98d73874a2",
+                "study_eur.ancestry_flip_update.txt:md5,2ffcb0888e521c734c95f0730187cac2",
+                "study_eur.ancestry_harmonisation.tsv:md5,46e8b285ec135c6541a3090898f104fa",
+                "study_eur.ancestry_harmonisation_summary.tsv:md5,82b4ecfca8638074f2a76774eab7bccf",
+                "study_eur.ancestry_harmonised.snplist:md5,89d1d9ef24e88fc73a20619d1e3fc404",
+                "study_eur.ancestry_mismatch_remove.txt:md5,3e3355c6a9be6ab53fad12d9f9010799",
+                "study_eur.ancestry_model.tsv:md5,2d61366fc4cf2212caefdbd9c993489e",
+                "study_eur.ancestry_pca.tsv:md5,707bfa5078bd51a8c9a8ffbf8afc5202",
+                "study_eur.ancestry_reference.sscore:md5,3782195a7f5cf6168a1f4bcf70221a01",
+                "study_eur.ancestry_study.sscore:md5,64c45878849adfa8e2a48d6304e1db49",
+                "study_eur.ancestry_summary.tsv:md5,37e04649229f6cd25e31120ff5bec038",
                 "study_eur.het:md5,25f9118b3c44b403e90faae1159f41d6",
                 "study_eur.het_hist.tsv:md5,73ad2b8eab126d8c871558b83e48811c",
                 "study_eur.het_sex_scatter.tsv:md5,3c638f966cf32af9ccabf7ee464bd58f",
@@ -414,7 +600,7 @@
                 "study_eur.sexcheck:md5,138090ffc7008416cd84f53690124e0b"
             ]
         ],
-        "timestamp": "2026-09-20T15:38:01.935692388",
+        "timestamp": "2026-09-20T20:35:39.601212421",
         "meta": {
             "nf-test": "0.9.5",
             "nextflow": "26.04.4"
