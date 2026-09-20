@@ -1,0 +1,137 @@
+nextflow_process {
+
+    name "Test Process PLINK2_MAKEKINGTABLE"
+    script "../main.nf"
+    process "PLINK2_MAKEKINGTABLE"
+    config "./nextflow.config"
+
+    tag "modules"
+    tag "modules_nfcore"
+    tag "plink2"
+    tag "plink2/makekingtable"
+
+    // The gwasqc fixture stratum plants a duplicate pair (EUR_S020/EUR_S021), a parent-offspring pair
+    // (EUR_S030/EUR_S031) and a full-sib pair (EUR_S032/EUR_S033) on the autosomes.
+    test("study_eur - bed - king-table-filter") {
+
+        when {
+            params {
+                module_args = '--king-table-filter 0.0442'
+            }
+            process {
+                """
+                input[0] = [
+                    [ id:'study_eur', ancestry:'EUR' ],
+                    file(params.pipelines_testdata_base_path + 'data/gwasqc/genotypes/study_eur.bed', checkIfExists: true),
+                    file(params.pipelines_testdata_base_path + 'data/gwasqc/genotypes/study_eur.bim', checkIfExists: true),
+                    file(params.pipelines_testdata_base_path + 'data/gwasqc/genotypes/study_eur.fam', checkIfExists: true),
+                    [],
+                    [],
+                    [],
+                    [],
+                ]
+                """
+            }
+        }
+
+        then {
+            def command = path(process.out.kin0.get(0).get(1)).parent.resolve('.command.sh').text
+            def table = path(process.out.kin0.get(0).get(1)).readLines().collect { line -> line.split('\t').toList() }
+            def pairs = table.drop(1).collectEntries { fields -> [([fields[1], fields[3]].sort().join('/')): fields[7] as Double] }
+            assertAll(
+                { assert process.success },
+                { assert command.contains('--king-table-filter 0.0442') },
+                { assert table[0] == ['#FID1', 'IID1', 'FID2', 'IID2', 'NSNP', 'HETHET', 'IBS0', 'KINSHIP'] },
+                { assert pairs['EUR_S020/EUR_S021'] > 0.354 },
+                { assert pairs['EUR_S030/EUR_S031'] > 0.177 && pairs['EUR_S030/EUR_S031'] < 0.354 },
+                { assert pairs['EUR_S032/EUR_S033'] > 0.177 && pairs['EUR_S032/EUR_S033'] < 0.354 },
+                { assert pairs.values().every { kinship -> kinship > 0.0442 } },
+                { assert snapshot(process.out.kin0, process.out.versions_plink2).match() },
+            )
+        }
+    }
+
+    test("plink_simulated - pgen - extract list - full table") {
+
+        setup {
+            run("PLINK2_WRITESNPLIST") {
+                script "../../writesnplist/main.nf"
+                process {
+                    """
+                    input[0] = [
+                        [ id:'plink_simulated_keep' ],
+                        file(params.modules_testdata_base_path + 'genomics/homo_sapiens/popgen/plink_simulated.bed', checkIfExists: true),
+                        file(params.modules_testdata_base_path + 'genomics/homo_sapiens/popgen/plink_simulated.bim', checkIfExists: true),
+                        file(params.modules_testdata_base_path + 'genomics/homo_sapiens/popgen/plink_simulated.fam', checkIfExists: true),
+                        [],
+                        [],
+                        [],
+                        [],
+                    ]
+                    """
+                }
+            }
+        }
+
+        when {
+            process {
+                """
+                input[0] = PLINK2_WRITESNPLIST.out.snplist.map { meta, snplist ->
+                    [
+                        [ id:'plink_simulated_pgen' ],
+                        file(params.modules_testdata_base_path + 'genomics/homo_sapiens/popgen/plink_simulated.pgen', checkIfExists: true),
+                        file(params.modules_testdata_base_path + 'genomics/homo_sapiens/popgen/plink_simulated.pvar', checkIfExists: true),
+                        file(params.modules_testdata_base_path + 'genomics/homo_sapiens/popgen/plink_simulated.psam', checkIfExists: true),
+                        snplist,
+                        [],
+                        [],
+                        [],
+                    ]
+                }
+                """
+            }
+        }
+
+        then {
+            def command = path(process.out.kin0.get(0).get(1)).parent.resolve('.command.sh').text
+            def samples = path(process.out.kin0.get(0).get(1)).parent.resolve('plink_simulated.psam').readLines().findAll { line -> !line.startsWith('#') }.size()
+            assertAll(
+                { assert process.success },
+                { assert command.contains('--pfile plink_simulated') },
+                { assert command.contains('--extract plink_simulated_keep.snplist') },
+                // Unfiltered, the table holds every pair.
+                { assert path(process.out.kin0.get(0).get(1)).readLines().size() - 1 == samples * (samples - 1) / 2 },
+                { assert snapshot(process.out.kin0, process.out.versions_plink2).match() },
+            )
+        }
+    }
+
+    test("study_eur - bed - stub") {
+
+        options "-stub"
+
+        when {
+            process {
+                """
+                input[0] = [
+                    [ id:'study_eur', ancestry:'EUR' ],
+                    file(params.pipelines_testdata_base_path + 'data/gwasqc/genotypes/study_eur.bed', checkIfExists: true),
+                    file(params.pipelines_testdata_base_path + 'data/gwasqc/genotypes/study_eur.bim', checkIfExists: true),
+                    file(params.pipelines_testdata_base_path + 'data/gwasqc/genotypes/study_eur.fam', checkIfExists: true),
+                    [],
+                    [],
+                    [],
+                    [],
+                ]
+                """
+            }
+        }
+
+        then {
+            assertAll(
+                { assert process.success },
+                { assert snapshot(sanitizeOutput(process.out)).match() },
+            )
+        }
+    }
+}

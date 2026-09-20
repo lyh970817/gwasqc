@@ -1,0 +1,87 @@
+{
+    "study_eur - bed - king-table-filter": {
+        "content": [
+            [
+                [
+                    {
+                        "id": "study_eur",
+                        "ancestry": "EUR"
+                    },
+                    "study_eur.kin0:md5,0d64feed5ab5e0357e133a732cc5dcb6"
+                ]
+            ],
+            [
+                [
+                    "PLINK2_MAKEKINGTABLE",
+                    "plink2",
+                    "2.0.0-a.6.9LM"
+                ]
+            ]
+        ],
+        "timestamp": "2026-09-20T15:11:25.646181739",
+        "meta": {
+            "nf-test": "0.9.5",
+            "nextflow": "26.04.4"
+        }
+    },
+    "plink_simulated - pgen - extract list - full table": {
+        "content": [
+            [
+                [
+                    {
+                        "id": "plink_simulated_pgen"
+                    },
+                    "plink_simulated_pgen.kin0:md5,2a9943405a5647864931e1e4439bb0ed"
+                ]
+            ],
+            [
+                [
+                    "PLINK2_MAKEKINGTABLE",
+                    "plink2",
+                    "2.0.0-a.6.9LM"
+                ]
+            ]
+        ],
+        "timestamp": "2026-09-20T15:11:37.494837981",
+        "meta": {
+            "nf-test": "0.9.5",
+            "nextflow": "26.04.4"
+        }
+    },
+    "study_eur - bed - stub": {
+        "content": [
+            {
+                "kin0": [
+                    [
+                        {
+                            "ancestry": "EUR",
+                            "id": "study_eur"
+                        },
+                        "study_eur.kin0:md5,d41d8cd98f00b204e9800998ecf8427e"
+                    ]
+                ],
+                "log": [
+                    [
+                        {
+                            "ancestry": "EUR",
+                            "id": "study_eur"
+                        },
+                        "study_eur.log:md5,d41d8cd98f00b204e9800998ecf8427e"
+                    ]
+                ],
+                "versions_plink2": [
+                    [
+                        "PLINK2_MAKEKINGTABLE",
+                        "plink2",
+                        "2.0.0-a.6.9LM"
+                    ]
+                ]
+            }
+        ],
+        "timestamp": "2026-09-20T15:11:42.73412501",
+        "meta": {
+            "nf-test": "0.9.5",
+            "nextflow": "26.04.4"
+        }
+    }
+}

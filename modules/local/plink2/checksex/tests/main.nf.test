@@ -1,0 +1,140 @@
+nextflow_process {
+
+    name "Test Process PLINK2_CHECKSEX"
+    script "../main.nf"
+    process "PLINK2_CHECKSEX"
+    config "./nextflow.config"
+
+    tag "modules"
+    tag "modules_nfcore"
+    tag "plink2"
+    tag "plink2/checksex"
+
+    // The public plink_simulated fixture carries no sex chromosome, so the check runs on the gwasqc fixture
+    // stratum: 250 chrX non-PAR, 50 chrX PAR and 30 chrY variants, with EUR_S010 (recorded female, male
+    // genotypes) and EUR_S011 (recorded male, female genotypes) planted.
+    test("study_eur - bed - split-par and thresholds") {
+
+        when {
+            params {
+                module_args  = '--split-par b38'
+                module_args2 = 'max-female-xf=0.2 min-male-xf=0.8 max-female-ycount=0 min-male-ycount=1 cols=+ycount'
+            }
+            process {
+                """
+                input[0] = [
+                    [ id:'study_eur', ancestry:'EUR' ],
+                    file(params.pipelines_testdata_base_path + 'data/gwasqc/genotypes/study_eur.bed', checkIfExists: true),
+                    file(params.pipelines_testdata_base_path + 'data/gwasqc/genotypes/study_eur.bim', checkIfExists: true),
+                    file(params.pipelines_testdata_base_path + 'data/gwasqc/genotypes/study_eur.fam', checkIfExists: true),
+                    [],
+                    [],
+                    [],
+                    [],
+                ]
+                """
+            }
+        }
+
+        then {
+            def command = path(process.out.sexcheck.get(0).get(1)).parent.resolve('.command.sh').text
+            def report = path(process.out.sexcheck.get(0).get(1)).readLines().collect { line -> line.split('\t').toList() }
+            def problems = report.findAll { fields -> fields[4] == 'PROBLEM' }
+            assertAll(
+                { assert process.success },
+                { assert command.contains('--split-par b38') },
+                { assert command.contains('--check-sex max-female-xf=0.2') },
+                { assert report[0] == ['#FID', 'IID', 'PEDSEX', 'SNPSEX', 'STATUS', 'F', 'YCOUNT', 'YRATE'] },
+                { assert report.size() == 126 },
+                { assert problems.collect { fields -> fields[1] } == ['EUR_S010', 'EUR_S011'] },
+                { assert problems.collect { fields -> fields[2..3] } == [['2', '1'], ['1', '2']] },
+                { assert snapshot(process.out.sexcheck, process.out.versions_plink2).match() },
+            )
+        }
+    }
+
+    test("study_eur - bed - extract list - plink2 defaults") {
+
+        setup {
+            run("PLINK2_WRITESNPLIST") {
+                script "../../writesnplist/main.nf"
+                process {
+                    """
+                    input[0] = [
+                        [ id:'study_eur_keep' ],
+                        file(params.pipelines_testdata_base_path + 'data/gwasqc/genotypes/study_eur.bed', checkIfExists: true),
+                        file(params.pipelines_testdata_base_path + 'data/gwasqc/genotypes/study_eur.bim', checkIfExists: true),
+                        file(params.pipelines_testdata_base_path + 'data/gwasqc/genotypes/study_eur.fam', checkIfExists: true),
+                        [],
+                        [],
+                        [],
+                        [],
+                    ]
+                    """
+                }
+            }
+        }
+
+        when {
+            process {
+                """
+                input[0] = PLINK2_WRITESNPLIST.out.snplist.map { meta, snplist ->
+                    [
+                        [ id:'study_eur', ancestry:'EUR' ],
+                        file(params.pipelines_testdata_base_path + 'data/gwasqc/genotypes/study_eur.bed', checkIfExists: true),
+                        file(params.pipelines_testdata_base_path + 'data/gwasqc/genotypes/study_eur.bim', checkIfExists: true),
+                        file(params.pipelines_testdata_base_path + 'data/gwasqc/genotypes/study_eur.fam', checkIfExists: true),
+                        snplist,
+                        [],
+                        [],
+                        [],
+                    ]
+                }
+                """
+            }
+        }
+
+        then {
+            def command = path(process.out.sexcheck.get(0).get(1)).parent.resolve('.command.sh').text
+            def report = path(process.out.sexcheck.get(0).get(1)).readLines().collect { line -> line.split('\t').toList() }
+            assertAll(
+                { assert process.success },
+                { assert command.contains('--extract study_eur_keep.snplist') },
+                // Without thresholds plink2 falls back to min-male-xf=1 max-female-yrate=0 on the unsplit
+                // chromosome X, which is a different, much noisier call; the module passes it through as is.
+                { assert report[0] == ['#FID', 'IID', 'PEDSEX', 'SNPSEX', 'STATUS', 'F', 'YRATE'] },
+                { assert report.size() == 126 },
+                { assert snapshot(process.out.sexcheck, process.out.versions_plink2).match() },
+            )
+        }
+    }
+
+    test("study_eur - bed - stub") {
+
+        options "-stub"
+
+        when {
+            process {
+                """
+                input[0] = [
+                    [ id:'study_eur', ancestry:'EUR' ],
+                    file(params.pipelines_testdata_base_path + 'data/gwasqc/genotypes/study_eur.bed', checkIfExists: true),
+                    file(params.pipelines_testdata_base_path + 'data/gwasqc/genotypes/study_eur.bim', checkIfExists: true),
+                    file(params.pipelines_testdata_base_path + 'data/gwasqc/genotypes/study_eur.fam', checkIfExists: true),
+                    [],
+                    [],
+                    [],
+                    [],
+                ]
+                """
+            }
+        }
+
+        then {
+            assertAll(
+                { assert process.success },
+                { assert snapshot(sanitizeOutput(process.out)).match() },
+            )
+        }
+    }
+}

@@ -1,0 +1,88 @@
+{
+    "study_eur - bed - split-par and thresholds": {
+        "content": [
+            [
+                [
+                    {
+                        "id": "study_eur",
+                        "ancestry": "EUR"
+                    },
+                    "study_eur.sexcheck:md5,697973a740539986470622268bbaf90f"
+                ]
+            ],
+            [
+                [
+                    "PLINK2_CHECKSEX",
+                    "plink2",
+                    "2.0.0-a.6.9LM"
+                ]
+            ]
+        ],
+        "timestamp": "2026-09-20T15:08:33.246468388",
+        "meta": {
+            "nf-test": "0.9.5",
+            "nextflow": "26.04.4"
+        }
+    },
+    "study_eur - bed - extract list - plink2 defaults": {
+        "content": [
+            [
+                [
+                    {
+                        "id": "study_eur",
+                        "ancestry": "EUR"
+                    },
+                    "study_eur.sexcheck:md5,6a4e271a4e1a95d6f3da09eda78cd37d"
+                ]
+            ],
+            [
+                [
+                    "PLINK2_CHECKSEX",
+                    "plink2",
+                    "2.0.0-a.6.9LM"
+                ]
+            ]
+        ],
+        "timestamp": "2026-09-20T15:08:39.665724176",
+        "meta": {
+            "nf-test": "0.9.5",
+            "nextflow": "26.04.4"
+        }
+    },
+    "study_eur - bed - stub": {
+        "content": [
+            {
+                "log": [
+                    [
+                        {
+                            "ancestry": "EUR",
+                            "id": "study_eur"
+                        },
+                        "study_eur.log:md5,d41d8cd98f00b204e9800998ecf8427e"
+                    ]
+                ],
+                "sexcheck": [
+                    [
+                        {
+                            "ancestry": "EUR",
+                            "id": "study_eur"
+                        },
+                        "study_eur.sexcheck:md5,d41d8cd98f00b204e9800998ecf8427e"
+                    ]
+                ],
+                "versions_plink2": [
+                    [
+                        "PLINK2_CHECKSEX",
+                        "plink2",
+                        "2.0.0-a.6.9LM"
+                    ]
+                ]
+            }
+        ],
+        "timestamp": "2026-09-20T15:08:45.292836634",
+        "meta": {
+            "nf-test": "0.9.5",
+            "nextflow": "26.04.4"
+        }
+    }
+}

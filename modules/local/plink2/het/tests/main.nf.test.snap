@@ -1,0 +1,84 @@
+{
+    "plink_simulated - pgen - extract list": {
+        "content": [
+            [
+                [
+                    {
+                        "id": "plink_simulated_pgen"
+                    },
+                    "plink_simulated_pgen.het:md5,4cf518af4ed9fea199c444efe0a6ec33"
+                ]
+            ],
+            [
+                [
+                    "PLINK2_HET",
+                    "plink2",
+                    "2.0.0-a.6.9LM"
+                ]
+            ]
+        ],
+        "timestamp": "2026-09-20T15:09:07.763358235",
+        "meta": {
+            "nf-test": "0.9.5",
+            "nextflow": "26.04.4"
+        }
+    },
+    "plink_simulated - bed": {
+        "content": [
+            [
+                [
+                    {
+                        "id": "plink_simulated"
+                    },
+                    "plink_simulated.het:md5,4cf518af4ed9fea199c444efe0a6ec33"
+                ]
+            ],
+            [
+                [
+                    "PLINK2_HET",
+                    "plink2",
+                    "2.0.0-a.6.9LM"
+                ]
+            ]
+        ],
+        "timestamp": "2026-09-20T15:08:54.515056526",
+        "meta": {
+            "nf-test": "0.9.5",
+            "nextflow": "26.04.4"
+        }
+    },
+    "plink_simulated - bed - stub": {
+        "content": [
+            {
+                "het": [
+                    [
+                        {
+                            "id": "plink_simulated"
+                        },
+                        "plink_simulated.het:md5,d41d8cd98f00b204e9800998ecf8427e"
+                    ]
+                ],
+                "log": [
+                    [
+                        {
+                            "id": "plink_simulated"
+                        },
+                        "plink_simulated.log:md5,d41d8cd98f00b204e9800998ecf8427e"
+                    ]
+                ],
+                "versions_plink2": [
+                    [
+                        "PLINK2_HET",
+                        "plink2",
+                        "2.0.0-a.6.9LM"
+                    ]
+                ]
+            }
+        ],
+        "timestamp": "2026-09-20T15:09:16.291979426",
+        "meta": {
+            "nf-test": "0.9.5",
+            "nextflow": "26.04.4"
+        }
+    }
+}
