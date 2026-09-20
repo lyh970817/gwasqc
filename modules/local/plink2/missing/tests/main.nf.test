@@ -34,7 +34,9 @@ nextflow_process {
             assertAll(
                 { assert process.success },
                 { assert command.contains('--bfile plink_simulated') },
-                { assert path(process.out.smiss.get(0).get(1)).readLines().first().split('\t').toList() == ['#FID', 'IID', 'MISSING_CT', 'OBS_CT', 'F_MISS'] },
+                // The sample report gains a PHENO1 column whenever the fileset carries a phenotype, as this fixture
+                // does, so the assertion names the columns a consumer relies on rather than the whole header.
+                { assert path(process.out.smiss.get(0).get(1)).readLines().first().split('\t').toList().containsAll(['#FID', 'IID', 'MISSING_CT', 'OBS_CT', 'F_MISS']) },
                 { assert path(process.out.vmiss.get(0).get(1)).readLines().first().split('\t').toList() == ['#CHROM', 'ID', 'MISSING_CT', 'OBS_CT', 'F_MISS'] },
                 { assert snapshot(process.out.smiss, process.out.vmiss, process.out.versions_plink2).match() },
             )

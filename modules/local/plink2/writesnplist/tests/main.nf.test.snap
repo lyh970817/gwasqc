@@ -1,0 +1,84 @@
+{
+    "plink_simulated - bed - stub": {
+        "content": [
+            {
+                "log": [
+                    [
+                        {
+                            "id": "plink_simulated"
+                        },
+                        "plink_simulated.log:md5,d41d8cd98f00b204e9800998ecf8427e"
+                    ]
+                ],
+                "snplist": [
+                    [
+                        {
+                            "id": "plink_simulated"
+                        },
+                        "plink_simulated.snplist:md5,d41d8cd98f00b204e9800998ecf8427e"
+                    ]
+                ],
+                "versions_plink2": [
+                    [
+                        "PLINK2_WRITESNPLIST",
+                        "plink2",
+                        "2.0.0-a.6.9LM"
+                    ]
+                ]
+            }
+        ],
+        "timestamp": "2026-09-20T13:36:24.232607149",
+        "meta": {
+            "nf-test": "0.9.5",
+            "nextflow": "26.04.4"
+        }
+    },
+    "plink_simulated - bed - maf filter": {
+        "content": [
+            [
+                [
+                    {
+                        "id": "plink_simulated"
+                    },
+                    "plink_simulated.snplist:md5,c219698d9fe6a29291a8abd5dcee2b3a"
+                ]
+            ],
+            [
+                [
+                    "PLINK2_WRITESNPLIST",
+                    "plink2",
+                    "2.0.0-a.6.9LM"
+                ]
+            ]
+        ],
+        "timestamp": "2026-09-20T13:35:45.027740117",
+        "meta": {
+            "nf-test": "0.9.5",
+            "nextflow": "26.04.4"
+        }
+    },
+    "plink_simulated - pgen - extract and remove lists": {
+        "content": [
+            [
+                [
+                    {
+                        "id": "plink_simulated_pgen"
+                    },
+                    "plink_simulated_pgen.snplist:md5,127248de349af5a0ad0497e7c8eeac1d"
+                ]
+            ],
+            [
+                [
+                    "PLINK2_WRITESNPLIST",
+                    "plink2",
+                    "2.0.0-a.6.9LM"
+                ]
+            ]
+        ],
+        "timestamp": "2026-09-20T13:36:04.113583544",
+        "meta": {
+            "nf-test": "0.9.5",
+            "nextflow": "26.04.4"
+        }
+    }
+}

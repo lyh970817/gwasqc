@@ -1,0 +1,92 @@
+{
+    "plink_simulated - pgen - exclude list": {
+        "content": [
+            [
+                [
+                    {
+                        "id": "plink_simulated_pgen"
+                    },
+                    "plink_simulated_pgen.hardy:md5,e5b1dcf1c5a182f672476a2ee00a9c62"
+                ]
+            ],
+            [
+                [
+                    "PLINK2_HARDY",
+                    "plink2",
+                    "2.0.0-a.6.9LM"
+                ]
+            ]
+        ],
+        "timestamp": "2026-09-20T13:33:29.370005207",
+        "meta": {
+            "nf-test": "0.9.5",
+            "nextflow": "26.04.4"
+        }
+    },
+    "plink_simulated - bed": {
+        "content": [
+            [
+                [
+                    {
+                        "id": "plink_simulated"
+                    },
+                    "plink_simulated.hardy:md5,b7ef84de2ab0c00cb8cad4aec365e8bd"
+                ]
+            ],
+            [
+                [
+                    "PLINK2_HARDY",
+                    "plink2",
+                    "2.0.0-a.6.9LM"
+                ]
+            ]
+        ],
+        "timestamp": "2026-09-20T13:33:18.18819761",
+        "meta": {
+            "nf-test": "0.9.5",
+            "nextflow": "26.04.4"
+        }
+    },
+    "plink_simulated - bed - stub": {
+        "content": [
+            {
+                "hardy": [
+                    [
+                        {
+                            "id": "plink_simulated"
+                        },
+                        "plink_simulated.hardy:md5,d41d8cd98f00b204e9800998ecf8427e"
+                    ]
+                ],
+                "hardy_x": [
+                    [
+                        {
+                            "id": "plink_simulated"
+                        },
+                        "plink_simulated.hardy.x:md5,d41d8cd98f00b204e9800998ecf8427e"
+                    ]
+                ],
+                "log": [
+                    [
+                        {
+                            "id": "plink_simulated"
+                        },
+                        "plink_simulated.log:md5,d41d8cd98f00b204e9800998ecf8427e"
+                    ]
+                ],
+                "versions_plink2": [
+                    [
+                        "PLINK2_HARDY",
+                        "plink2",
+                        "2.0.0-a.6.9LM"
+                    ]
+                ]
+            }
+        ],
+        "timestamp": "2026-09-20T13:33:41.53580297",
+        "meta": {
+            "nf-test": "0.9.5",
+            "nextflow": "26.04.4"
+        }
+    }
+}

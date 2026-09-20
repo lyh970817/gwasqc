@@ -3,6 +3,7 @@ nextflow_process {
     name "Test Process MISSINGNESS_DECISIONS"
     script "../main.nf"
     process "MISSINGNESS_DECISIONS"
+    config "./nextflow.config"
 
     tag "modules"
     tag "modules_local"

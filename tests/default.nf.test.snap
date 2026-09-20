@@ -1,0 +1,189 @@
+{
+    "-profile test - stub": {
+        "content": [
+            {
+                "HWE_DECISIONS": {
+                    "r-base": "4.3.1"
+                },
+                "MISSINGNESS_DECISIONS": {
+                    "r-base": "4.3.1"
+                },
+                "PLINK2_HARDY": {
+                    "plink2": "2.0.0-a.6.9LM"
+                },
+                "PLINK2_MAKEBED": {
+                    "plink2": "2.0.0-a.6.9LM"
+                },
+                "PLINK2_MISSING": {
+                    "plink2": "2.0.0-a.6.9LM"
+                },
+                "PLINK2_WRITESNPLIST": {
+                    "plink2": "2.0.0-a.6.9LM"
+                },
+                "Workflow": {
+                    "nf-core/gwasqc": "v1.0.0dev"
+                }
+            },
+            [
+                "genotypes",
+                "genotypes/study_afr",
+                "genotypes/study_afr/study_afr.qc.bed",
+                "genotypes/study_afr/study_afr.qc.bim",
+                "genotypes/study_afr/study_afr.qc.fam",
+                "genotypes/study_eur",
+                "genotypes/study_eur/study_eur.qc.bed",
+                "genotypes/study_eur/study_eur.qc.bim",
+                "genotypes/study_eur/study_eur.qc.fam",
+                "multiqc",
+                "multiqc/multiqc_data",
+                "multiqc/multiqc_data/.stub",
+                "multiqc/multiqc_plots",
+                "multiqc/multiqc_plots/.stub",
+                "multiqc/multiqc_report.html",
+                "pipeline_info",
+                "pipeline_info/nf_core_gwasqc_software_mqc_versions.yml",
+                "qc",
+                "qc/study_afr",
+                "qc/study_afr/hwe",
+                "qc/study_afr/hwe/study_afr.hardy",
+                "qc/study_afr/hwe/study_afr.hardy.x",
+                "qc/study_afr/hwe/study_afr.hwe_exclude.txt",
+                "qc/study_afr/maf",
+                "qc/study_afr/maf/study_afr.maf.snplist",
+                "qc/study_afr/missingness",
+                "qc/study_afr/missingness/study_afr.geno_exclude.txt",
+                "qc/study_afr/missingness/study_afr.mind_remove.txt",
+                "qc/study_afr/missingness/study_afr.missingness_ladder.tsv",
+                "qc/study_afr/missingness/study_afr.smiss",
+                "qc/study_afr/missingness/study_afr.vmiss",
+                "qc/study_eur",
+                "qc/study_eur/hwe",
+                "qc/study_eur/hwe/study_eur.hardy",
+                "qc/study_eur/hwe/study_eur.hardy.x",
+                "qc/study_eur/hwe/study_eur.hwe_exclude.txt",
+                "qc/study_eur/maf",
+                "qc/study_eur/maf/study_eur.maf.snplist",
+                "qc/study_eur/missingness",
+                "qc/study_eur/missingness/study_eur.geno_exclude.txt",
+                "qc/study_eur/missingness/study_eur.mind_remove.txt",
+                "qc/study_eur/missingness/study_eur.missingness_ladder.tsv",
+                "qc/study_eur/missingness/study_eur.smiss",
+                "qc/study_eur/missingness/study_eur.vmiss"
+            ]
+        ],
+        "timestamp": "2026-09-20T13:36:09.874607538",
+        "meta": {
+            "nf-test": "0.9.5",
+            "nextflow": "26.04.4"
+        }
+    },
+    "-profile test": {
+        "content": [
+            {
+                "HWE_DECISIONS": {
+                    "r-base": "4.3.1"
+                },
+                "MISSINGNESS_DECISIONS": {
+                    "r-base": "4.3.1"
+                },
+                "PLINK2_HARDY": {
+                    "plink2": "2.0.0-a.6.9LM"
+                },
+                "PLINK2_MAKEBED": {
+                    "plink2": "2.0.0-a.6.9LM"
+                },
+                "PLINK2_MISSING": {
+                    "plink2": "2.0.0-a.6.9LM"
+                },
+                "PLINK2_WRITESNPLIST": {
+                    "plink2": "2.0.0-a.6.9LM"
+                },
+                "Workflow": {
+                    "nf-core/gwasqc": "v1.0.0dev"
+                }
+            },
+            [
+                "genotypes",
+                "genotypes/study_afr",
+                "genotypes/study_afr/study_afr.qc.bed",
+                "genotypes/study_afr/study_afr.qc.bim",
+                "genotypes/study_afr/study_afr.qc.fam",
+                "genotypes/study_eur",
+                "genotypes/study_eur/study_eur.qc.bed",
+                "genotypes/study_eur/study_eur.qc.bim",
+                "genotypes/study_eur/study_eur.qc.fam",
+                "multiqc",
+                "multiqc/multiqc_data",
+                "multiqc/multiqc_data/llms-full.txt",
+                "multiqc/multiqc_data/multiqc.log",
+                "multiqc/multiqc_data/multiqc.parquet",
+                "multiqc/multiqc_data/multiqc_citations.txt",
+                "multiqc/multiqc_data/multiqc_data.json",
+                "multiqc/multiqc_data/multiqc_software_versions.txt",
+                "multiqc/multiqc_data/multiqc_sources.txt",
+                "multiqc/multiqc_report.html",
+                "pipeline_info",
+                "pipeline_info/nf_core_gwasqc_software_mqc_versions.yml",
+                "qc",
+                "qc/study_afr",
+                "qc/study_afr/hwe",
+                "qc/study_afr/hwe/study_afr.hardy",
+                "qc/study_afr/hwe/study_afr.hardy.x",
+                "qc/study_afr/hwe/study_afr.hwe_exclude.txt",
+                "qc/study_afr/maf",
+                "qc/study_afr/maf/study_afr.maf.snplist",
+                "qc/study_afr/missingness",
+                "qc/study_afr/missingness/study_afr.geno_exclude.txt",
+                "qc/study_afr/missingness/study_afr.mind_remove.txt",
+                "qc/study_afr/missingness/study_afr.missingness_ladder.tsv",
+                "qc/study_afr/missingness/study_afr.smiss",
+                "qc/study_afr/missingness/study_afr.vmiss",
+                "qc/study_eur",
+                "qc/study_eur/hwe",
+                "qc/study_eur/hwe/study_eur.hardy",
+                "qc/study_eur/hwe/study_eur.hardy.x",
+                "qc/study_eur/hwe/study_eur.hwe_exclude.txt",
+                "qc/study_eur/maf",
+                "qc/study_eur/maf/study_eur.maf.snplist",
+                "qc/study_eur/missingness",
+                "qc/study_eur/missingness/study_eur.geno_exclude.txt",
+                "qc/study_eur/missingness/study_eur.mind_remove.txt",
+                "qc/study_eur/missingness/study_eur.missingness_ladder.tsv",
+                "qc/study_eur/missingness/study_eur.smiss",
+                "qc/study_eur/missingness/study_eur.vmiss"
+            ],
+            [
+                "study_afr.qc.bed:md5,3bb83fd91acd70af2f6d6f1dbbbcc713",
+                "study_afr.qc.bim:md5,33f14dfcc5a0fcf1b3c4d503eb0013c5",
+                "study_afr.qc.fam:md5,80d9814370c0ebe5d042b79bbbeb47ee",
+                "study_eur.qc.bed:md5,3165fd524d7b787cd91f9ccb82324063",
+                "study_eur.qc.bim:md5,89df2f6732f81fc60ef43abc2be36355",
+                "study_eur.qc.fam:md5,6fe787141dcaedf646aacb0b1cbd241c",
+                "multiqc_citations.txt:md5,4c806e63a283ec1b7e78cdae3a923d4f",
+                "study_afr.hardy:md5,7c1b1754b1cc3c7e1ad61685b552a8e9",
+                "study_afr.hardy.x:md5,4c2b4b26cdc715d49d79273b4a50ee6e",
+                "study_afr.hwe_exclude.txt:md5,5c5c7bb5cc1ca307c582e2e9a5062ed3",
+                "study_afr.maf.snplist:md5,610b5acd571d2bf7c7bc9acf8555f9e7",
+                "study_afr.geno_exclude.txt:md5,306ebae029a8d020020a2f3978a8bf8c",
+                "study_afr.mind_remove.txt:md5,5fdbdc854fcbd317135f87efc6ad182d",
+                "study_afr.missingness_ladder.tsv:md5,b9f7149ce37eceba735d659b40dbb457",
+                "study_afr.smiss:md5,151fb604f83220fc679b9f851407f9b7",
+                "study_afr.vmiss:md5,5812f5eda3d0d23cd3a5650c8db64615",
+                "study_eur.hardy:md5,6ceeee5eac7e25c5cfea99b7938ed1a4",
+                "study_eur.hardy.x:md5,e773432a02a72293c177a6ec2b00d961",
+                "study_eur.hwe_exclude.txt:md5,5c5c7bb5cc1ca307c582e2e9a5062ed3",
+                "study_eur.maf.snplist:md5,6873b91a6fe3c9066a90b572089641d2",
+                "study_eur.geno_exclude.txt:md5,3da7987f6f7096b36350eabe2e8f8882",
+                "study_eur.mind_remove.txt:md5,6052c5a2225990a800497de7c0f0f3a8",
+                "study_eur.missingness_ladder.tsv:md5,52850676d2776af1a58e8501a77b653c",
+                "study_eur.smiss:md5,3226482e5392f56ee289f39220e9408c",
+                "study_eur.vmiss:md5,66ba3c6e0470c1bece269544178ae032"
+            ]
+        ],
+        "timestamp": "2026-09-20T13:35:32.964214065",
+        "meta": {
+            "nf-test": "0.9.5",
+            "nextflow": "26.04.4"
+        }
+    }
+}
