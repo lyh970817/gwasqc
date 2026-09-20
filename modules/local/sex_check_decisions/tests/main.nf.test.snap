@@ -1,0 +1,128 @@
+{
+    "study_eur - stub": {
+        "content": [
+            {
+                "hist_data": [
+                    [
+                        {
+                            "ancestry": "EUR",
+                            "id": "study_eur"
+                        },
+                        "study_eur.sex_check_hist.tsv:md5,74b5a647d36dc0d90581e5123b7ba969"
+                    ]
+                ],
+                "hist_plot": [
+                    [
+                        {
+                            "ancestry": "EUR",
+                            "id": "study_eur"
+                        },
+                        "study_eur.sex_check_hist.pdf:md5,d41d8cd98f00b204e9800998ecf8427e",
+                        "study_eur.sex_check_hist.png:md5,d41d8cd98f00b204e9800998ecf8427e"
+                    ]
+                ],
+                "mismatch": [
+                    [
+                        {
+                            "ancestry": "EUR",
+                            "id": "study_eur"
+                        },
+                        "study_eur.sex_mismatch.tsv:md5,29b1911eee36b4bc4173efc6d444765b"
+                    ]
+                ],
+                "sample_remove": [
+                    [
+                        {
+                            "ancestry": "EUR",
+                            "id": "study_eur"
+                        },
+                        "study_eur.sex_mismatch_remove.txt:md5,d41d8cd98f00b204e9800998ecf8427e"
+                    ]
+                ],
+                "versions": [
+                    "versions.yml:md5,322d380c9850a4a6b9ef939f88c3606e"
+                ]
+            }
+        ],
+        "timestamp": "2026-09-20T15:12:28.38363735",
+        "meta": {
+            "nf-test": "0.9.5",
+            "nextflow": "26.04.4"
+        }
+    },
+    "study_eur - two mismatches": {
+        "content": [
+            [
+                [
+                    {
+                        "id": "study_eur",
+                        "ancestry": "EUR"
+                    },
+                    "study_eur.sex_mismatch.tsv:md5,cf5ec8cb8d81d7da452503f6725607fc"
+                ]
+            ],
+            [
+                [
+                    {
+                        "id": "study_eur",
+                        "ancestry": "EUR"
+                    },
+                    "study_eur.sex_mismatch_remove.txt:md5,a15cb4ea5ae0beb9ffc14c624d142f0e"
+                ]
+            ],
+            [
+                [
+                    {
+                        "id": "study_eur",
+                        "ancestry": "EUR"
+                    },
+                    "study_eur.sex_check_hist.tsv:md5,57ccc8e41dcb1315d335dbfa1f0a1873"
+                ]
+            ],
+            [
+                "versions.yml:md5,322d380c9850a4a6b9ef939f88c3606e"
+            ]
+        ],
+        "timestamp": "2026-09-20T15:12:15.41822018",
+        "meta": {
+            "nf-test": "0.9.5",
+            "nextflow": "26.04.4"
+        }
+    },
+    "study_eur - no mismatch": {
+        "content": [
+            [
+                [
+                    {
+                        "id": "study_eur",
+                        "ancestry": "EUR"
+                    },
+                    "study_eur.sex_mismatch.tsv:md5,29b1911eee36b4bc4173efc6d444765b"
+                ]
+            ],
+            [
+                [
+                    {
+                        "id": "study_eur",
+                        "ancestry": "EUR"
+                    },
+                    "study_eur.sex_mismatch_remove.txt:md5,d41d8cd98f00b204e9800998ecf8427e"
+                ]
+            ],
+            [
+                [
+                    {
+                        "id": "study_eur",
+                        "ancestry": "EUR"
+                    },
+                    "study_eur.sex_check_hist.tsv:md5,b470569b14d7e3e7082b022aba2b1c4b"
+                ]
+            ]
+        ],
+        "timestamp": "2026-09-20T15:12:22.424190535",
+        "meta": {
+            "nf-test": "0.9.5",
+            "nextflow": "26.04.4"
+        }
+    }
+}

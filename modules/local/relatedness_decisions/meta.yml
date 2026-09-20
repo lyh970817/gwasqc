@@ -1,0 +1,153 @@
+name: relatedness_decisions
+description: Classify the sample pairs of one stratum from a plink2 --make-king-table report, list one member of every duplicate or monozygotic pair for removal, flag mean-kinship outliers and draw the kinship histogram
+keywords:
+  - relatedness
+  - kinship
+  - king
+  - genotype
+  - quality control
+  - plot
+tools:
+  - r-base:
+      description: The R programming language runtime
+      homepage: https://www.r-project.org/
+      documentation: https://cran.r-project.org/manuals.html
+  - r-ggplot2:
+      description: Grammar-of-graphics plotting for R
+      homepage: https://ggplot2.tidyverse.org/
+      documentation: https://ggplot2.tidyverse.org/reference/
+  - r-data.table:
+      description: Fast tabular data handling for R
+      homepage: https://r-datatable.com/
+      documentation: https://rdatatable.gitlab.io/data.table/
+input:
+  - - meta:
+        type: map
+        description: |
+          Groovy map describing the stratum.
+          Expected keys:
+            - id (string): Stratum identifier, used as the output prefix.
+    - kin0:
+        type: file
+        description: plink2 --make-king-table report with IID1, IID2, IBS0 and KINSHIP columns, optionally FID1 and FID2; pairs below a --king-table-filter are absent and count as unrelated
+        pattern: "*.kin0"
+        ontologies:
+          - edam: "http://edamontology.org/format_3475" # TSV
+    - smiss:
+        type: file
+        description: plink2 --missing sample report of the same fileset with an IID, optionally an FID, and an F_MISS column; it names every sample and supplies the missing-call rate the duplicate rule compares
+        pattern: "*.smiss"
+        ontologies:
+          - edam: "http://edamontology.org/format_3475" # TSV
+    - mind_remove:
+        type: file
+        description: Optional list of the samples removed before the kinship report was computed, one FID IID pair or bare IID per line; use `[]` when none was removed
+        pattern: "*"
+        ontologies:
+          - edam: "http://edamontology.org/format_2330" # Text
+  - indiv_sd:
+      type: float
+      description: An individual whose mean kinship over all other samples lies strictly above the cohort mean plus this many standard deviations is an outlier
+  - po_ibs0_max:
+      type: float
+      description: A first-degree pair whose IBS0 proportion is at or below this value is classified parent-offspring, above it full sibling
+output:
+  pairs:
+    - - meta:
+          type: map
+          description: Metadata map propagated from input
+      - "${prefix}.relatedness_pairs.tsv":
+          type: file
+          description: The kinship report with DEGREE (0 duplicate/MZ, 1, 2, 3, empty below third degree) and RELATIONSHIP (duplicate_or_mz, parent_offspring, full_sibling, second_degree, third_degree, unrelated) added per pair
+          pattern: "*.relatedness_pairs.tsv"
+          ontologies:
+            - edam: "http://edamontology.org/format_3475" # TSV
+  indiv:
+    - - meta:
+          type: map
+          description: Metadata map propagated from input
+      - "${prefix}.relatedness_indiv.tsv":
+          type: file
+          description: Per sample, the number of reported pairs it is in, its mean kinship over all other samples and whether it is an outlier
+          pattern: "*.relatedness_indiv.tsv"
+          ontologies:
+            - edam: "http://edamontology.org/format_3475" # TSV
+  sample_remove:
+    - - meta:
+          type: map
+          description: Metadata map propagated from input
+      - "${prefix}.relatedness_remove.txt":
+          type: file
+          description: One space-separated FID IID pair, or bare IID, per line for plink2 --remove, naming the member of each duplicate/MZ pair with the higher missing-call rate; empty when there is none
+          pattern: "*.relatedness_remove.txt"
+          ontologies:
+            - edam: "http://edamontology.org/format_2330" # Text
+  outliers:
+    - - meta:
+          type: map
+          description: Metadata map propagated from input
+      - "${prefix}.relatedness_outliers.txt":
+          type: file
+          description: One space-separated FID IID pair, or bare IID, per mean-kinship outlier, in the format of a plink2 sample list; empty when there is none
+          pattern: "*.relatedness_outliers.txt"
+          ontologies:
+            - edam: "http://edamontology.org/format_2330" # Text
+  hist_data:
+    - - meta:
+          type: map
+          description: Metadata map propagated from input
+      - "${prefix}.relatedness_hist.tsv":
+          type: file
+          description: Counts of reported pairs in 100 bins of kinship spanning the observed range; the data the histogram is drawn from
+          pattern: "*.relatedness_hist.tsv"
+          ontologies:
+            - edam: "http://edamontology.org/format_3475" # TSV
+  hist_plot:
+    - - meta:
+          type: map
+          description: Metadata map propagated from input
+      - "${prefix}.relatedness_hist.pdf":
+          type: file
+          description: Histogram of the reported kinship coefficients; a second page is zoomed to a count of 100
+          pattern: "*.relatedness_hist.pdf"
+          ontologies:
+            - edam: "http://edamontology.org/format_3508" # PDF
+      - "${prefix}.relatedness_hist.png":
+          type: file
+          description: The full-range histogram as an image
+          pattern: "*.relatedness_hist.png"
+          ontologies:
+            - edam: "http://edamontology.org/format_3603" # PNG
+  versions:
+    - versions.yml:
+        type: file
+        description: File containing software versions
+        pattern: "versions.yml"
+        ontologies:
+          - edam: "http://edamontology.org/format_3750" # YAML
+topics:
+  versions:
+    - versions.yml:
+        type: file
+        description: File containing software versions, written by the R template because an eval output is only accepted for a Bash script
+        pattern: "versions.yml"
+        ontologies:
+          - edam: "http://edamontology.org/format_3750" # YAML
+authors:
+  - "@lyh970817"
+maintainers:
+  - "@lyh970817"
+containers:
+  conda:
+    linux/amd64:
+      lock_file: "modules/local/relatedness_decisions/.conda-lock/linux_amd64-bd-785e51271c23bbdc_1.txt"
+  docker:
+    linux/amd64:
+      build_id: "bd-785e51271c23bbdc_1"
+      name: "community.wave.seqera.io/library/r-base_r-ggplot2_r-data.table:785e51271c23bbdc"
+      scan_id: "sc-940f534e023f3133_1"
+  singularity:
+    linux/amd64:
+      build_id: "bd-0012f1154a886ee6_1"
+      name: "oras://community.wave.seqera.io/library/r-base_r-ggplot2_r-data.table:0012f1154a886ee6"
+      https: "https://community-cr-prod.seqera.io/docker/registry/v2/blobs/sha256/ac/ac330e254aed1e019ded0a6140463199760e9ee8f1cf398670eb40ccee61ed14/data"

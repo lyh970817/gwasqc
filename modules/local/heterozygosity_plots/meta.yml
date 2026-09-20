@@ -1,0 +1,126 @@
+name: heterozygosity_plots
+description: Draw the heterozygosity report of one stratum, a histogram of the plink2 --het inbreeding coefficient and its scatter against the --check-sex chromosome X F, joined explicitly on the sample IDs
+keywords:
+  - heterozygosity
+  - inbreeding coefficient
+  - genotype
+  - quality control
+  - plot
+tools:
+  - r-base:
+      description: The R programming language runtime
+      homepage: https://www.r-project.org/
+      documentation: https://cran.r-project.org/manuals.html
+  - r-ggplot2:
+      description: Grammar-of-graphics plotting for R
+      homepage: https://ggplot2.tidyverse.org/
+      documentation: https://ggplot2.tidyverse.org/reference/
+  - r-data.table:
+      description: Fast tabular data handling for R
+      homepage: https://r-datatable.com/
+      documentation: https://rdatatable.gitlab.io/data.table/
+input:
+  - - meta:
+        type: map
+        description: |
+          Groovy map describing the stratum.
+          Expected keys:
+            - id (string): Stratum identifier, used as the output prefix.
+    - het:
+        type: file
+        description: plink2 --het report with an IID, optionally an FID, and an F column
+        pattern: "*.het"
+        ontologies:
+          - edam: "http://edamontology.org/format_3475" # TSV
+    - sexcheck:
+        type: file
+        description: plink2 --check-sex report of the same fileset with PEDSEX and F columns
+        pattern: "*.sexcheck"
+        ontologies:
+          - edam: "http://edamontology.org/format_3475" # TSV
+output:
+  hist_data:
+    - - meta:
+          type: map
+          description: Metadata map propagated from input
+      - "${prefix}.het_hist.tsv":
+          type: file
+          description: Counts of samples in 100 bins of the heterozygosity F spanning the observed range; the data the histogram is drawn from
+          pattern: "*.het_hist.tsv"
+          ontologies:
+            - edam: "http://edamontology.org/format_3475" # TSV
+  hist_plot:
+    - - meta:
+          type: map
+          description: Metadata map propagated from input
+      - "${prefix}.het_hist.pdf":
+          type: file
+          description: Histogram of the heterozygosity F
+          pattern: "*.het_hist.pdf"
+          ontologies:
+            - edam: "http://edamontology.org/format_3508" # PDF
+      - "${prefix}.het_hist.png":
+          type: file
+          description: The histogram as an image
+          pattern: "*.het_hist.png"
+          ontologies:
+            - edam: "http://edamontology.org/format_3603" # PNG
+  scatter_data:
+    - - meta:
+          type: map
+          description: Metadata map propagated from input
+      - "${prefix}.het_sex_scatter.tsv":
+          type: file
+          description: One row per sample present in both reports with the ID columns, PEDSEX, F_HET and F_SEX; the data the scatter is drawn from
+          pattern: "*.het_sex_scatter.tsv"
+          ontologies:
+            - edam: "http://edamontology.org/format_3475" # TSV
+  scatter_plot:
+    - - meta:
+          type: map
+          description: Metadata map propagated from input
+      - "${prefix}.het_sex_scatter.pdf":
+          type: file
+          description: Scatter of the heterozygosity F against the sex-check F, coloured by recorded sex
+          pattern: "*.het_sex_scatter.pdf"
+          ontologies:
+            - edam: "http://edamontology.org/format_3508" # PDF
+      - "${prefix}.het_sex_scatter.png":
+          type: file
+          description: The scatter as an image
+          pattern: "*.het_sex_scatter.png"
+          ontologies:
+            - edam: "http://edamontology.org/format_3603" # PNG
+  versions:
+    - versions.yml:
+        type: file
+        description: File containing software versions
+        pattern: "versions.yml"
+        ontologies:
+          - edam: "http://edamontology.org/format_3750" # YAML
+topics:
+  versions:
+    - versions.yml:
+        type: file
+        description: File containing software versions, written by the R template because an eval output is only accepted for a Bash script
+        pattern: "versions.yml"
+        ontologies:
+          - edam: "http://edamontology.org/format_3750" # YAML
+authors:
+  - "@lyh970817"
+maintainers:
+  - "@lyh970817"
+containers:
+  conda:
+    linux/amd64:
+      lock_file: "modules/local/heterozygosity_plots/.conda-lock/linux_amd64-bd-785e51271c23bbdc_1.txt"
+  docker:
+    linux/amd64:
+      build_id: "bd-785e51271c23bbdc_1"
+      name: "community.wave.seqera.io/library/r-base_r-ggplot2_r-data.table:785e51271c23bbdc"
+      scan_id: "sc-940f534e023f3133_1"
+  singularity:
+    linux/amd64:
+      build_id: "bd-0012f1154a886ee6_1"
+      name: "oras://community.wave.seqera.io/library/r-base_r-ggplot2_r-data.table:0012f1154a886ee6"
+      https: "https://community-cr-prod.seqera.io/docker/registry/v2/blobs/sha256/ac/ac330e254aed1e019ded0a6140463199760e9ee8f1cf398670eb40ccee61ed14/data"

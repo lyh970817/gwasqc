@@ -1,0 +1,84 @@
+{
+    "study_eur - stub": {
+        "content": [
+            {
+                "hist_data": [
+                    [
+                        {
+                            "ancestry": "EUR",
+                            "id": "study_eur"
+                        },
+                        "study_eur.het_hist.tsv:md5,81c1ba5414fcb016e9f6fe7e97f4ab35"
+                    ]
+                ],
+                "hist_plot": [
+                    [
+                        {
+                            "ancestry": "EUR",
+                            "id": "study_eur"
+                        },
+                        "study_eur.het_hist.pdf:md5,d41d8cd98f00b204e9800998ecf8427e",
+                        "study_eur.het_hist.png:md5,d41d8cd98f00b204e9800998ecf8427e"
+                    ]
+                ],
+                "scatter_data": [
+                    [
+                        {
+                            "ancestry": "EUR",
+                            "id": "study_eur"
+                        },
+                        "study_eur.het_sex_scatter.tsv:md5,23647538bcfbf89e9a8f465226f59b2e"
+                    ]
+                ],
+                "scatter_plot": [
+                    [
+                        {
+                            "ancestry": "EUR",
+                            "id": "study_eur"
+                        },
+                        "study_eur.het_sex_scatter.pdf:md5,d41d8cd98f00b204e9800998ecf8427e",
+                        "study_eur.het_sex_scatter.png:md5,d41d8cd98f00b204e9800998ecf8427e"
+                    ]
+                ],
+                "versions": [
+                    "versions.yml:md5,fe276844e916baea7c5b810ed9f5dedb"
+                ]
+            }
+        ],
+        "timestamp": "2026-09-20T15:15:38.414437071",
+        "meta": {
+            "nf-test": "0.9.5",
+            "nextflow": "26.04.4"
+        }
+    },
+    "study_eur": {
+        "content": [
+            [
+                [
+                    {
+                        "id": "study_eur",
+                        "ancestry": "EUR"
+                    },
+                    "study_eur.het_hist.tsv:md5,8c3e45944a7da4ce7e8e0ab554171a6b"
+                ]
+            ],
+            [
+                [
+                    {
+                        "id": "study_eur",
+                        "ancestry": "EUR"
+                    },
+                    "study_eur.het_sex_scatter.tsv:md5,6dee27da9e02686caf57e8cf52218cc7"
+                ]
+            ],
+            [
+                "versions.yml:md5,fe276844e916baea7c5b810ed9f5dedb"
+            ]
+        ],
+        "timestamp": "2026-09-20T15:15:32.076990212",
+        "meta": {
+            "nf-test": "0.9.5",
+            "nextflow": "26.04.4"
+        }
+    }
+}

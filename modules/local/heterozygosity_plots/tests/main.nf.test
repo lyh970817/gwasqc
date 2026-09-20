@@ -1,0 +1,102 @@
+nextflow_process {
+
+    name "Test Process HETEROZYGOSITY_PLOTS"
+    script "../main.nf"
+    process "HETEROZYGOSITY_PLOTS"
+    config "./nextflow.config"
+
+    tag "modules"
+    tag "modules_local"
+    tag "heterozygosity_plots"
+
+    // Both reports come from the gwasqc fixture stratum: --het over its autosomes and --check-sex with the PAR
+    // split and the pipeline's thresholds, so that the join has 125 samples on each side.
+    setup {
+        run("PLINK2_HET") {
+            script "../../plink2/het/main.nf"
+            process {
+                """
+                input[0] = [
+                    [ id:'study_eur', ancestry:'EUR' ],
+                    file(params.pipelines_testdata_base_path + 'data/gwasqc/genotypes/study_eur.bed', checkIfExists: true),
+                    file(params.pipelines_testdata_base_path + 'data/gwasqc/genotypes/study_eur.bim', checkIfExists: true),
+                    file(params.pipelines_testdata_base_path + 'data/gwasqc/genotypes/study_eur.fam', checkIfExists: true),
+                    [],
+                    [],
+                    [],
+                    [],
+                ]
+                """
+            }
+        }
+        run("PLINK2_CHECKSEX") {
+            script "../../plink2/checksex/main.nf"
+            process {
+                """
+                input[0] = [
+                    [ id:'study_eur', ancestry:'EUR' ],
+                    file(params.pipelines_testdata_base_path + 'data/gwasqc/genotypes/study_eur.bed', checkIfExists: true),
+                    file(params.pipelines_testdata_base_path + 'data/gwasqc/genotypes/study_eur.bim', checkIfExists: true),
+                    file(params.pipelines_testdata_base_path + 'data/gwasqc/genotypes/study_eur.fam', checkIfExists: true),
+                    [],
+                    [],
+                    [],
+                    [],
+                ]
+                """
+            }
+        }
+    }
+
+    test("study_eur") {
+
+        when {
+            process {
+                """
+                input[0] = PLINK2_HET.out.het.join(PLINK2_CHECKSEX.out.sexcheck)
+                """
+            }
+        }
+
+        then {
+            def hist = path(process.out.hist_data.get(0).get(1)).readLines().collect { line -> line.split('\t').toList() }
+            def scatter = path(process.out.scatter_data.get(0).get(1)).readLines().collect { line -> line.split('\t').toList() }
+            def mismatches = scatter.drop(1).findAll { fields -> fields[1] in ['EUR_S010', 'EUR_S011'] }.collectEntries { fields -> [(fields[1]): fields[4] as Double] }
+            assertAll(
+                { assert process.success },
+                { assert hist[0] == ['bin_start', 'bin_end', 'count'] },
+                { assert hist.size() == 101 },
+                { assert hist.drop(1).collect { fields -> fields[2] as Integer }.sum() == 125 },
+                // Every sample joins once on FID and IID, and the two F columns are told apart by name: the
+                // planted sex mismatches keep their chromosome X F, not their autosomal one.
+                { assert scatter[0] == ['FID', 'IID', 'PEDSEX', 'F_HET', 'F_SEX'] },
+                { assert scatter.size() == 126 },
+                { assert mismatches['EUR_S010'] > 0.8 },
+                { assert mismatches['EUR_S011'] < 0.2 },
+                { assert path(process.out.hist_plot.get(0).get(1)).size() > 0 },
+                { assert path(process.out.scatter_plot.get(0).get(2)).size() > 0 },
+                { assert snapshot(process.out.hist_data, process.out.scatter_data, process.out.versions).match() },
+            )
+        }
+    }
+
+    test("study_eur - stub") {
+
+        options "-stub"
+
+        when {
+            process {
+                """
+                input[0] = PLINK2_HET.out.het.join(PLINK2_CHECKSEX.out.sexcheck)
+                """
+            }
+        }
+
+        then {
+            assertAll(
+                { assert process.success },
+                { assert snapshot(sanitizeOutput(process.out)).match() },
+            )
+        }
+    }
+}

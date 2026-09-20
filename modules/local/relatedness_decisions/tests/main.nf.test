@@ -1,0 +1,138 @@
+nextflow_process {
+
+    name "Test Process RELATEDNESS_DECISIONS"
+    script "../main.nf"
+    process "RELATEDNESS_DECISIONS"
+    config "./nextflow.config"
+
+    tag "modules"
+    tag "modules_local"
+    tag "relatedness_decisions"
+
+    // The gwasqc fixture stratum plants a duplicate pair (EUR_S020/EUR_S021, identical genotypes), a
+    // parent-offspring pair (EUR_S030/EUR_S031) and a full-sib pair (EUR_S032/EUR_S033); the setup computes the
+    // kinship table above the third-degree bound and the missingness report the duplicate rule reads.
+    setup {
+        run("PLINK2_MAKEKINGTABLE") {
+            script "../../plink2/makekingtable/main.nf"
+            process {
+                """
+                input[0] = [
+                    [ id:'study_eur', ancestry:'EUR' ],
+                    file(params.pipelines_testdata_base_path + 'data/gwasqc/genotypes/study_eur.bed', checkIfExists: true),
+                    file(params.pipelines_testdata_base_path + 'data/gwasqc/genotypes/study_eur.bim', checkIfExists: true),
+                    file(params.pipelines_testdata_base_path + 'data/gwasqc/genotypes/study_eur.fam', checkIfExists: true),
+                    [],
+                    [],
+                    [],
+                    [],
+                ]
+                """
+            }
+        }
+        run("PLINK2_MISSING") {
+            script "../../plink2/missing/main.nf"
+            process {
+                """
+                input[0] = [
+                    [ id:'study_eur', ancestry:'EUR' ],
+                    file(params.pipelines_testdata_base_path + 'data/gwasqc/genotypes/study_eur.bed', checkIfExists: true),
+                    file(params.pipelines_testdata_base_path + 'data/gwasqc/genotypes/study_eur.bim', checkIfExists: true),
+                    file(params.pipelines_testdata_base_path + 'data/gwasqc/genotypes/study_eur.fam', checkIfExists: true),
+                    [],
+                    [],
+                    [],
+                    [],
+                ]
+                """
+            }
+        }
+    }
+
+    test("study_eur - planted pairs") {
+
+        when {
+            process {
+                """
+                input[0] = PLINK2_MAKEKINGTABLE.out.kin0.join(PLINK2_MISSING.out.smiss).map { meta, kin0, smiss -> [meta, kin0, smiss, []] }
+                input[1] = 3
+                input[2] = 0.005
+                """
+            }
+        }
+
+        then {
+            def pairs = path(process.out.pairs.get(0).get(1)).readLines().collect { line -> line.split('\t').toList() }
+            def relationship = pairs.drop(1).collectEntries { fields -> [([fields[1], fields[3]].sort().join('/')): fields[9]] }
+            def indiv = path(process.out.indiv.get(0).get(1)).readLines().collect { line -> line.split('\t').toList() }
+            def outliers = indiv.drop(1).findAll { fields -> fields[4] == 'TRUE' }.collect { fields -> fields[1] }
+            assertAll(
+                { assert process.success },
+                { assert pairs[0] == ['FID1', 'IID1', 'FID2', 'IID2', 'NSNP', 'HETHET', 'IBS0', 'KINSHIP', 'DEGREE', 'RELATIONSHIP'] },
+                { assert relationship['EUR_S020/EUR_S021'] == 'duplicate_or_mz' },
+                { assert relationship['EUR_S030/EUR_S031'] == 'parent_offspring' },
+                { assert relationship['EUR_S032/EUR_S033'] == 'full_sibling' },
+                { assert relationship.values().every { value -> value in ['duplicate_or_mz', 'parent_offspring', 'full_sibling', 'third_degree'] } },
+                // The duplicate members share their autosomal genotypes but not their sex-chromosome calls, so
+                // EUR_S020 carries seven missing calls against five: the higher rate is dropped, and the
+                // first-degree pairs contribute nothing to the removal list.
+                { assert path(process.out.sample_remove.get(0).get(1)).readLines() == ['EUR_S020 EUR_S020'] },
+                { assert indiv[0] == ['FID', 'IID', 'N_PAIRS_REPORTED', 'MEAN_KINSHIP', 'OUTLIER'] },
+                { assert indiv.size() == 126 },
+                { assert outliers.containsAll(['EUR_S020', 'EUR_S021']) },
+                { assert path(process.out.outliers.get(0).get(1)).readLines() == outliers.collect { iid -> "${iid} ${iid}".toString() } },
+                { assert path(process.out.hist_data.get(0).get(1)).readLines().size() == 101 },
+                { assert path(process.out.hist_plot.get(0).get(1)).size() > 0 },
+                { assert snapshot(process.out.pairs, process.out.indiv, process.out.sample_remove, process.out.outliers, process.out.hist_data, process.out.versions).match() },
+            )
+        }
+    }
+
+    test("study_eur - duplicate member removed upstream") {
+
+        when {
+            process {
+                """
+                def removed = file('removed_upstream.txt')
+                removed.text = 'EUR_S040 EUR_S040\\nEUR_S041 EUR_S041\\n'
+                input[0] = PLINK2_MAKEKINGTABLE.out.kin0.join(PLINK2_MISSING.out.smiss).map { meta, kin0, smiss -> [meta, kin0, smiss, removed] }
+                input[1] = 3
+                input[2] = 0.005
+                """
+            }
+        }
+
+        then {
+            def indiv = path(process.out.indiv.get(0).get(1)).readLines().drop(1).collect { line -> line.split('\t')[1] }
+            assertAll(
+                { assert process.success },
+                // The removed samples leave the per-individual table and the denominator of the mean.
+                { assert indiv.size() == 123 },
+                { assert !indiv.contains('EUR_S040') },
+                { assert snapshot(process.out.indiv, process.out.sample_remove, process.out.outliers).match() },
+            )
+        }
+    }
+
+    test("study_eur - stub") {
+
+        options "-stub"
+
+        when {
+            process {
+                """
+                input[0] = PLINK2_MAKEKINGTABLE.out.kin0.join(PLINK2_MISSING.out.smiss).map { meta, kin0, smiss -> [meta, kin0, smiss, []] }
+                input[1] = 3
+                input[2] = 0.005
+                """
+            }
+        }
+
+        then {
+            assertAll(
+                { assert process.success },
+                { assert snapshot(sanitizeOutput(process.out)).match() },
+            )
+        }
+    }
+}

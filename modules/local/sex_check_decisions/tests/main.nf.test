@@ -1,0 +1,146 @@
+nextflow_process {
+
+    name "Test Process SEX_CHECK_DECISIONS"
+    script "../main.nf"
+    process "SEX_CHECK_DECISIONS"
+    config "./nextflow.config"
+
+    tag "modules"
+    tag "modules_local"
+    tag "sex_check_decisions"
+
+    // The gwasqc fixture stratum plants EUR_S010 (recorded female, male genotypes) and EUR_S011 (recorded male,
+    // female genotypes); the setup runs the plink2 sex check with the PAR split and the pipeline's thresholds.
+    test("study_eur - two mismatches") {
+
+        setup {
+            run("PLINK2_CHECKSEX") {
+                script "../../plink2/checksex/main.nf"
+                process {
+                    """
+                    input[0] = [
+                        [ id:'study_eur', ancestry:'EUR' ],
+                        file(params.pipelines_testdata_base_path + 'data/gwasqc/genotypes/study_eur.bed', checkIfExists: true),
+                        file(params.pipelines_testdata_base_path + 'data/gwasqc/genotypes/study_eur.bim', checkIfExists: true),
+                        file(params.pipelines_testdata_base_path + 'data/gwasqc/genotypes/study_eur.fam', checkIfExists: true),
+                        [],
+                        [],
+                        [],
+                        [],
+                    ]
+                    """
+                }
+            }
+        }
+
+        when {
+            process {
+                """
+                input[0] = PLINK2_CHECKSEX.out.sexcheck
+                """
+            }
+        }
+
+        then {
+            def mismatch = path(process.out.mismatch.get(0).get(1)).readLines().collect { line -> line.split('\t').toList() }
+            def hist = path(process.out.hist_data.get(0).get(1)).readLines().collect { line -> line.split('\t').toList() }
+            assertAll(
+                { assert process.success },
+                { assert mismatch[0] == ['FID', 'IID', 'PEDSEX', 'SNPSEX', 'STATUS', 'F', 'YCOUNT', 'YRATE'] },
+                { assert mismatch.drop(1).collect { fields -> fields[1] } == ['EUR_S010', 'EUR_S011'] },
+                { assert path(process.out.sample_remove.get(0).get(1)).readLines() == ['EUR_S010 EUR_S010', 'EUR_S011 EUR_S011'] },
+                { assert hist[0] == ['recorded_sex', 'bin_start', 'bin_end', 'count'] },
+                // Three recorded-sex levels times 100 bins, and every sample lands in a bin.
+                { assert hist.size() == 301 },
+                { assert hist.drop(1).collect { fields -> fields[3] as Integer }.sum() == 125 },
+                { assert path(process.out.hist_plot.get(0).get(1)).size() > 0 },
+                { assert path(process.out.hist_plot.get(0).get(2)).size() > 0 },
+                { assert snapshot(process.out.mismatch, process.out.sample_remove, process.out.hist_data, process.out.versions).match() },
+            )
+        }
+    }
+
+    test("study_eur - no mismatch") {
+
+        setup {
+            run("PLINK2_CHECKSEX") {
+                script "../../plink2/checksex/main.nf"
+                process {
+                    """
+                    def mismatches = file('planted_mismatches.txt')
+                    mismatches.text = 'EUR_S010 EUR_S010\\nEUR_S011 EUR_S011\\n'
+                    input[0] = [
+                        [ id:'study_eur', ancestry:'EUR' ],
+                        file(params.pipelines_testdata_base_path + 'data/gwasqc/genotypes/study_eur.bed', checkIfExists: true),
+                        file(params.pipelines_testdata_base_path + 'data/gwasqc/genotypes/study_eur.bim', checkIfExists: true),
+                        file(params.pipelines_testdata_base_path + 'data/gwasqc/genotypes/study_eur.fam', checkIfExists: true),
+                        [],
+                        [],
+                        [],
+                        mismatches,
+                    ]
+                    """
+                }
+            }
+        }
+
+        when {
+            process {
+                """
+                input[0] = PLINK2_CHECKSEX.out.sexcheck
+                """
+            }
+        }
+
+        then {
+            assertAll(
+                { assert process.success },
+                // A well-defined empty result: the header alone, and an empty removal list.
+                { assert path(process.out.mismatch.get(0).get(1)).readLines() == ['FID\tIID\tPEDSEX\tSNPSEX\tSTATUS\tF\tYCOUNT\tYRATE'] },
+                { assert path(process.out.sample_remove.get(0).get(1)).readLines().isEmpty() },
+                { assert path(process.out.hist_data.get(0).get(1)).readLines().drop(1).collect { line -> line.split('\t')[3] as Integer }.sum() == 123 },
+                { assert snapshot(process.out.mismatch, process.out.sample_remove, process.out.hist_data).match() },
+            )
+        }
+    }
+
+    test("study_eur - stub") {
+
+        options "-stub"
+
+        setup {
+            run("PLINK2_CHECKSEX") {
+                script "../../plink2/checksex/main.nf"
+                process {
+                    """
+                    input[0] = [
+                        [ id:'study_eur', ancestry:'EUR' ],
+                        file(params.pipelines_testdata_base_path + 'data/gwasqc/genotypes/study_eur.bed', checkIfExists: true),
+                        file(params.pipelines_testdata_base_path + 'data/gwasqc/genotypes/study_eur.bim', checkIfExists: true),
+                        file(params.pipelines_testdata_base_path + 'data/gwasqc/genotypes/study_eur.fam', checkIfExists: true),
+                        [],
+                        [],
+                        [],
+                        [],
+                    ]
+                    """
+                }
+            }
+        }
+
+        when {
+            process {
+                """
+                input[0] = PLINK2_CHECKSEX.out.sexcheck
+                """
+            }
+        }
+
+        then {
+            assertAll(
+                { assert process.success },
+                { assert snapshot(sanitizeOutput(process.out)).match() },
+            )
+        }
+    }
+}
