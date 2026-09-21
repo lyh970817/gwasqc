@@ -6,7 +6,8 @@ nextflow_pipeline {
     tag "apply_sample_removals"
 
     // The same fixture scenario with the gate on: the sex-mismatch, relatedness and ancestry mismatch removal
-    // lists join the mind removals in the terminal `--remove`, so the fileset shrinks by the union of the four.
+    // lists join the mind removals in the terminal `--remove`, so each fileset shrinks by the union of the
+    // four; the small stratum's lists come from the shared marker set and reach the gate the same way.
     test("-profile test --apply_sample_removals") {
 
         when {
@@ -18,7 +19,8 @@ nextflow_pipeline {
 
         then {
             def lines = { relative -> new File("${params.outdir}/${relative}").readLines() }
-            def strata = ['study_eur', 'study_afr']
+            def large = ['study_eur', 'study_afr']
+            def strata = large + ['study_csa']
             def prefix = { id -> id.replace('study_', '').toUpperCase() }
             def removed = { id ->
                 (lines("qc/${id}/missingness/${id}.mind_remove.txt") + lines("qc/${id}/sex_check/${id}.sex_mismatch_remove.txt") + lines("qc/${id}/relatedness/${id}.relatedness_remove.txt") + lines("qc/${id}/ancestry/${id}.ancestry_mismatch_remove.txt")).unique()
@@ -31,20 +33,25 @@ nextflow_pipeline {
                 { assert workflow.success },
                 // The summary and the removal-gate section state that every list was applied and that the gate
                 // removed exactly the union it lists.
-                { assert strata.every { id -> summary[id].subMap(['sex_removals', 'relatedness_removals', 'ancestry_removals', 'samples_removed_under_gate', 'samples_removed', 'samples_final']) == [sex_removals: 'applied', relatedness_removals: 'applied', ancestry_removals: 'applied', samples_removed_under_gate: '8', samples_removed: '8', samples_final: '117'] } },
+                { assert large.every { id -> summary[id].subMap(['sex_removals', 'relatedness_removals', 'ancestry_removals', 'samples_removed_under_gate', 'samples_removed', 'samples_final']) == [sex_removals: 'applied', relatedness_removals: 'applied', ancestry_removals: 'applied', samples_removed_under_gate: '8', samples_removed: '8', samples_final: '117'] } },
+                { assert summary.study_csa.subMap(['sample_qc_marker_set', 'sex_removals', 'relatedness_removals', 'ancestry_removals', 'samples_removed_under_gate', 'samples_removed', 'samples_final']) == [sample_qc_marker_set: 'shared', sex_removals: 'applied', relatedness_removals: 'applied', ancestry_removals: 'applied', samples_removed_under_gate: '2', samples_removed: '2', samples_final: '10'] },
                 { assert report.contains('id="gwasqc_sample_removals"') },
-                // Eight removals per stratum: two mind, two sex, one duplicate member, three ancestry outliers;
-                // none of them is in the fam.
-                { assert strata.every { id -> removed(id).size() == 8 } },
-                { assert strata.every { id -> lines("qc/${id}/ancestry/${id}.ancestry_mismatch_remove.txt").collect { line -> line.split(' ')[1] } == ['S050', 'S051', 'S052'].collect { slot -> "${prefix(id)}_${slot}".toString() } } },
-                { assert strata.every { id -> lines("genotypes/${id}/${id}.qc.fam").size() == 125 - removed(id).size() } },
+                // Eight removals per large stratum: two mind, two sex, one duplicate member, three ancestry
+                // outliers; two in the small stratum: its sex mismatch and one duplicate member. None of them
+                // is in the fam.
+                { assert large.every { id -> removed(id).size() == 8 } },
+                { assert removed('study_csa').size() == 2 },
+                { assert large.every { id -> lines("qc/${id}/ancestry/${id}.ancestry_mismatch_remove.txt").collect { line -> line.split(' ')[1] } == ['S050', 'S051', 'S052'].collect { slot -> "${prefix(id)}_${slot}".toString() } } },
+                { assert large.every { id -> lines("genotypes/${id}/${id}.qc.fam").size() == 125 - removed(id).size() } },
+                { assert lines('genotypes/study_csa/study_csa.qc.fam').size() == 10 },
                 { assert strata.every { id -> fam_ids(id).intersect(removed(id).collect { line -> line.split(' ')[1] }).isEmpty() } },
-                { assert strata.every { id -> !fam_ids(id).contains("${prefix(id)}_S010".toString()) && !fam_ids(id).contains("${prefix(id)}_S011".toString()) } },
-                { assert strata.every { id -> !fam_ids(id).contains("${prefix(id)}_S050".toString()) && !fam_ids(id).contains("${prefix(id)}_S052".toString()) } },
+                { assert large.every { id -> !fam_ids(id).contains("${prefix(id)}_S010".toString()) && !fam_ids(id).contains("${prefix(id)}_S011".toString()) } },
+                { assert !fam_ids('study_csa').contains('CSA_S010') },
+                { assert large.every { id -> !fam_ids(id).contains("${prefix(id)}_S050".toString()) && !fam_ids(id).contains("${prefix(id)}_S052".toString()) } },
                 // The mean-kinship outlier list is published but never applied.
                 { assert strata.every { id -> lines("qc/${id}/relatedness/${id}.relatedness_outliers.txt").every { line -> line.split(' ')[1] in fam_ids(id) || line.split(' ')[1] in removed(id).collect { entry -> entry.split(' ')[1] } } } },
                 { assert strata.every { id -> lines("qc/${id}/relatedness/${id}.relatedness_outliers.txt").collect { line -> line.split(' ')[1] }.findAll { iid -> !(iid in removed(id).collect { entry -> entry.split(' ')[1] }) }.every { iid -> iid in fam_ids(id) } } },
-                { assert workflow.trace.tasks().findAll { task -> task.name.contains('GWASQC:PLINK2_MAKEBED (') }.size() == 2 },
+                { assert workflow.trace.tasks().findAll { task -> task.name.contains('GWASQC:PLINK2_MAKEBED (') }.size() == 3 },
                 { assert snapshot(
                     removeNextflowVersion("$outputDir/pipeline_info/nf_core_gwasqc_software_mqc_versions.yml"),
                     strata.collect { id -> path("${params.outdir}/genotypes/${id}/${id}.qc.fam") }

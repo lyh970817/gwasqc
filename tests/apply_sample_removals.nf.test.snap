@@ -11,6 +11,9 @@
                 "ANCESTRY_HARMONISE": {
                     "r-base": "4.3.1"
                 },
+                "ANCESTRY_REFERENCE_KEEP": {
+                    "gawk": "5.3.1"
+                },
                 "GENO_DECISIONS": {
                     "r-base": "4.3.1"
                 },
@@ -50,10 +53,16 @@
                 "PLINK2_CHECKSEX": {
                     "plink2": "2.0.0-a.6.9LM"
                 },
+                "PLINK2_FREQ": {
+                    "plink2": "2.0.0-a.6.9LM"
+                },
                 "PLINK2_HARDY": {
                     "plink2": "2.0.0-a.6.9LM"
                 },
                 "PLINK2_HET": {
+                    "plink2": "2.0.0-a.6.9LM"
+                },
+                "PLINK2_HET_REFERENCE": {
                     "plink2": "2.0.0-a.6.9LM"
                 },
                 "PLINK2_INDEPPAIRWISE": {
@@ -118,10 +127,11 @@
             },
             [
                 "study_eur.qc.fam:md5,2d176744c5d3b8acf028fe347aa27388",
-                "study_afr.qc.fam:md5,788a6f9b7623044546a44749094ae095"
+                "study_afr.qc.fam:md5,788a6f9b7623044546a44749094ae095",
+                "study_csa.qc.fam:md5,4871d83e3ba9e1e5e1f91135794c5810"
             ]
         ],
-        "timestamp": "2026-09-21T09:40:53.869064044",
+        "timestamp": "2026-09-21T17:05:02.8580441",
         "meta": {
             "nf-test": "0.9.5",
             "nextflow": "26.04.4"

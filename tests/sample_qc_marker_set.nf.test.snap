@@ -1,0 +1,350 @@
+{
+    "-profile test --skip_ancestry --sample_qc_marker_set study": {
+        "content": [
+            {
+                "GENO_DECISIONS": {
+                    "r-base": "4.3.1"
+                },
+                "GENO_DECISIONS_LADDER": {
+                    "r-base": "4.3.1"
+                },
+                "HETEROZYGOSITY_PLOTS": {
+                    "r-base": "4.4.3",
+                    "r-data.table": "1.17.8",
+                    "r-ggplot2": "3.5.2"
+                },
+                "HIGHLD_EXCLUDE": {
+                    "gawk": "5.3.1"
+                },
+                "HWE_DECISIONS": {
+                    "r-base": "4.3.1"
+                },
+                "HWE_PLOTS": {
+                    "r-base": "4.4.3",
+                    "r-data.table": "1.17.8",
+                    "r-ggplot2": "3.5.2"
+                },
+                "MIND_DECISIONS": {
+                    "r-base": "4.3.1"
+                },
+                "MISSINGNESS_LADDER": {
+                    "r-base": "4.3.1"
+                },
+                "MISSINGNESS_PLOTS": {
+                    "r-base": "4.4.3",
+                    "r-data.table": "1.17.8",
+                    "r-ggplot2": "3.5.2"
+                },
+                "PLINK2_CHECKSEX": {
+                    "plink2": "2.0.0-a.6.9LM"
+                },
+                "PLINK2_HARDY": {
+                    "plink2": "2.0.0-a.6.9LM"
+                },
+                "PLINK2_HET": {
+                    "plink2": "2.0.0-a.6.9LM"
+                },
+                "PLINK2_INDEPPAIRWISE": {
+                    "plink2": "2.0.0-a.6.9LM"
+                },
+                "PLINK2_MAKEBED": {
+                    "plink2": "2.0.0-a.6.9LM"
+                },
+                "PLINK2_MAKEKINGTABLE": {
+                    "plink2": "2.0.0-a.6.9LM"
+                },
+                "PLINK2_MISSING_LADDER": {
+                    "plink2": "2.0.0-a.6.9LM"
+                },
+                "PLINK2_MISSING_SAMPLES": {
+                    "plink2": "2.0.0-a.6.9LM"
+                },
+                "PLINK2_MISSING_VARIANTS": {
+                    "plink2": "2.0.0-a.6.9LM"
+                },
+                "PLINK2_WRITESNPLIST": {
+                    "plink2": "2.0.0-a.6.9LM"
+                },
+                "QC_SUMMARY": {
+                    "gawk": "5.3.1"
+                },
+                "RELATEDNESS_DECISIONS": {
+                    "r-base": "4.4.3",
+                    "r-data.table": "1.17.8",
+                    "r-ggplot2": "3.5.2"
+                },
+                "SEX_CHECK_DECISIONS": {
+                    "r-base": "4.4.3",
+                    "r-data.table": "1.17.8",
+                    "r-ggplot2": "3.5.2"
+                },
+                "STRATUM_REPORT": {
+                    "coreutils": 9.4,
+                    "gawk": "5.3.1"
+                },
+                "Workflow": {
+                    "nf-core/gwasqc": "v1.0.0dev"
+                }
+            },
+            "gwasqc_summary.tsv:md5,4248f9cbe9fd859da6dc676ff8ede18c"
+        ],
+        "timestamp": "2026-09-21T17:25:21.904163395",
+        "meta": {
+            "nf-test": "0.9.5",
+            "nextflow": "26.04.4"
+        }
+    },
+    "-profile test --sample_qc_marker_set shared": {
+        "content": [
+            {
+                "ANCESTRY_ASSIGN": {
+                    "r-base": "4.4.3",
+                    "r-data.table": "1.17.8",
+                    "r-ggplot2": "3.5.2",
+                    "r-mass": "7.3.66"
+                },
+                "ANCESTRY_HARMONISE": {
+                    "r-base": "4.3.1"
+                },
+                "ANCESTRY_REFERENCE_KEEP": {
+                    "gawk": "5.3.1"
+                },
+                "GENO_DECISIONS": {
+                    "r-base": "4.3.1"
+                },
+                "GENO_DECISIONS_LADDER": {
+                    "r-base": "4.3.1"
+                },
+                "HETEROZYGOSITY_PLOTS": {
+                    "r-base": "4.4.3",
+                    "r-data.table": "1.17.8",
+                    "r-ggplot2": "3.5.2"
+                },
+                "HIGHLD_EXCLUDE_REFERENCE": {
+                    "gawk": "5.3.1"
+                },
+                "HWE_DECISIONS": {
+                    "r-base": "4.3.1"
+                },
+                "HWE_PLOTS": {
+                    "r-base": "4.4.3",
+                    "r-data.table": "1.17.8",
+                    "r-ggplot2": "3.5.2"
+                },
+                "MIND_DECISIONS": {
+                    "r-base": "4.3.1"
+                },
+                "MISSINGNESS_LADDER": {
+                    "r-base": "4.3.1"
+                },
+                "MISSINGNESS_PLOTS": {
+                    "r-base": "4.4.3",
+                    "r-data.table": "1.17.8",
+                    "r-ggplot2": "3.5.2"
+                },
+                "PLINK2_CHECKSEX": {
+                    "plink2": "2.0.0-a.6.9LM"
+                },
+                "PLINK2_FREQ": {
+                    "plink2": "2.0.0-a.6.9LM"
+                },
+                "PLINK2_HARDY": {
+                    "plink2": "2.0.0-a.6.9LM"
+                },
+                "PLINK2_HET": {
+                    "plink2": "2.0.0-a.6.9LM"
+                },
+                "PLINK2_HET_REFERENCE": {
+                    "plink2": "2.0.0-a.6.9LM"
+                },
+                "PLINK2_INDEPPAIRWISE_REFERENCE": {
+                    "plink2": "2.0.0-a.6.9LM"
+                },
+                "PLINK2_MAKEBED": {
+                    "plink2": "2.0.0-a.6.9LM"
+                },
+                "PLINK2_MAKEBED_REFERENCE": {
+                    "plink2": "2.0.0-a.6.9LM"
+                },
+                "PLINK2_MAKEKINGTABLE": {
+                    "plink2": "2.0.0-a.6.9LM"
+                },
+                "PLINK2_MISSING_LADDER": {
+                    "plink2": "2.0.0-a.6.9LM"
+                },
+                "PLINK2_MISSING_SAMPLES": {
+                    "plink2": "2.0.0-a.6.9LM"
+                },
+                "PLINK2_MISSING_VARIANTS": {
+                    "plink2": "2.0.0-a.6.9LM"
+                },
+                "PLINK2_PCAWTS": {
+                    "plink2": "2.0.0-a.6.9LM"
+                },
+                "PLINK2_PMERGELIST": {
+                    "plink2": "2.0.0-a.6.9LM"
+                },
+                "PLINK2_SCORE_REFERENCE": {
+                    "plink2": "2.0.0-a.6.9LM"
+                },
+                "PLINK2_SCORE_STUDY": {
+                    "plink2": "2.0.0-a.6.9LM"
+                },
+                "PLINK2_WRITESNPLIST": {
+                    "plink2": "2.0.0-a.6.9LM"
+                },
+                "QC_SUMMARY": {
+                    "gawk": "5.3.1"
+                },
+                "RELATEDNESS_DECISIONS": {
+                    "r-base": "4.4.3",
+                    "r-data.table": "1.17.8",
+                    "r-ggplot2": "3.5.2"
+                },
+                "SEX_CHECK_DECISIONS": {
+                    "r-base": "4.4.3",
+                    "r-data.table": "1.17.8",
+                    "r-ggplot2": "3.5.2"
+                },
+                "STRATUM_REPORT": {
+                    "coreutils": 9.4,
+                    "gawk": "5.3.1"
+                },
+                "Workflow": {
+                    "nf-core/gwasqc": "v1.0.0dev"
+                }
+            },
+            "gwasqc_summary.tsv:md5,ccb25f1faf49efc9ee5855672a1f0edf"
+        ],
+        "timestamp": "2026-09-21T17:23:10.621380578",
+        "meta": {
+            "nf-test": "0.9.5",
+            "nextflow": "26.04.4"
+        }
+    },
+    "-profile test --sample_qc_marker_set study": {
+        "content": [
+            {
+                "ANCESTRY_ASSIGN": {
+                    "r-base": "4.4.3",
+                    "r-data.table": "1.17.8",
+                    "r-ggplot2": "3.5.2",
+                    "r-mass": "7.3.66"
+                },
+                "ANCESTRY_HARMONISE": {
+                    "r-base": "4.3.1"
+                },
+                "GENO_DECISIONS": {
+                    "r-base": "4.3.1"
+                },
+                "GENO_DECISIONS_LADDER": {
+                    "r-base": "4.3.1"
+                },
+                "HETEROZYGOSITY_PLOTS": {
+                    "r-base": "4.4.3",
+                    "r-data.table": "1.17.8",
+                    "r-ggplot2": "3.5.2"
+                },
+                "HIGHLD_EXCLUDE": {
+                    "gawk": "5.3.1"
+                },
+                "HIGHLD_EXCLUDE_REFERENCE": {
+                    "gawk": "5.3.1"
+                },
+                "HWE_DECISIONS": {
+                    "r-base": "4.3.1"
+                },
+                "HWE_PLOTS": {
+                    "r-base": "4.4.3",
+                    "r-data.table": "1.17.8",
+                    "r-ggplot2": "3.5.2"
+                },
+                "MIND_DECISIONS": {
+                    "r-base": "4.3.1"
+                },
+                "MISSINGNESS_LADDER": {
+                    "r-base": "4.3.1"
+                },
+                "MISSINGNESS_PLOTS": {
+                    "r-base": "4.4.3",
+                    "r-data.table": "1.17.8",
+                    "r-ggplot2": "3.5.2"
+                },
+                "PLINK2_CHECKSEX": {
+                    "plink2": "2.0.0-a.6.9LM"
+                },
+                "PLINK2_HARDY": {
+                    "plink2": "2.0.0-a.6.9LM"
+                },
+                "PLINK2_HET": {
+                    "plink2": "2.0.0-a.6.9LM"
+                },
+                "PLINK2_INDEPPAIRWISE": {
+                    "plink2": "2.0.0-a.6.9LM"
+                },
+                "PLINK2_INDEPPAIRWISE_REFERENCE": {
+                    "plink2": "2.0.0-a.6.9LM"
+                },
+                "PLINK2_MAKEBED": {
+                    "plink2": "2.0.0-a.6.9LM"
+                },
+                "PLINK2_MAKEBED_REFERENCE": {
+                    "plink2": "2.0.0-a.6.9LM"
+                },
+                "PLINK2_MAKEKINGTABLE": {
+                    "plink2": "2.0.0-a.6.9LM"
+                },
+                "PLINK2_MISSING_LADDER": {
+                    "plink2": "2.0.0-a.6.9LM"
+                },
+                "PLINK2_MISSING_SAMPLES": {
+                    "plink2": "2.0.0-a.6.9LM"
+                },
+                "PLINK2_MISSING_VARIANTS": {
+                    "plink2": "2.0.0-a.6.9LM"
+                },
+                "PLINK2_PCAWTS": {
+                    "plink2": "2.0.0-a.6.9LM"
+                },
+                "PLINK2_PMERGELIST": {
+                    "plink2": "2.0.0-a.6.9LM"
+                },
+                "PLINK2_SCORE_REFERENCE": {
+                    "plink2": "2.0.0-a.6.9LM"
+                },
+                "PLINK2_SCORE_STUDY": {
+                    "plink2": "2.0.0-a.6.9LM"
+                },
+                "PLINK2_WRITESNPLIST": {
+                    "plink2": "2.0.0-a.6.9LM"
+                },
+                "QC_SUMMARY": {
+                    "gawk": "5.3.1"
+                },
+                "RELATEDNESS_DECISIONS": {
+                    "r-base": "4.4.3",
+                    "r-data.table": "1.17.8",
+                    "r-ggplot2": "3.5.2"
+                },
+                "SEX_CHECK_DECISIONS": {
+                    "r-base": "4.4.3",
+                    "r-data.table": "1.17.8",
+                    "r-ggplot2": "3.5.2"
+                },
+                "STRATUM_REPORT": {
+                    "coreutils": 9.4,
+                    "gawk": "5.3.1"
+                },
+                "Workflow": {
+                    "nf-core/gwasqc": "v1.0.0dev"
+                }
+            },
+            "gwasqc_summary.tsv:md5,a9dcfd18f6d1f3e6ee9da95476465391"
+        ],
+        "timestamp": "2026-09-21T17:20:58.772510185",
+        "meta": {
+            "nf-test": "0.9.5",
+            "nextflow": "26.04.4"
+        }
+    }
+}
