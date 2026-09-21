@@ -190,42 +190,6 @@
                         "study_eur.ancestry_model.tsv:md5,2d61366fc4cf2212caefdbd9c993489e"
                     ]
                 ],
-                "pc1_pc2_plot": [
-                    [
-                        {
-                            "ancestry": "AFR",
-                            "id": "study_afr"
-                        },
-                        "study_afr.ancestry_pc1_pc2.pdf:md5,dce819fa828661ed58738ed3c81160c0",
-                        "study_afr.ancestry_pc1_pc2.png:md5,932a72fc14e4f4b6a6396837848e7ec1"
-                    ],
-                    [
-                        {
-                            "ancestry": "EUR",
-                            "id": "study_eur"
-                        },
-                        "study_eur.ancestry_pc1_pc2.pdf:md5,4d6f3640e673f954da6cca6d7ef95dad",
-                        "study_eur.ancestry_pc1_pc2.png:md5,1b11ed112c878d3915c22cffc71df6bc"
-                    ]
-                ],
-                "pc3_pc4_plot": [
-                    [
-                        {
-                            "ancestry": "AFR",
-                            "id": "study_afr"
-                        },
-                        "study_afr.ancestry_pc3_pc4.pdf:md5,3af17148f14a0f5ba4b8d1a1cc44bab8",
-                        "study_afr.ancestry_pc3_pc4.png:md5,932d54a36c4f048b804edbacaeea7312"
-                    ],
-                    [
-                        {
-                            "ancestry": "EUR",
-                            "id": "study_eur"
-                        },
-                        "study_eur.ancestry_pc3_pc4.pdf:md5,7a0a30ca620ad18a2bb325bcbcddbc96",
-                        "study_eur.ancestry_pc3_pc4.png:md5,bdbcd9449d4ae14cfbd0fc0f4d2e3434"
-                    ]
-                ],
                 "pca_data": [
                     [
                         {
@@ -360,7 +324,7 @@
                 ]
             }
         ],
-        "timestamp": "2026-09-21T09:34:15.344888444",
+        "timestamp": "2026-09-21T10:02:19.479655362",
         "meta": {
             "nf-test": "0.9.5",
             "nextflow": "26.04.4"

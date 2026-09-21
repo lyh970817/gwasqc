@@ -81,7 +81,10 @@ nextflow_workflow {
                 { assert ladder.study_eur.readLines().size() == 11 },
                 { assert ladder.study_eur.readLines().drop(1).collect { line -> line.split('\t')[0] } == (90..99).collect { rate -> rate.toString() } },
                 { assert ladder.study_eur.readLines()[1].split('\t').toList() == ['90', '0.1', '20', '3934', '2', '123'] },
-                { assert snapshot(sanitizeOutput(workflow.out)).match() },
+                // The figure emits carry PDFs, whose bytes change with the creation time R writes into them,
+                // so they are asserted for presence per stratum and left out of the content snapshot.
+                { assert [workflow.out.vmiss_hist_plot, workflow.out.smiss_hist_plot, workflow.out.ladder_plot, workflow.out.hwe_hist_plot, workflow.out.hwe_window_plot].every { emission -> emission.size() == 2 && emission.every { entry -> path(entry[1]).size() > 0 && path(entry[2]).size() > 0 } } },
+                { assert snapshot(sanitizeOutput(workflow.out).findAll { entry -> !entry.key.endsWith('_plot') }).match() },
             )
         }
     }

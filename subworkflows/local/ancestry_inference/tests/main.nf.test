@@ -145,7 +145,10 @@ nextflow_workflow {
                 { assert strata.every { id -> assigned(id).size() == 123 } },
                 { assert strata.every { id -> mismatch_remove[id].readLines() == planted[id].keySet().collect { iid -> "${iid} ${iid}".toString() } } },
                 { assert strata.every { id -> summary[id].readLines().drop(1).collect { line -> line.split('\t', -1) }.collectEntries { fields -> [(fields[0] + '/' + fields[1]): fields[3]] } == [("${own(id)}/assigned".toString()): '120', 'unassigned/below_threshold': '0'] + planted[id].values().collectEntries { group -> [("${group}/assigned".toString()): '1'] } + (['AFR', 'AMR', 'CSA', 'EAS', 'EUR'] - own(id) - planted[id].values()).collectEntries { group -> [("${group}/assigned".toString()): '0'] } } },
-                { assert snapshot(sanitizeOutput(workflow.out)).match() },
+                // The figure emits carry PDFs, whose bytes change with the creation time R writes into them,
+                // so they are asserted for presence per stratum and left out of the content snapshot.
+                { assert [workflow.out.pc1_pc2_plot, workflow.out.pc3_pc4_plot].every { emission -> emission.size() == 2 && emission.every { entry -> path(entry[1]).size() > 0 && path(entry[2]).size() > 0 } } },
+                { assert snapshot(sanitizeOutput(workflow.out).findAll { entry -> !entry.key.endsWith('_plot') }).match() },
             )
         }
     }
