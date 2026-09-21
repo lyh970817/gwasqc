@@ -7,7 +7,7 @@ decision modules, so they carry scientific policy and are measured against `pipe
 submission candidates.
 
 An upstream-bound subworkflow added here must provide meaningful multi-step composition of upstream-prepared
-modules only and must follow the canonical subworkflow, GWAS-contract, fixture, and component-test standards
+modules only and must follow the canonical subworkflow, genotype-QC-contract, fixture, and component-test standards
 indexed by `CODING_STANDARDS.md`. Pipeline-owned compositions must not appear in its dependency graph.
 
 Pipeline nf-test discovery of a local subworkflow is regression coverage, not proof of component-submission

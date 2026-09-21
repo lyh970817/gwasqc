@@ -15,7 +15,7 @@ own task procedure, gates, evidence, and reporting rather than stable contracts.
 | [`docs/coding-standards/contribution-boundaries.md`](docs/coding-standards/contribution-boundaries.md)               | Repository/workspace identity, personal/public tracks, and reviewer-facing boundaries      |
 | [`docs/coding-standards/nf-core-modules.md`](docs/coding-standards/nf-core-modules.md)                               | Atomic upstream-bound module contracts                                                     |
 | [`docs/coding-standards/nf-core-subworkflows.md`](docs/coding-standards/nf-core-subworkflows.md)                     | Reusable upstream-bound composition contracts                                              |
-| [`docs/coding-standards/gwas-component-contracts.md`](docs/coding-standards/gwas-component-contracts.md)             | GWAS/population-genetics tuple, identity, selector, and bundle contracts                   |
+| [`docs/coding-standards/qc-component-contracts.md`](docs/coding-standards/qc-component-contracts.md)                 | Genotype-QC fileset, filter-list, statistics table, decision-list, and bundle contracts    |
 | [`docs/coding-standards/component-containers.md`](docs/coding-standards/component-containers.md)                     | Component packages, runtime directives, and container metadata                             |
 | [`docs/coding-standards/component-fixtures-and-testing.md`](docs/coding-standards/component-fixtures-and-testing.md) | Component fixture, assertion, snapshot, and readiness contracts                            |
 

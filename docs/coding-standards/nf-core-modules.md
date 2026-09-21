@@ -67,6 +67,6 @@ Applies to new or maintained upstream-bound atomic components, including the can
   yields a bare version string without a tool-name prefix, leading `v`, suffix, or extra line.
 
 Package and container requirements are owned by
-[`component-containers.md`](component-containers.md). GWAS-specific tuple, selector, and bundle semantics are
-owned by [`gwas-component-contracts.md`](gwas-component-contracts.md). Test contracts are owned by
+[`component-containers.md`](component-containers.md). Genotype-QC fileset, filter-list, statistics, and bundle
+semantics are owned by [`qc-component-contracts.md`](qc-component-contracts.md). Test contracts are owned by
 [`component-fixtures-and-testing.md`](component-fixtures-and-testing.md).

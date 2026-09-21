@@ -3,7 +3,7 @@
 Applies to pipeline-owned orchestration, routes, and helpers. Atomic component and reusable-subworkflow
 interfaces remain owned by [`nf-core-modules.md`](nf-core-modules.md),
 [`nf-core-subworkflows.md`](nf-core-subworkflows.md), and
-[`gwas-component-contracts.md`](gwas-component-contracts.md); user-facing parameter contracts remain owned by
+[`qc-component-contracts.md`](qc-component-contracts.md); user-facing parameter contracts remain owned by
 [`configuration-and-schema.md`](configuration-and-schema.md).
 
 ## Ingress and representation
@@ -30,7 +30,7 @@ interfaces remain owned by [`nf-core-modules.md`](nf-core-modules.md),
 ## Genotype QC route
 
 Decided 2026-09-20 with the foundation milestone of the legacy port; the tuple contract itself is owned by
-[`gwas-component-contracts.md`](gwas-component-contracts.md).
+[`qc-component-contracts.md`](qc-component-contracts.md).
 
 - **[MUST]** A stratum is one PLINK 1 `[ val(meta), path(bed), path(bim), path(fam) ]` tuple carrying
   `meta.id` and `meta.ancestry`, exactly as the samplesheet row declares it. The fileset is consumed natively:

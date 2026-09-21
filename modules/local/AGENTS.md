@@ -1,7 +1,7 @@
 # Local modules
 
 The PLINK 2 family under `plink2/` holds upstream-bound atomic candidates and must follow the canonical module,
-GWAS-contract, container, fixture, and component-test standards indexed by `CODING_STANDARDS.md`. Use the
+genotype-QC-contract, container, fixture, and component-test standards indexed by `CODING_STANDARDS.md`. Use the
 corresponding `nf-core-*` skills for task procedure. Keep them free of pipeline routing, scientific policy,
 publication, and reuse identity: a threshold reaches a plink2 atom only as native optional behaviour through
 `ext.args` (or `ext.args2` where plink2 reads modifiers that must follow the command flag, as `plink2/checksex`

@@ -54,6 +54,6 @@ Pipeline routes and helpers classified by the descendant instructions remain pip
   when a snapshot obscures it.
 - Directory, workflow symbol, `main.nf`, `meta.yml`, config, tests, and snapshots are one public contract.
 
-GWAS-specific interface semantics are owned by
-[`gwas-component-contracts.md`](gwas-component-contracts.md); fixture and assertion rules are owned by
+Genotype-QC interface semantics are owned by
+[`qc-component-contracts.md`](qc-component-contracts.md); fixture and assertion rules are owned by
 [`component-fixtures-and-testing.md`](component-fixtures-and-testing.md).
