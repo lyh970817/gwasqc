@@ -45,6 +45,9 @@ containers:
 ```
 
 - Use `scan_id`, never `scanId`.
-- Include a `conda` entry whenever the module has `environment.yml`.
+- Include a `conda` entry whenever the module has `environment.yml`, and name the lock file at the module's
+  real location relative to the repository root: `modules/local/<component>/.conda-lock/...` for a local
+  candidate, `modules/nf-core/...` only once it lives there. `conf/containers_conda_lock_files_*.config` is
+  generated from this path verbatim.
 - Lock-file existence and exact schema requirements are validated against the current nf-core tooling; do not
   encode a warning from one tool version as an eternal contract.

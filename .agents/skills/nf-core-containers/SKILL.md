@@ -23,3 +23,24 @@ Read [`component-containers.md`](../../../docs/coding-standards/component-contai
 
 Report package versions, resolved references, probe and runtime commands/results, lint warnings interpreted, and
 any unverified platform or container blocker.
+
+## Recipe that produced this repository's Wave builds
+
+The development shell carries the `wave` CLI. For a module whose `environment.yml` changed, or that still runs on
+a biocontainer, the frozen references and lock file come from four requests, none of them guessed:
+
+1. `wave --conda-file modules/local/<module>/environment.yml --freeze --await --platform linux/amd64 -o json`
+   returns the Docker `targetImage`, its `buildId` and `scanId`.
+2. The same command with `--singularity` returns the `oras://` image and its own `buildId`.
+3. `https://wave.seqera.io/v1alpha1/builds/<docker buildId>/condalock` is the lock file; store it as
+   `modules/local/<module>/.conda-lock/linux_amd64-<docker buildId>.txt` and name that path in `meta.yml`.
+4. The Singularity `https` reference is the one SIF layer of the ORAS manifest: request an anonymous pull token
+   from the realm the registry's `WWW-Authenticate` header names, read
+   `https://community.wave.seqera.io/v2/library/<image>/manifests/<tag>` with it, and form
+   `https://community-cr-prod.seqera.io/docker/registry/v2/blobs/sha256/<d[0:2]>/<digest>/data` from the layer
+   digest; probe it with `curl -I -L` before writing it.
+
+Modules that share one `environment.yml` share one build: copy the lock file and the block into each of them.
+Regenerate `conf/containers_*.config` afterwards from the `meta.yml` blocks with
+`nf_core.pipelines.containers_utils.ContainerConfigs(Path('.')).generate_container_configs()` (the
+`--fix container_configs` route of `nf-core pipelines lint` does the same but refuses a dirty tree).
