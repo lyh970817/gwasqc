@@ -67,14 +67,14 @@ Once you have made your changes, run the pipeline with nf-test to test them loca
 For additional information, use the `--verbose` flag to view the Nextflow console log output.
 
 ```bash
-nf-test test --tag test --profile +docker --verbose
+nf-test test --tag pipeline --profile +docker --verbose
 ```
 
 If you have added new functionality, ensure you update the test assertions in the `.nf.test` files in the `tests/` directory.
 Update the snapshots with the following command:
 
 ```bash
-nf-test test --tag test --profile +docker --verbose --update-snapshots
+nf-test test --tag pipeline --profile +docker --verbose --update-snapshot
 ```
 
 When you create a pull request with changes, GitHub Actions will run automatic tests.
@@ -124,11 +124,11 @@ Please also refer to the [pipeline-specific contribution guidelines](#pipeline-s
 - [ ] Define the output channel if needed. Mix the version output channel into `ch_versions` and relevant files into `ch_multiqc`.
 - [ ] Add new or updated parameters to `nextflow.config` with a [default value](#default-parameter-values).
 - [ ] Add new or updated parameters and relevant help text to `nextflow_schema.json` with [nf-core/tools](#default-parameter-values).
-- [ ] Add validation for relevant parameters to the pipeline utilisation section of `utils_nfcore_\_pipeline/main.nf` subworkflow.
+- [ ] Add validation for relevant parameters to the pipeline utilisation section of `utils_nfcore_gwasqc_pipeline/main.nf` subworkflow.
 - [ ] Perform local tests to validate that the new code works as expected.
   - [ ] If applicable, add a new test in the `tests` directory.
-- [ ] Update `usage.md`, `output.md`, and `citation.md` as appropriate.
-- [ ] [Lint](lint) the code with nf-core/tools.
+- [ ] Update `usage.md`, `output.md`, and `CITATIONS.md` as appropriate.
+- [ ] [Lint](#lint-tests) the code with nf-core/tools.
 - [ ] Update any diagrams or pipeline images as necessary.
 - [ ] Update MultiQC config `assets/multiqc_config.yml` so relevant suffixes, file name cleanup, and module plots are in the appropriate order.
 - [ ] If applicable, create a [MultiQC](https://seqera.io/multiqc/) module.

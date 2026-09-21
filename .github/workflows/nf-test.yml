@@ -18,8 +18,14 @@ concurrency:
 
 env:
   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-  NFT_VER: "0.9.4"
+  # Keep in step with nfTestVersion in shell.nix.
+  NFT_VER: "0.9.5"
   NFT_WORKDIR: "~"
+  # Fixture source of the test profile. Empty means the pipeline default, `params.pipelines_testdata_base_path`
+  # in nextflow.config (the `gwasqc` branch of nf-core/test-datasets), which is the one knob to change when the
+  # fixtures live elsewhere; set this to another public root, such as a fork branch, only to test unmerged
+  # fixtures without touching that default. `conf/test_fixtures.config` reads it before the parameter.
+  GWASQC_TEST_FIXTURES: ""
   NXF_ANSI_LOG: false
   NXF_SINGULARITY_CACHEDIR: ${{ github.workspace }}/.singularity
   NXF_SINGULARITY_LIBRARYDIR: ${{ github.workspace }}/.singularity
