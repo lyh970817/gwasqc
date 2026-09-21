@@ -90,7 +90,7 @@ Decided 2026-09-20 with the ancestry milestone of the legacy port.
   `ancestry` column. No reference path or population list is hardcoded anywhere.
 - **[MUST]** The stratum reaches the reference as its QC'd variant set, the filter chain's lists, not as a
   separate target QC: the legacy `nrow(fam) > 100` switch, which dropped the MAF and HWE filters on small
-  targets, chose which filters to *compute*, and the pipeline has computed them for every stratum before
+  targets, chose which filters to _compute_, and the pipeline has computed them for every stratum before
   ancestry runs. The study fileset is never materialised; its samples are projected from the original fileset
   with the pruned list under `--extract` and the mind removals under `--remove`, and no other sample list.
 - **[MUST]** The reference is the one materialised intermediate of the route, and it is materialised twice
@@ -106,7 +106,7 @@ Decided 2026-09-20 with the ancestry milestone of the legacy port.
   `--indep-pairwise`, as the legacy ancestry branch ordered the two.
 - **[MUST]** Projection follows the plink2 recipe: `--freq counts` and `--pca allele-wts vcols=chrom,ref,alt`
   in one run over the pruned reference, then one `--score <weights> 2 5 header-read no-mean-imputation
-  variance-standardize` with `--read-freq` of those counts for the reference samples and for the study samples
+variance-standardize` with `--read-freq` of those counts for the reference samples and for the study samples
   alike, so that both sets of coordinates share one scale and the study is standardised with the reference's
   frequencies rather than its own.
 - **[MUST]** Assignment is linear discriminant analysis on the projected reference coordinates with equal group
