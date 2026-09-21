@@ -4,6 +4,11 @@ name: nf-core linting
 # that the code meets the nf-core guidelines.
 on:
   pull_request:
+  # `personal` is the development branch of this repository and carries no pull request of its own, so
+  # lint runs on its pushes as well.
+  push:
+    branches:
+      - personal
   release:
     types: [published]
 

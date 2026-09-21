@@ -11,6 +11,10 @@ lint:
     # `modules_config` toggle below are required: the first stops lint demanding the deleted file, the second
     # stops the `withName:` check reading it.
     - conf/modules.config
+  files_unchanged:
+    # `personal` is this repository's development branch and has no pull request of its own, so the
+    # workflow adds a push trigger for it on top of the template's pull-request trigger.
+    - .github/workflows/linting.yml
   modules_config: false
   nextflow_config:
     # The default long-range LD asset lives in the pipeline and is addressed through `${projectDir}`, which
