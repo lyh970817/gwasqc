@@ -65,13 +65,36 @@ Decided 2026-09-20 with the foundation milestone of the legacy port; the tuple c
   `Iterative_Missingness.sh` did: per rung, the geno exclusion list at that rate is derived from the base
   variant report, one `--missing` run with that list under `--exclude` yields the rung's sample report, and the
   table records the variants and samples each rung removes and leaves. Ten stats-only runs, no fileset.
-- **[MUST]** The sample QC chain keeps the legacy ordering: `--indep-pairwise` prunes the QC'd set over every
-  chromosome; the long-range LD regions (the tracked GRCh38 asset, derived from the legacy awk rules) and every
-  non-autosomal variant are then listed for exclusion among the pruned variants. The sex check runs on the
-  pruned set with chromosome X, splitting the pseudo-autosomal regions and applying its thresholds in the one
-  `--check-sex` run (verified: `--split-par b38`, `--extract` and `--check-sex` combine on a `--bfile` input,
-  so nothing is materialised); heterozygosity and KING relatedness run on the pruned autosomal set outside the
-  regions. The mind removals apply to every one of these runs; no other sample list does.
+- **[MUST]** The sample QC chain runs on a marker set chosen per stratum, and the choice is made once, after the
+  mind list exists, and carried as `meta.sample_qc_marker_set`: `study` or `shared` as forced, and under
+  `auto` `shared` for a stratum with fewer than `small_n_threshold` samples after the mind filter. The
+  `shared` mode needs the ancestry route, so a forced `shared` under `skip_ancestry`, and a stratum whose
+  input count alone decides it will need it, are rejected at ingress, and the residual case when the mode is
+  decided. _(decided 2026-09-21 with the small-n milestone, issue #2)_
+- **[MUST]** In the `study` mode the chain keeps the legacy ordering: `--indep-pairwise` prunes the QC'd set over
+  every chromosome; the long-range LD regions (the tracked GRCh38 asset, derived from the legacy awk rules) and
+  every non-autosomal variant are then listed for exclusion among the pruned variants. The sex check runs on
+  the pruned set with chromosome X, splitting the pseudo-autosomal regions and applying its thresholds in the
+  one `--check-sex` run (verified: `--split-par b38`, `--extract` and `--check-sex` combine on a `--bfile`
+  input, so nothing is materialised); heterozygosity and KING relatedness run on the pruned autosomal set
+  outside the regions. A stratum whose pruning kept fewer than `ld_min_retained_fraction` of its QC'd variants
+  is noted in its summary row, because pairwise r-squared over a few dozen samples collapses the set (the
+  11-sample legacy stratum kept 0.5 %); nothing is re-decided.
+- **[MUST]** In the `shared` mode nothing is pruned on the study side. Heterozygosity and KING relatedness run on
+  the ancestry route's post-high-LD `prune.in`, the harmonised intersect filtered on both sides and pruned on
+  the merged reference; the heterozygosity report of the study and that of the reference samples of the
+  stratum's own super-population are computed over those markers against one `--freq` table of those reference
+  samples through `--read-freq`, so that the study cannot define its own baseline and the two reports differ
+  only in their samples; the sex check runs on every QC-passing chromosome X and Y variant unpruned, because
+  the reference carries no chromosome X and pruning X over a handful of samples is what starved the legacy
+  check. The reference samples are selected from the population table by the stratum's `ancestry` label; a
+  pooled panel is not a substitute, as its frequencies inflate F by the panel's differentiation.
+- **[MUST]** The mind removals apply to every study-side run of either mode; no other sample list does. plink2
+  refuses `--indep-pairwise`, `--check-sex` and `--het` below 50 samples; the configuration lifts the refusal
+  with `--bad-ld` on the study-side pruning and `--bad-freqs` on the sex check and the `study`-mode
+  heterozygosity report, never on a reference-side run, because there the stratum's own estimates are the
+  user's explicit choice and the collapse note is the safety net (verified on 2.0.0a.6.9 with the 12-sample
+  fixture stratum, which prunes to 4.8 % under `--bad-ld`).
 - **[MUST]** Sex mismatches are plink2's own `PROBLEM` calls, tabled with the report's header and listed for
   removal. Heterozygosity is report-only. Relatedness pairs are classified on KING's inference boundaries; the
   removal list holds one member of each duplicate/MZ pair, the one with the higher missing-call rate over the

@@ -28,6 +28,13 @@ deviation is flagged.
   population table, fatally only when the mismatch list would actually be applied and as a warning otherwise
   (`subworkflows/local/utils_nfcore_gwasqc_pipeline/main.nf:119`, `:208-217`). Downstream stages consume the
   label without revalidating it.
+- **[MUST]** One further key is decided by the route rather than declared: `sample_qc_marker_set`, `study` or
+  `shared`, is added to the stratum's map by the workflow once the mind list exists, because the sample QC
+  chain branches on it per stratum, the plink2 configuration reads it, and the report records it
+  (`workflows/gwasqc.nf`, the marker-set decision; `subworkflows/local/plink_sample_qc_lists/main.nf`, the
+  `branch`; `conf/modules/plink2.config`, `PLINK2_HET`; `modules/local/stratum_report/templates/stratum_report.sh`).
+  It is not a scatter key: it reaches the published summary deliberately, as the `sample_qc_marker_set` column.
+  A module that reads it says so in its `meta.yml` expected keys; a plink2 atom never reads it.
 - **[MUST]** Metadata keys beyond these are scatter-local: `call_rate` for one rung of the call-rate ladder
   (`subworkflows/local/plink_qc_filter_lists/main.nf:86`) and `stratum`, `reference`, `n_reference` for one
   stratum-by-fileset intersect (`subworkflows/local/ancestry_inference/main.nf:53`). A scatter key is collision-free,
@@ -115,9 +122,9 @@ deviation is flagged.
   or Hardy-Weinberg threshold reaches plink2 only after a pipeline-owned module has turned it into a list; the
   native `--geno`, `--mind`, `--maf`, and `--hwe` flags reach plink2 only through `ext.args`.
 - **[MUST]** A role-specific file follows the block rather than interrupting it: `path(update_alleles)`
-  (`modules/local/plink2/pmergelist/main.nf:13`) and `path(score_file), path(read_freq)`
-  (`modules/local/plink2/score/main.nf:11`). Each gets its own presence-driven fragment, and a mandatory one, such
-  as the score file, gets no presence check.
+  (`modules/local/plink2/pmergelist/main.nf:13`), `path(score_file), path(read_freq)`
+  (`modules/local/plink2/score/main.nf:11`) and `path(read_freq)` (`modules/local/plink2/het/main.nf`). Each
+  gets its own presence-driven fragment, and a mandatory one, such as the score file, gets no presence check.
 - **[SHOULD]** The `keep` slot stays `[]` throughout this pipeline: every sample decision the QC chain makes is a
   removal list, so the gate is one union at one slot (`workflows/gwasqc.nf:142`). The slot exists because the
   contract is plink2's filter block, not this pipeline's current route, and an atom that dropped it would stop
@@ -151,6 +158,38 @@ deviation is flagged.
   `task.ext.prefix ?: "${meta.id}"` in both the script and the stub. A template-backed module assigns every other
   variable its template reads the same way and says so in a comment
   (`modules/local/hwe_decisions/main.nf:24-26`, `modules/local/missingness_ladder/main.nf:25-28`).
+
+## The shared-marker list
+
+The `shared` marker-set mode of the sample checks consumes three products of the ancestry route as inputs, and
+their shapes are part of that route's contract.
+
+- **[MUST]** The shared-marker list is the ancestry route's post-high-LD `prune.in`
+  (`subworkflows/local/ancestry_inference/main.nf`, `PLINK2_INDEPPAIRWISE_REFERENCE`): study-side variant IDs,
+  the harmonised intersect of the stratum's QC'd variants with the reference after the reference-side `--maf`
+  and `--geno`, with the long-range LD regions and every non-autosomal variant excluded before pruning, pruned
+  on the merged reference. It is a variant list in the format above and reaches a sample-QC atom only through
+  `--extract`, so it is interchangeable with the study-side `prune.in` at that slot.
+- **[MUST]** The merged reference fileset that accompanies it is the one the list was pruned on, flipped onto the
+  stratum's strand by `--update-alleles`, so that its alleles agree with the study's and a frequency table
+  computed on it applies to the study fileset without further harmonisation.
+- **[MUST]** The frequency basis of the `shared`-mode heterozygosity report is one `--freq` table of the reference
+  samples of the stratum's `ancestry` super-population over exactly the shared markers
+  (`modules/local/ancestry_reference_keep/main.nf` selects the samples from the population table,
+  `modules/local/plink2/freq/main.nf` writes the table with the list under `--extract` and the samples under
+  `--keep`), read by both `--het` runs through `--read-freq`. The table covers every extracted marker, because a
+  marker absent from it silently falls back to the sample's own frequency (verified on 2.0.0a.6.9), and a
+  pooled panel is the wrong basis: its frequencies inflate F by the panel's differentiation (measured +0.10 on
+  the fixture's five-population panel against +0.00 on the matched samples).
+- **[MUST]** The reference report of that mode is `--het` of the same samples over the same markers and the same
+  table, so that the two reports differ only in their samples; it is optional on `heterozygosity_plots`, whose
+  histogram data then carries a `source` column with both sources binned over one range
+  (`modules/local/heterozygosity_plots/templates/heterozygosity_plots.R`).
+- **[MUST]** The list, the keep list, the frequency table and the reference report exist only for the strata in
+  `shared` mode, and the study-side pruning lists only for those in `study` mode. A consumer that needs one
+  of them for every stratum joins with a remainder and substitutes `[]` for the mode that does not produce
+  it (`workflows/gwasqc.nf`, the report inputs); a consumer specific to one mode joins strictly within that
+  mode's branch (`subworkflows/local/plink_sample_qc_lists/main.nf`).
 
 ## Decision-list and table file formats
 
@@ -269,9 +308,15 @@ header. Never merge the two roles into one file.
   - the chromosome-Y call count and rate of the sex-check report, which exist only because `cols=+ycount` is in
     that process's `ext.args2` (`conf/modules/plink2.config:77`);
   - the sex-check `F` column and the heterozygosity `F` column, which exist only because the input still carries
-    chromosome X, which is why pruning runs genome-wide
+    chromosome X, which is why pruning runs genome-wide in the `study` mode and the `shared` mode extracts the
+    unpruned QC'd set for the sex check rather than the autosomal shared list
     (`modules/local/sex_check_decisions/templates/sex_check_decisions.R:27-29`,
     `modules/local/heterozygosity_plots/templates/heterozygosity_plots.R:37-39`);
+  - the three plink2 statistics that refuse a fileset below 50 samples, `--indep-pairwise`, `--check-sex` and
+    `--het`, which run on such a stratum only because `conf/modules/plink2.config` lifts the refusal with
+    `--bad-ld` and `--bad-freqs` where the marker-set mode makes the stratum's own estimates the user's choice,
+    and because `--read-freq` of a covering table lifts it for `--het` on its own (verified on 2.0.0a.6.9 with
+    the 12-sample fixture stratum);
   - the Hardy-Weinberg `P` column, which plink2 _renames_ to `MIDP` under a `midp` modifier rather than adding a
     column, so that modifier must stay out of `PLINK2_HARDY`'s `ext.args2`, the seam through which `--hardy`
     modifiers reach plink2 and which the pipeline leaves empty: the atom surfaces the report as plink2 writes it
@@ -298,7 +343,11 @@ header. Never merge the two roles into one file.
     (`modules/local/sex_check_decisions/templates/sex_check_decisions.R:27-34`).
   - `.het` from `--het` — `F`, joined to the sex-check report on the ID columns and renamed at the module boundary
     so the two `F` columns cannot be confused
-    (`modules/local/heterozygosity_plots/templates/heterozygosity_plots.R:34-42`).
+    (`modules/local/heterozygosity_plots/templates/heterozygosity_plots.R:34-42`); the optional reference
+    report contributes `F` alone.
+  - `.afreq` from `--freq`, and `.acount` under its `counts` modifier (`modules/local/plink2/freq/main.nf`) — read
+    by plink2 through `--read-freq`, never parsed by the pipeline; the two are interchangeable at that flag
+    (verified on 2.0.0a.6.9: `--het --read-freq` gives byte-identical reports from either).
   - `.kin0` from `--make-king-table` — `KINSHIP`, `IBS0`, and the pair ID columns, `IID1`/`IID2` as the pinned
     plink2 writes them (with `FID1`/`FID2` beside them when the fileset carries family IDs) or `ID1`/`ID2` for a
     report in the bare id colset; every other column passes through into the pair table
@@ -398,6 +447,9 @@ header. Never merge the two roles into one file.
   the complete list set (`workflows/gwasqc.nf:145`). No stage of the QC chain or of the ancestry route writes an
   intermediate study fileset, and a component that would need one is wrong for this pipeline: the statistic runs
   on the unfiltered fileset with the lists accumulated so far.
+- **[MUST]** The `shared`-mode frequency table and reference report are statistics runs on the merged reference,
+  not filesets, and are published beside the study's report (`conf/modules/plink2.config`, `PLINK2_FREQ` and
+  `PLINK2_HET_REFERENCE`), because they are the basis a reviewer reads the study's `F` against.
 - **[MUST]** The only materialised intermediates are the reference filesets of the ancestry route, and they exist
   because plink2 cannot produce them any other way: the per-fileset intersect because `--extract` is applied only
   after `--pmerge-list` has concatenated its inputs in full, and the merged, harmonised reference because pruning,
@@ -439,7 +491,7 @@ header. Never merge the two roles into one file.
   `PLINK2_PMERGELIST` and the score aliases; `conf/modules/multiqc.config`, `STRATUM_REPORT`).
 - **[MUST]** Where a prefix must distinguish an alias's outputs in the same published directory, `ext.prefix`
   carries the distinguishing token and the module stays unaware of it: `${meta.id}.maf`, `${meta.id}.qc`,
-  `${meta.id}.ancestry`, `${meta.id}.ancestry_reference`, `${meta.id}.ancestry_study`
+  `${meta.id}.ancestry`, `${meta.id}.ancestry_reference`, `${meta.id}.ancestry_study`, `${meta.id}.reference`
   (`conf/modules/plink2.config`).
 
 ## The removal-gate union
