@@ -1,0 +1,98 @@
+nextflow_process {
+
+    name "Test Process MISSINGNESS_PLOTS"
+    script "../main.nf"
+    process "MISSINGNESS_PLOTS"
+    config "./nextflow.config"
+
+    tag "modules"
+    tag "modules_local"
+    tag "missingness_plots"
+
+    // Both reports come from one --missing run on the unfiltered gwasqc fixture stratum: twenty planted
+    // variants lie above F_MISS 0.10 and two samples above it. The ladder is the documented table shape with
+    // two rungs, written in place; the subworkflow test covers the real ten-rung ladder.
+    setup {
+        run("PLINK2_MISSING") {
+            script "../../plink2/missing/main.nf"
+            process {
+                """
+                input[0] = [
+                    [ id:'study_eur', ancestry:'EUR' ],
+                    file(params.pipelines_testdata_base_path + 'data/gwasqc/genotypes/study_eur.bed', checkIfExists: true),
+                    file(params.pipelines_testdata_base_path + 'data/gwasqc/genotypes/study_eur.bim', checkIfExists: true),
+                    file(params.pipelines_testdata_base_path + 'data/gwasqc/genotypes/study_eur.fam', checkIfExists: true),
+                    [],
+                    [],
+                    [],
+                    [],
+                ]
+                """
+            }
+        }
+    }
+
+    test("study_eur") {
+
+        when {
+            process {
+                """
+                def ladder = file('study_eur.missingness_ladder.tsv')
+                ladder.text = 'call_rate\\tmissing_threshold\\tvariants_removed\\tvariants_remaining\\tsamples_removed\\tsamples_remaining\\n90\\t0.1\\t20\\t3942\\t2\\t123\\n99\\t0.01\\t1002\\t2960\\t3\\t122\\n'
+                input[0] = PLINK2_MISSING.out.vmiss.join(PLINK2_MISSING.out.smiss).map { meta, vmiss, smiss -> [meta, vmiss, smiss, ladder] }
+                input[1] = 0.05
+                input[2] = 0.05
+                """
+            }
+        }
+
+        then {
+            def variant_hist = path(process.out.variant_hist_data.get(0).get(1)).readLines().collect { line -> line.split('\t').toList() }
+            def sample_hist = path(process.out.sample_hist_data.get(0).get(1)).readLines().collect { line -> line.split('\t').toList() }
+            assertAll(
+                { assert process.success },
+                { assert variant_hist[0] == ['bin_start', 'bin_end', 'count'] },
+                { assert variant_hist.size() == 101 },
+                { assert variant_hist[1][0] == '0' },
+                // Every variant and every sample lands in a bin, and the bins reach past the threshold so that
+                // its line lies within the plot.
+                { assert variant_hist.drop(1).collect { fields -> fields[2] as Integer }.sum() == 3962 },
+                { assert (variant_hist[100][1] as Double) > 0.05 },
+                { assert sample_hist[0] == ['bin_start', 'bin_end', 'count'] },
+                { assert sample_hist.size() == 101 },
+                { assert sample_hist.drop(1).collect { fields -> fields[2] as Integer }.sum() == 125 },
+                { assert (sample_hist[100][1] as Double) > 0.05 },
+                { assert path(process.out.variant_hist_plot.get(0).get(1)).size() > 0 },
+                { assert path(process.out.variant_hist_plot.get(0).get(2)).size() > 0 },
+                { assert path(process.out.sample_hist_plot.get(0).get(2)).size() > 0 },
+                { assert path(process.out.ladder_plot.get(0).get(1)).size() > 0 },
+                { assert path(process.out.ladder_plot.get(0).get(2)).size() > 0 },
+                { assert snapshot(process.out.variant_hist_data, process.out.sample_hist_data, process.out.versions).match() },
+            )
+        }
+    }
+
+    test("study_eur - stub") {
+
+        options "-stub"
+
+        when {
+            process {
+                """
+                def ladder = file('study_eur.missingness_ladder.tsv')
+                ladder.text = 'call_rate\\tmissing_threshold\\tvariants_removed\\tvariants_remaining\\tsamples_removed\\tsamples_remaining\\n'
+                input[0] = PLINK2_MISSING.out.vmiss.join(PLINK2_MISSING.out.smiss).map { meta, vmiss, smiss -> [meta, vmiss, smiss, ladder] }
+                input[1] = 0.05
+                input[2] = 0.05
+                """
+            }
+        }
+
+        then {
+            assertAll(
+                { assert process.success },
+                { assert snapshot(sanitizeOutput(process.out)).match() },
+            )
+        }
+    }
+}

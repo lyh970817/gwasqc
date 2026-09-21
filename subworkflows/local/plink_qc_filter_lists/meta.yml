@@ -13,8 +13,10 @@ components:
   - geno_decisions
   - mind_decisions
   - missingness_ladder
+  - missingness_plots
   - plink2/hardy
   - hwe_decisions
+  - hwe_plots
 input:
   - ch_genotypes:
       description: One PLINK 1 fileset per stratum; meta.id must be unique across strata
@@ -85,6 +87,60 @@ output:
       description: Variants below the HWE p-value threshold, one ID per line for plink2 --exclude
       structure: [map meta, path hwe_exclude]
       pattern: "*.hwe_exclude.txt"
+      ontologies: []
+  - vmiss_hist_data:
+      type: file
+      description: Histogram counts of the per-variant missing-call rate over the MAF-passing variants, the data behind the plot
+      structure: [map meta, path vmiss_hist]
+      pattern: "*.vmiss_hist.tsv"
+      ontologies: []
+  - vmiss_hist_plot:
+      type: file
+      description: The per-variant missingness histogram with the geno threshold marked, as PDF and PNG
+      structure: [map meta, path pdf, path png]
+      pattern: "*.vmiss_hist.{pdf,png}"
+      ontologies: []
+  - smiss_hist_data:
+      type: file
+      description: Histogram counts of the per-sample missing-call rate over the geno-retained variants, the data behind the plot
+      structure: [map meta, path smiss_hist]
+      pattern: "*.smiss_hist.tsv"
+      ontologies: []
+  - smiss_hist_plot:
+      type: file
+      description: The per-sample missingness histogram with the mind threshold marked, as PDF and PNG
+      structure: [map meta, path pdf, path png]
+      pattern: "*.smiss_hist.{pdf,png}"
+      ontologies: []
+  - ladder_plot:
+      type: file
+      description: The call-rate ladder rendered as a table image, as PDF and PNG
+      structure: [map meta, path pdf, path png]
+      pattern: "*.missingness_ladder.{pdf,png}"
+      ontologies: []
+  - hwe_hist_data:
+      type: file
+      description: Histogram counts of the Hardy-Weinberg p-value per report, the data behind the plot
+      structure: [map meta, path hwe_hist]
+      pattern: "*.hwe_hist.tsv"
+      ontologies: []
+  - hwe_hist_plot:
+      type: file
+      description: The Hardy-Weinberg p-value histogram over every variant, as PDF and PNG
+      structure: [map meta, path pdf, path png]
+      pattern: "*.hwe_hist.{pdf,png}"
+      ontologies: []
+  - hwe_window_data:
+      type: file
+      description: Histogram counts of the log10 p-value within the window 1e-20 < P < 0.01 per report, the data behind the plot
+      structure: [map meta, path hwe_hist_window]
+      pattern: "*.hwe_hist_window.tsv"
+      ontologies: []
+  - hwe_window_plot:
+      type: file
+      description: The windowed Hardy-Weinberg histogram with the threshold marked, as PDF and PNG
+      structure: [map meta, path pdf, path png]
+      pattern: "*.hwe_hist_window.{pdf,png}"
       ontologies: []
 authors:
   - "@lyh970817"

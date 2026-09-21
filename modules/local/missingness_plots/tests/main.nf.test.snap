@@ -1,0 +1,94 @@
+{
+    "study_eur - stub": {
+        "content": [
+            {
+                "ladder_plot": [
+                    [
+                        {
+                            "ancestry": "EUR",
+                            "id": "study_eur"
+                        },
+                        "study_eur.missingness_ladder.pdf:md5,d41d8cd98f00b204e9800998ecf8427e",
+                        "study_eur.missingness_ladder.png:md5,d41d8cd98f00b204e9800998ecf8427e"
+                    ]
+                ],
+                "sample_hist_data": [
+                    [
+                        {
+                            "ancestry": "EUR",
+                            "id": "study_eur"
+                        },
+                        "study_eur.smiss_hist.tsv:md5,81c1ba5414fcb016e9f6fe7e97f4ab35"
+                    ]
+                ],
+                "sample_hist_plot": [
+                    [
+                        {
+                            "ancestry": "EUR",
+                            "id": "study_eur"
+                        },
+                        "study_eur.smiss_hist.pdf:md5,d41d8cd98f00b204e9800998ecf8427e",
+                        "study_eur.smiss_hist.png:md5,d41d8cd98f00b204e9800998ecf8427e"
+                    ]
+                ],
+                "variant_hist_data": [
+                    [
+                        {
+                            "ancestry": "EUR",
+                            "id": "study_eur"
+                        },
+                        "study_eur.vmiss_hist.tsv:md5,81c1ba5414fcb016e9f6fe7e97f4ab35"
+                    ]
+                ],
+                "variant_hist_plot": [
+                    [
+                        {
+                            "ancestry": "EUR",
+                            "id": "study_eur"
+                        },
+                        "study_eur.vmiss_hist.pdf:md5,d41d8cd98f00b204e9800998ecf8427e",
+                        "study_eur.vmiss_hist.png:md5,d41d8cd98f00b204e9800998ecf8427e"
+                    ]
+                ],
+                "versions": [
+                    "versions.yml:md5,5acbb05547f5935970bca2e836aa7da9"
+                ]
+            }
+        ],
+        "timestamp": "2026-09-21T09:17:55.494432982",
+        "meta": {
+            "nf-test": "0.9.5",
+            "nextflow": "26.04.4"
+        }
+    },
+    "study_eur": {
+        "content": [
+            [
+                [
+                    {
+                        "id": "study_eur",
+                        "ancestry": "EUR"
+                    },
+                    "study_eur.vmiss_hist.tsv:md5,b0a86ed4e3cf672e5e4243fb92b0e214"
+                ]
+            ],
+            [
+                [
+                    {
+                        "id": "study_eur",
+                        "ancestry": "EUR"
+                    },
+                    "study_eur.smiss_hist.tsv:md5,8764194a9d3fb7621ffbfcc3d633054d"
+                ]
+            ],
+            [
+                "versions.yml:md5,5acbb05547f5935970bca2e836aa7da9"
+            ]
+        ],
+        "timestamp": "2026-09-21T09:17:48.347336794",
+        "meta": {
+            "nf-test": "0.9.5",
+            "nextflow": "26.04.4"
+        }
+    }
+}

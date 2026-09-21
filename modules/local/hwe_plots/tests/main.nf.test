@@ -1,0 +1,117 @@
+nextflow_process {
+
+    name "Test Process HWE_PLOTS"
+    script "../main.nf"
+    process "HWE_PLOTS"
+    config "./nextflow.config"
+
+    tag "modules"
+    tag "modules_local"
+    tag "hwe_plots"
+
+    // The gwasqc fixture stratum plants five chr5 variants with every sample heterozygous, whose p-values fall
+    // far below the window; its chromosome X variants make plink2 write the separate `.hardy.x` report that
+    // the optional second input draws as its own series.
+    setup {
+        run("PLINK2_HARDY") {
+            script "../../plink2/hardy/main.nf"
+            process {
+                """
+                input[0] = [
+                    [ id:'study_eur', ancestry:'EUR' ],
+                    file(params.pipelines_testdata_base_path + 'data/gwasqc/genotypes/study_eur.bed', checkIfExists: true),
+                    file(params.pipelines_testdata_base_path + 'data/gwasqc/genotypes/study_eur.bim', checkIfExists: true),
+                    file(params.pipelines_testdata_base_path + 'data/gwasqc/genotypes/study_eur.fam', checkIfExists: true),
+                    [],
+                    [],
+                    [],
+                    [],
+                ]
+                """
+            }
+        }
+    }
+
+    test("study_eur - with chromosome X report") {
+
+        when {
+            process {
+                """
+                input[0] = PLINK2_HARDY.out.hardy.join(PLINK2_HARDY.out.hardy_x)
+                input[1] = 1e-10
+                """
+            }
+        }
+
+        then {
+            def hist = path(process.out.hist_data.get(0).get(1)).readLines().collect { line -> line.split('\t').toList() }
+            def window = path(process.out.window_data.get(0).get(1)).readLines().collect { line -> line.split('\t').toList() }
+            def total = { rows, report -> rows.drop(1).findAll { fields -> fields[0] == report }.collect { fields -> fields[3] as Integer }.sum() }
+            assertAll(
+                { assert process.success },
+                { assert hist[0] == ['report', 'bin_start', 'bin_end', 'count'] },
+                { assert hist.size() == 201 },
+                // Every row of each report lands in a bin: 3632 autosomal variants and the 300 chromosome X
+                // variants after the pseudo-autosomal ones are excluded by the test itself.
+                { assert total(hist, 'autosomal') == 3632 },
+                { assert total(hist, 'chrX') == 300 },
+                { assert window[0] == ['report', 'log10_p_start', 'log10_p_end', 'count'] },
+                { assert window.size() == 201 },
+                { assert window[1][1..2] == ['-20', '-19.82'] },
+                // The planted violations sit near 1e-36, below the window, so the window holds only the
+                // moderate tail of each report.
+                { assert total(window, 'autosomal') > 0 && total(window, 'autosomal') < 100 },
+                { assert total(window, 'chrX') > 0 && total(window, 'chrX') < 100 },
+                { assert path(process.out.hist_plot.get(0).get(1)).size() > 0 },
+                { assert path(process.out.hist_plot.get(0).get(2)).size() > 0 },
+                { assert path(process.out.window_plot.get(0).get(1)).size() > 0 },
+                { assert path(process.out.window_plot.get(0).get(2)).size() > 0 },
+                { assert snapshot(process.out.hist_data, process.out.window_data, process.out.versions).match() },
+            )
+        }
+    }
+
+    test("study_eur - autosomal report only") {
+
+        when {
+            process {
+                """
+                input[0] = PLINK2_HARDY.out.hardy.map { meta, hardy -> [ meta, hardy, [] ] }
+                input[1] = 1e-10
+                """
+            }
+        }
+
+        then {
+            def hist = path(process.out.hist_data.get(0).get(1)).readLines().collect { line -> line.split('\t').toList() }
+            assertAll(
+                { assert process.success },
+                { assert hist.size() == 101 },
+                { assert hist.drop(1).every { fields -> fields[0] == 'autosomal' } },
+                { assert hist.drop(1).collect { fields -> fields[3] as Integer }.sum() == 3632 },
+                { assert snapshot(process.out.hist_data, process.out.window_data).match() },
+            )
+        }
+    }
+
+    test("study_eur - stub") {
+
+        options "-stub"
+
+        when {
+            process {
+                """
+                input[0] = PLINK2_HARDY.out.hardy.join(PLINK2_HARDY.out.hardy_x)
+                input[1] = 1e-10
+                """
+            }
+        }
+
+        then {
+            assertAll(
+                { assert process.success },
+                { assert snapshot(sanitizeOutput(process.out)).match() },
+            )
+        }
+    }
+}

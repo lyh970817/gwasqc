@@ -66,6 +66,92 @@
                         "study_eur.hwe_exclude.txt:md5,d41d8cd98f00b204e9800998ecf8427e"
                     ]
                 ],
+                "hwe_hist_data": [
+                    [
+                        {
+                            "ancestry": "AFR",
+                            "id": "study_afr"
+                        },
+                        "study_afr.hwe_hist.tsv:md5,c3b21ef0d419575df84183dc1c6e4bc5"
+                    ],
+                    [
+                        {
+                            "ancestry": "EUR",
+                            "id": "study_eur"
+                        },
+                        "study_eur.hwe_hist.tsv:md5,c3b21ef0d419575df84183dc1c6e4bc5"
+                    ]
+                ],
+                "hwe_hist_plot": [
+                    [
+                        {
+                            "ancestry": "AFR",
+                            "id": "study_afr"
+                        },
+                        "study_afr.hwe_hist.pdf:md5,d41d8cd98f00b204e9800998ecf8427e",
+                        "study_afr.hwe_hist.png:md5,d41d8cd98f00b204e9800998ecf8427e"
+                    ],
+                    [
+                        {
+                            "ancestry": "EUR",
+                            "id": "study_eur"
+                        },
+                        "study_eur.hwe_hist.pdf:md5,d41d8cd98f00b204e9800998ecf8427e",
+                        "study_eur.hwe_hist.png:md5,d41d8cd98f00b204e9800998ecf8427e"
+                    ]
+                ],
+                "hwe_window_data": [
+                    [
+                        {
+                            "ancestry": "AFR",
+                            "id": "study_afr"
+                        },
+                        "study_afr.hwe_hist_window.tsv:md5,910ea7ecf6e1945c3b778713cce4de69"
+                    ],
+                    [
+                        {
+                            "ancestry": "EUR",
+                            "id": "study_eur"
+                        },
+                        "study_eur.hwe_hist_window.tsv:md5,910ea7ecf6e1945c3b778713cce4de69"
+                    ]
+                ],
+                "hwe_window_plot": [
+                    [
+                        {
+                            "ancestry": "AFR",
+                            "id": "study_afr"
+                        },
+                        "study_afr.hwe_hist_window.pdf:md5,d41d8cd98f00b204e9800998ecf8427e",
+                        "study_afr.hwe_hist_window.png:md5,d41d8cd98f00b204e9800998ecf8427e"
+                    ],
+                    [
+                        {
+                            "ancestry": "EUR",
+                            "id": "study_eur"
+                        },
+                        "study_eur.hwe_hist_window.pdf:md5,d41d8cd98f00b204e9800998ecf8427e",
+                        "study_eur.hwe_hist_window.png:md5,d41d8cd98f00b204e9800998ecf8427e"
+                    ]
+                ],
+                "ladder_plot": [
+                    [
+                        {
+                            "ancestry": "AFR",
+                            "id": "study_afr"
+                        },
+                        "study_afr.missingness_ladder.pdf:md5,d41d8cd98f00b204e9800998ecf8427e",
+                        "study_afr.missingness_ladder.png:md5,d41d8cd98f00b204e9800998ecf8427e"
+                    ],
+                    [
+                        {
+                            "ancestry": "EUR",
+                            "id": "study_eur"
+                        },
+                        "study_eur.missingness_ladder.pdf:md5,d41d8cd98f00b204e9800998ecf8427e",
+                        "study_eur.missingness_ladder.png:md5,d41d8cd98f00b204e9800998ecf8427e"
+                    ]
+                ],
                 "maf_snplist": [
                     [
                         {
@@ -130,6 +216,40 @@
                         "study_eur.smiss:md5,d41d8cd98f00b204e9800998ecf8427e"
                     ]
                 ],
+                "smiss_hist_data": [
+                    [
+                        {
+                            "ancestry": "AFR",
+                            "id": "study_afr"
+                        },
+                        "study_afr.smiss_hist.tsv:md5,81c1ba5414fcb016e9f6fe7e97f4ab35"
+                    ],
+                    [
+                        {
+                            "ancestry": "EUR",
+                            "id": "study_eur"
+                        },
+                        "study_eur.smiss_hist.tsv:md5,81c1ba5414fcb016e9f6fe7e97f4ab35"
+                    ]
+                ],
+                "smiss_hist_plot": [
+                    [
+                        {
+                            "ancestry": "AFR",
+                            "id": "study_afr"
+                        },
+                        "study_afr.smiss_hist.pdf:md5,d41d8cd98f00b204e9800998ecf8427e",
+                        "study_afr.smiss_hist.png:md5,d41d8cd98f00b204e9800998ecf8427e"
+                    ],
+                    [
+                        {
+                            "ancestry": "EUR",
+                            "id": "study_eur"
+                        },
+                        "study_eur.smiss_hist.pdf:md5,d41d8cd98f00b204e9800998ecf8427e",
+                        "study_eur.smiss_hist.png:md5,d41d8cd98f00b204e9800998ecf8427e"
+                    ]
+                ],
                 "vmiss": [
                     [
                         {
@@ -145,10 +265,44 @@
                         },
                         "study_eur.vmiss:md5,d41d8cd98f00b204e9800998ecf8427e"
                     ]
+                ],
+                "vmiss_hist_data": [
+                    [
+                        {
+                            "ancestry": "AFR",
+                            "id": "study_afr"
+                        },
+                        "study_afr.vmiss_hist.tsv:md5,81c1ba5414fcb016e9f6fe7e97f4ab35"
+                    ],
+                    [
+                        {
+                            "ancestry": "EUR",
+                            "id": "study_eur"
+                        },
+                        "study_eur.vmiss_hist.tsv:md5,81c1ba5414fcb016e9f6fe7e97f4ab35"
+                    ]
+                ],
+                "vmiss_hist_plot": [
+                    [
+                        {
+                            "ancestry": "AFR",
+                            "id": "study_afr"
+                        },
+                        "study_afr.vmiss_hist.pdf:md5,d41d8cd98f00b204e9800998ecf8427e",
+                        "study_afr.vmiss_hist.png:md5,d41d8cd98f00b204e9800998ecf8427e"
+                    ],
+                    [
+                        {
+                            "ancestry": "EUR",
+                            "id": "study_eur"
+                        },
+                        "study_eur.vmiss_hist.pdf:md5,d41d8cd98f00b204e9800998ecf8427e",
+                        "study_eur.vmiss_hist.png:md5,d41d8cd98f00b204e9800998ecf8427e"
+                    ]
                 ]
             }
         ],
-        "timestamp": "2026-09-20T14:59:30.897607713",
+        "timestamp": "2026-09-21T09:36:21.262707634",
         "meta": {
             "nf-test": "0.9.5",
             "nextflow": "26.04.4"
@@ -221,6 +375,92 @@
                         "study_eur.hwe_exclude.txt:md5,5c5c7bb5cc1ca307c582e2e9a5062ed3"
                     ]
                 ],
+                "hwe_hist_data": [
+                    [
+                        {
+                            "ancestry": "AFR",
+                            "id": "study_afr"
+                        },
+                        "study_afr.hwe_hist.tsv:md5,3a5cc0eefc31b5e41595ffa8b54e7201"
+                    ],
+                    [
+                        {
+                            "ancestry": "EUR",
+                            "id": "study_eur"
+                        },
+                        "study_eur.hwe_hist.tsv:md5,7accfc674606707e51697940cda292bc"
+                    ]
+                ],
+                "hwe_hist_plot": [
+                    [
+                        {
+                            "ancestry": "AFR",
+                            "id": "study_afr"
+                        },
+                        "study_afr.hwe_hist.pdf:md5,cb85a54de1878dc80c4ee9be948e42b5",
+                        "study_afr.hwe_hist.png:md5,07a39185f97fcb9faf3731637ae7e6b5"
+                    ],
+                    [
+                        {
+                            "ancestry": "EUR",
+                            "id": "study_eur"
+                        },
+                        "study_eur.hwe_hist.pdf:md5,39bd80b103eaca2c54d66d1959e6374d",
+                        "study_eur.hwe_hist.png:md5,3b1082d3d7e63ad30e4bdae4b7c83f22"
+                    ]
+                ],
+                "hwe_window_data": [
+                    [
+                        {
+                            "ancestry": "AFR",
+                            "id": "study_afr"
+                        },
+                        "study_afr.hwe_hist_window.tsv:md5,6c51c20dc0d6049fa20d2fce45d4cc3d"
+                    ],
+                    [
+                        {
+                            "ancestry": "EUR",
+                            "id": "study_eur"
+                        },
+                        "study_eur.hwe_hist_window.tsv:md5,e492165d0bcfc832dd28c2244a5900c4"
+                    ]
+                ],
+                "hwe_window_plot": [
+                    [
+                        {
+                            "ancestry": "AFR",
+                            "id": "study_afr"
+                        },
+                        "study_afr.hwe_hist_window.pdf:md5,df175ba2ee1a13bef35619f9762b453b",
+                        "study_afr.hwe_hist_window.png:md5,cbc238661f058c0258caa0af48a337d5"
+                    ],
+                    [
+                        {
+                            "ancestry": "EUR",
+                            "id": "study_eur"
+                        },
+                        "study_eur.hwe_hist_window.pdf:md5,84c4c788a3663ba236869d3521a4980d",
+                        "study_eur.hwe_hist_window.png:md5,6313e5e176b8cdc96d21a5edbb175117"
+                    ]
+                ],
+                "ladder_plot": [
+                    [
+                        {
+                            "ancestry": "AFR",
+                            "id": "study_afr"
+                        },
+                        "study_afr.missingness_ladder.pdf:md5,2466a91e5217f6baf9842849cb35354d",
+                        "study_afr.missingness_ladder.png:md5,c57f413af008f4de41618676a4f072fa"
+                    ],
+                    [
+                        {
+                            "ancestry": "EUR",
+                            "id": "study_eur"
+                        },
+                        "study_eur.missingness_ladder.pdf:md5,9e5fa44beea70331ea19fa2431870488",
+                        "study_eur.missingness_ladder.png:md5,92c2bafdd0e9705fbbd87b6b70195ef5"
+                    ]
+                ],
                 "maf_snplist": [
                     [
                         {
@@ -285,6 +525,40 @@
                         "study_eur.smiss:md5,09c1955f2bf1ec8e48342a8a8cc2b843"
                     ]
                 ],
+                "smiss_hist_data": [
+                    [
+                        {
+                            "ancestry": "AFR",
+                            "id": "study_afr"
+                        },
+                        "study_afr.smiss_hist.tsv:md5,515662d42f7b630ee4898eab4423e9b3"
+                    ],
+                    [
+                        {
+                            "ancestry": "EUR",
+                            "id": "study_eur"
+                        },
+                        "study_eur.smiss_hist.tsv:md5,1e9cb5e58688af332a792a0e673c919c"
+                    ]
+                ],
+                "smiss_hist_plot": [
+                    [
+                        {
+                            "ancestry": "AFR",
+                            "id": "study_afr"
+                        },
+                        "study_afr.smiss_hist.pdf:md5,88218f55b53de77cb796fcf9d1d58314",
+                        "study_afr.smiss_hist.png:md5,5686d707442953abfaddd5f5980e8ce9"
+                    ],
+                    [
+                        {
+                            "ancestry": "EUR",
+                            "id": "study_eur"
+                        },
+                        "study_eur.smiss_hist.pdf:md5,862df6fdbb2e4c5b68abe1f88e97f104",
+                        "study_eur.smiss_hist.png:md5,d191fd61328e31cf5f3908d96684af77"
+                    ]
+                ],
                 "vmiss": [
                     [
                         {
@@ -300,10 +574,44 @@
                         },
                         "study_eur.vmiss:md5,66ba3c6e0470c1bece269544178ae032"
                     ]
+                ],
+                "vmiss_hist_data": [
+                    [
+                        {
+                            "ancestry": "AFR",
+                            "id": "study_afr"
+                        },
+                        "study_afr.vmiss_hist.tsv:md5,5c55a41e4803247580d07e7b94ca2c5d"
+                    ],
+                    [
+                        {
+                            "ancestry": "EUR",
+                            "id": "study_eur"
+                        },
+                        "study_eur.vmiss_hist.tsv:md5,5d2fa2ff0396e8dcfce5b3d32b838e8f"
+                    ]
+                ],
+                "vmiss_hist_plot": [
+                    [
+                        {
+                            "ancestry": "AFR",
+                            "id": "study_afr"
+                        },
+                        "study_afr.vmiss_hist.pdf:md5,6971791e67c02e4c4bfe4690fdfca3ca",
+                        "study_afr.vmiss_hist.png:md5,3d245f9278a9d7594d8e6f5fc093f33e"
+                    ],
+                    [
+                        {
+                            "ancestry": "EUR",
+                            "id": "study_eur"
+                        },
+                        "study_eur.vmiss_hist.pdf:md5,718f00578d6e23a442fa26b5ed5676a6",
+                        "study_eur.vmiss_hist.png:md5,0a8f71a88490cae13eb019b8483114de"
+                    ]
                 ]
             }
         ],
-        "timestamp": "2026-09-20T14:58:56.328093898",
+        "timestamp": "2026-09-21T09:35:48.928594442",
         "meta": {
             "nf-test": "0.9.5",
             "nextflow": "26.04.4"

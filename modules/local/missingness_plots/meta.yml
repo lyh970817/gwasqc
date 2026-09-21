@@ -1,0 +1,154 @@
+name: missingness_plots
+description: Draw the missingness review figures of one stratum, histograms of the plink2 --missing per-variant and per-sample missing-call rates with the geno and mind thresholds marked and the call-rate ladder rendered as a table image
+keywords:
+  - missingness
+  - call rate
+  - genotype
+  - quality control
+  - plot
+tools:
+  - r-base:
+      description: The R programming language runtime
+      homepage: https://www.r-project.org/
+      documentation: https://cran.r-project.org/manuals.html
+  - r-ggplot2:
+      description: Grammar-of-graphics plotting for R
+      homepage: https://ggplot2.tidyverse.org/
+      documentation: https://ggplot2.tidyverse.org/reference/
+  - r-data.table:
+      description: Fast tabular data handling for R
+      homepage: https://r-datatable.com/
+      documentation: https://rdatatable.gitlab.io/data.table/
+input:
+  - - meta:
+        type: map
+        description: |
+          Groovy map describing the stratum.
+          Expected keys:
+            - id (string): Stratum identifier, used as the output prefix.
+    - vmiss:
+        type: file
+        description: plink2 variant-based missing-genotype report with an F_MISS column
+        pattern: "*.vmiss"
+        ontologies:
+          - edam: "http://edamontology.org/format_3475" # TSV
+    - smiss:
+        type: file
+        description: plink2 sample-based missing-genotype report with an F_MISS column
+        pattern: "*.smiss"
+        ontologies:
+          - edam: "http://edamontology.org/format_3475" # TSV
+    - ladder:
+        type: file
+        description: Call-rate ladder table with a header row, as written by missingness_ladder; every column is drawn and the known column names are given their display labels
+        pattern: "*.missingness_ladder.tsv"
+        ontologies:
+          - edam: "http://edamontology.org/format_3475" # TSV
+  - geno:
+      type: float
+      description: Maximum per-variant missing-call rate, drawn as a dashed line on the variant histogram
+  - mind:
+      type: float
+      description: Maximum per-sample missing-call rate, drawn as a dashed line on the sample histogram
+output:
+  variant_hist_data:
+    - - meta:
+          type: map
+          description: Metadata map propagated from input
+      - "${prefix}.vmiss_hist.tsv":
+          type: file
+          description: Counts of variants in 100 bins of F_MISS from zero to the larger of the largest rate and the geno threshold; the data the histogram is drawn from
+          pattern: "*.vmiss_hist.tsv"
+          ontologies:
+            - edam: "http://edamontology.org/format_3475" # TSV
+  variant_hist_plot:
+    - - meta:
+          type: map
+          description: Metadata map propagated from input
+      - "${prefix}.vmiss_hist.pdf":
+          type: file
+          description: Histogram of the per-variant missing-call rate, counts on a linear and on a log scale side by side, with the geno threshold marked
+          pattern: "*.vmiss_hist.pdf"
+          ontologies:
+            - edam: "http://edamontology.org/format_3508" # PDF
+      - "${prefix}.vmiss_hist.png":
+          type: file
+          description: The histogram as an image
+          pattern: "*.vmiss_hist.png"
+          ontologies:
+            - edam: "http://edamontology.org/format_3603" # PNG
+  sample_hist_data:
+    - - meta:
+          type: map
+          description: Metadata map propagated from input
+      - "${prefix}.smiss_hist.tsv":
+          type: file
+          description: Counts of samples in 100 bins of F_MISS from zero to the larger of the largest rate and the mind threshold; the data the histogram is drawn from
+          pattern: "*.smiss_hist.tsv"
+          ontologies:
+            - edam: "http://edamontology.org/format_3475" # TSV
+  sample_hist_plot:
+    - - meta:
+          type: map
+          description: Metadata map propagated from input
+      - "${prefix}.smiss_hist.pdf":
+          type: file
+          description: Histogram of the per-sample missing-call rate, counts on a linear and on a log scale side by side, with the mind threshold marked
+          pattern: "*.smiss_hist.pdf"
+          ontologies:
+            - edam: "http://edamontology.org/format_3508" # PDF
+      - "${prefix}.smiss_hist.png":
+          type: file
+          description: The histogram as an image
+          pattern: "*.smiss_hist.png"
+          ontologies:
+            - edam: "http://edamontology.org/format_3603" # PNG
+  ladder_plot:
+    - - meta:
+          type: map
+          description: Metadata map propagated from input
+      - "${prefix}.missingness_ladder.pdf":
+          type: file
+          description: The call-rate ladder rendered as a table image
+          pattern: "*.missingness_ladder.pdf"
+          ontologies:
+            - edam: "http://edamontology.org/format_3508" # PDF
+      - "${prefix}.missingness_ladder.png":
+          type: file
+          description: The table image as a PNG
+          pattern: "*.missingness_ladder.png"
+          ontologies:
+            - edam: "http://edamontology.org/format_3603" # PNG
+  versions:
+    - versions.yml:
+        type: file
+        description: File containing software versions
+        pattern: "versions.yml"
+        ontologies:
+          - edam: "http://edamontology.org/format_3750" # YAML
+topics:
+  versions:
+    - versions.yml:
+        type: file
+        description: File containing software versions, written by the R template because an eval output is only accepted for a Bash script
+        pattern: "versions.yml"
+        ontologies:
+          - edam: "http://edamontology.org/format_3750" # YAML
+authors:
+  - "@lyh970817"
+maintainers:
+  - "@lyh970817"
+containers:
+  conda:
+    linux/amd64:
+      lock_file: "modules/local/missingness_plots/.conda-lock/linux_amd64-bd-785e51271c23bbdc_1.txt"
+  docker:
+    linux/amd64:
+      build_id: "bd-785e51271c23bbdc_1"
+      name: "community.wave.seqera.io/library/r-base_r-ggplot2_r-data.table:785e51271c23bbdc"
+      scan_id: "sc-940f534e023f3133_1"
+  singularity:
+    linux/amd64:
+      build_id: "bd-0012f1154a886ee6_1"
+      name: "oras://community.wave.seqera.io/library/r-base_r-ggplot2_r-data.table:0012f1154a886ee6"
+      https: "https://community-cr-prod.seqera.io/docker/registry/v2/blobs/sha256/ac/ac330e254aed1e019ded0a6140463199760e9ee8f1cf398670eb40ccee61ed14/data"

@@ -12,8 +12,10 @@ nextflow_workflow {
     tag "geno_decisions"
     tag "mind_decisions"
     tag "missingness_ladder"
+    tag "missingness_plots"
     tag "plink2/hardy"
     tag "hwe_decisions"
+    tag "hwe_plots"
     tag "subworkflows/plink_qc_filter_lists"
 
     test("gwasqc fixtures - two strata") {
