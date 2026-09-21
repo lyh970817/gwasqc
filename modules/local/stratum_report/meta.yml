@@ -1,0 +1,256 @@
+name: stratum_report
+description: Assemble the QC summary row of one stratum from its decision lists, statistics tables and QC'd fileset, and the MultiQC custom-content fragments that carry its call-rate ladder, sex mismatches, duplicate and first-degree pairs and review figures
+keywords:
+  - quality control
+  - report
+  - multiqc
+  - genotype
+tools:
+  - gawk:
+      description: GNU awk, the text-processing language used to count the lists and summarise the tables
+      homepage: https://www.gnu.org/software/gawk/
+      documentation: https://www.gnu.org/software/gawk/manual/
+      licence: ["GPL-3.0-or-later"]
+  - coreutils:
+      description: GNU core utilities; base64 embeds the figures in the MultiQC image sections
+      homepage: https://www.gnu.org/software/coreutils/
+      documentation: https://www.gnu.org/software/coreutils/manual/
+      licence: ["GPL-3.0-or-later"]
+input:
+  - - meta:
+        type: map
+        description: |
+          Groovy map describing the stratum.
+          Expected keys:
+            - id (string): Stratum identifier, used as the output prefix and as the row name.
+            - ancestry (string): The stratum's ancestry label, recorded in the row.
+    - fam:
+        type: file
+        description: PLINK 1 sample file of the input fileset; its line count is the samples in
+        pattern: "*.fam"
+        ontologies: []
+    - bim:
+        type: file
+        description: PLINK 1 variant file of the input fileset; its line count is the variants in
+        pattern: "*.bim"
+        ontologies: []
+    - maf_snplist:
+        type: file
+        description: Variants passing the MAF threshold, one ID per line
+        pattern: "*.snplist"
+        ontologies:
+          - edam: "http://edamontology.org/format_2330" # Text
+    - geno_exclude:
+        type: file
+        description: Variants above the geno threshold, one ID per line
+        pattern: "*.geno_exclude.txt"
+        ontologies:
+          - edam: "http://edamontology.org/format_2330" # Text
+    - mind_remove:
+        type: file
+        description: Samples above the mind threshold, one FID IID pair per line
+        pattern: "*.mind_remove.txt"
+        ontologies:
+          - edam: "http://edamontology.org/format_2330" # Text
+    - hwe_exclude:
+        type: file
+        description: Variants below the HWE threshold, one ID per line
+        pattern: "*.hwe_exclude.txt"
+        ontologies:
+          - edam: "http://edamontology.org/format_2330" # Text
+    - ladder:
+        type: file
+        description: Call-rate ladder table with a header row, as written by missingness_ladder; its first column names the rung
+        pattern: "*.missingness_ladder.tsv"
+        ontologies:
+          - edam: "http://edamontology.org/format_3475" # TSV
+    - prune_in:
+        type: file
+        description: Variants retained by LD pruning of the QC'd set, one ID per line
+        pattern: "*.prune.in"
+        ontologies:
+          - edam: "http://edamontology.org/format_2330" # Text
+    - highld_exclude:
+        type: file
+        description: Pruned variants inside a long-range LD region or off the autosomes, one ID per line
+        pattern: "*.highld_exclude.txt"
+        ontologies:
+          - edam: "http://edamontology.org/format_2330" # Text
+    - sex_mismatch:
+        type: file
+        description: The PROBLEM rows of the plink2 --check-sex report with its header, an IID column and optionally an FID column; header only when there is no mismatch
+        pattern: "*.sex_mismatch.tsv"
+        ontologies:
+          - edam: "http://edamontology.org/format_3475" # TSV
+    - het:
+        type: file
+        description: plink2 --het report with an F column
+        pattern: "*.het"
+        ontologies:
+          - edam: "http://edamontology.org/format_3475" # TSV
+    - relatedness_pairs:
+        type: file
+        description: The classified KING table with IID1, IID2, KINSHIP, IBS0 and RELATIONSHIP columns, optionally FID1 and FID2, as written by relatedness_decisions
+        pattern: "*.relatedness_pairs.tsv"
+        ontologies:
+          - edam: "http://edamontology.org/format_3475" # TSV
+    - relatedness_remove:
+        type: file
+        description: One member of each duplicate/MZ pair, one FID IID pair (or IID) per line
+        pattern: "*.relatedness_remove.txt"
+        ontologies:
+          - edam: "http://edamontology.org/format_2330" # Text
+    - relatedness_outliers:
+        type: file
+        description: The mean-kinship outliers, one FID IID pair (or IID) per line
+        pattern: "*.relatedness_outliers.txt"
+        ontologies:
+          - edam: "http://edamontology.org/format_2330" # Text
+    - ancestry_summary:
+        type: file
+        description: Optional ancestry summary with GROUP, STATUS and N_STUDY columns, as written by ancestry_assign; an empty list when ancestry inference was skipped
+        pattern: "*.ancestry_summary.tsv"
+        ontologies:
+          - edam: "http://edamontology.org/format_3475" # TSV
+    - ancestry_mismatch_remove:
+        type: file
+        description: Optional list of the study samples not assigned to the stratum's label, one FID IID pair per line; an empty list when ancestry inference was skipped
+        pattern: "*.ancestry_mismatch_remove.txt"
+        ontologies:
+          - edam: "http://edamontology.org/format_2330" # Text
+    - qc_bim:
+        type: file
+        description: PLINK 1 variant file of the QC'd fileset; its line count is the variants out
+        pattern: "*.bim"
+        ontologies: []
+    - qc_fam:
+        type: file
+        description: PLINK 1 sample file of the QC'd fileset; its line count is the samples out
+        pattern: "*.fam"
+        ontologies: []
+    - variant_qc_images:
+        type: file
+        description: PNG figures of the variant and sample filter stage, embedded in that stage's image section; an empty list for none
+        pattern: "*.png"
+        ontologies:
+          - edam: "http://edamontology.org/format_3603" # PNG
+    - sex_check_images:
+        type: file
+        description: PNG figures of the sex check, embedded in that stage's image section; an empty list for none
+        pattern: "*.png"
+        ontologies:
+          - edam: "http://edamontology.org/format_3603" # PNG
+    - heterozygosity_images:
+        type: file
+        description: PNG figures of the heterozygosity report, embedded in that stage's image section; an empty list for none
+        pattern: "*.png"
+        ontologies:
+          - edam: "http://edamontology.org/format_3603" # PNG
+    - relatedness_images:
+        type: file
+        description: PNG figures of the relatedness report, embedded in that stage's image section; an empty list for none
+        pattern: "*.png"
+        ontologies:
+          - edam: "http://edamontology.org/format_3603" # PNG
+    - ancestry_images:
+        type: file
+        description: PNG figures of the ancestry inference, embedded in that stage's image section; an empty list for none
+        pattern: "*.png"
+        ontologies:
+          - edam: "http://edamontology.org/format_3603" # PNG
+  - maf:
+      type: float
+      description: Minor allele frequency threshold, recorded in the row
+  - geno:
+      type: float
+      description: Per-variant missing-call rate threshold, recorded in the row
+  - mind:
+      type: float
+      description: Per-sample missing-call rate threshold, recorded in the row
+  - hwe:
+      type: float
+      description: Hardy-Weinberg p-value threshold, recorded in the row
+  - apply_sample_removals:
+      type: boolean
+      description: Whether the sex-mismatch, duplicate and ancestry-mismatch lists were applied to the QC'd fileset
+  - ancestry_remove_mismatched:
+      type: boolean
+      description: Whether the ancestry mismatch list joins the removals under apply_sample_removals
+output:
+  summary:
+    - - meta:
+          type: map
+          description: Metadata map propagated from input
+      - "${prefix}.qc_summary.tsv":
+          type: file
+          description: One header row and one row for the stratum, stratum and ancestry first, then the input counts, every filter's threshold and removals, the pruned set, the sex, heterozygosity, relatedness and ancestry summaries, the removal gate and the final counts; the ancestry columns are present only when ancestry inference ran
+          pattern: "*.qc_summary.tsv"
+          ontologies:
+            - edam: "http://edamontology.org/format_3475" # TSV
+  multiqc:
+    - - meta:
+          type: map
+          description: Metadata map propagated from input
+      - "${prefix}.*_mqc.{tsv,yaml}":
+          type: file
+          description: MultiQC custom-content fragments; the call-rate ladder table, the sex mismatch table and the duplicate and first-degree pair table when they have rows, and one image section per stage that has figures
+          pattern: "*_mqc.{tsv,yaml}"
+          ontologies: []
+  versions_gawk:
+    - - "${task.process}":
+          type: string
+          description: The process the version was collected from
+      - "gawk":
+          type: string
+          description: The tool name
+      - "gawk --version | head -n 1 | sed 's/^GNU Awk //; s/,.*\\$//'":
+          type: eval
+          description: The command used to retrieve the gawk version
+  versions_coreutils:
+    - - "${task.process}":
+          type: string
+          description: The process the version was collected from
+      - "coreutils":
+          type: string
+          description: The tool name
+      - "base64 --version | head -n 1 | sed 's/^base64 (GNU coreutils) //'":
+          type: eval
+          description: The command used to retrieve the coreutils version
+topics:
+  versions:
+    - - ${task.process}:
+          type: string
+          description: The process the version was collected from
+      - gawk:
+          type: string
+          description: The tool name
+      - "gawk --version | head -n 1 | sed 's/^GNU Awk //; s/,.*\\$//'":
+          type: eval
+          description: The command used to retrieve the gawk version
+    - - ${task.process}:
+          type: string
+          description: The process the version was collected from
+      - coreutils:
+          type: string
+          description: The tool name
+      - "base64 --version | head -n 1 | sed 's/^base64 (GNU coreutils) //'":
+          type: eval
+          description: The command used to retrieve the coreutils version
+authors:
+  - "@lyh970817"
+maintainers:
+  - "@lyh970817"
+containers:
+  conda:
+    linux/amd64:
+      lock_file: "modules/local/stratum_report/.conda-lock/linux_amd64-bd-d5d074ad9f29be71_1.txt"
+  docker:
+    linux/amd64:
+      build_id: "bd-d5d074ad9f29be71_1"
+      name: "community.wave.seqera.io/library/gawk:5.3.1--d5d074ad9f29be71"
+      scan_id: "sc-872432f3c6e6b071_1"
+  singularity:
+    linux/amd64:
+      build_id: "bd-55cafbff4f74c897_1"
+      name: "oras://community.wave.seqera.io/library/gawk:5.3.1--55cafbff4f74c897"
+      https: "https://community-cr-prod.seqera.io/docker/registry/v2/blobs/sha256/0c/0c4365ad2ac928e4b018455102731c78cfcf43ecd4cb8178c12cd00c02f6ee29/data"

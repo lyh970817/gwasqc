@@ -1,0 +1,56 @@
+{
+    "two strata": {
+        "content": [
+            [
+                "gwasqc_summary.tsv:md5,1738defa77195921393994559fe25502"
+            ],
+            [
+                [
+                    "gwasqc_ancestry_summary_mqc.tsv:md5,ee8d50eaf5c592a274842f288c70c53d",
+                    "gwasqc_heterozygosity_summary_mqc.tsv:md5,2339d4848111cc31340ebd3c462a9bf2",
+                    "gwasqc_qc_summary_mqc.tsv:md5,b9475bc43b507766240f4705a61d9c1d",
+                    "gwasqc_relatedness_summary_mqc.tsv:md5,02a4250700d4c18e47aebbc2e440b33b",
+                    "gwasqc_sample_removals_mqc.tsv:md5,cb72141f00064d7541456470bb2f464d",
+                    "gwasqc_sex_check_summary_mqc.tsv:md5,778ae90a0998d9cda72edf771ac8e7b4",
+                    "gwasqc_variant_qc_filters_mqc.tsv:md5,71e49349cc153693c7032e30d27ca408"
+                ]
+            ],
+            [
+                [
+                    "QC_SUMMARY",
+                    "gawk",
+                    "5.3.1"
+                ]
+            ]
+        ],
+        "timestamp": "2026-09-21T09:27:03.263496309",
+        "meta": {
+            "nf-test": "0.9.5",
+            "nextflow": "26.04.4"
+        }
+    },
+    "two strata - stub": {
+        "content": [
+            {
+                "multiqc": [
+                    "gwasqc_qc_summary_mqc.tsv:md5,016ed1d7781cff5e7869211da948a7fe"
+                ],
+                "summary": [
+                    "gwasqc_summary.tsv:md5,8f555354cd73631b623a209c5b544a4b"
+                ],
+                "versions_gawk": [
+                    [
+                        "QC_SUMMARY",
+                        "gawk",
+                        "5.3.1"
+                    ]
+                ]
+            }
+        ],
+        "timestamp": "2026-09-21T09:27:13.824825268",
+        "meta": {
+            "nf-test": "0.9.5",
+            "nextflow": "26.04.4"
+        }
+    }
+}

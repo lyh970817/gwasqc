@@ -40,6 +40,7 @@ workflow NFCORE_GWASQC {
     GWASQC(
         samplesheet,
         reference,
+        params.maf,
         params.geno,
         params.mind,
         params.hwe,

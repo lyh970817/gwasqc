@@ -169,4 +169,6 @@ workflow ANCESTRY_INFERENCE {
     keep_lists            = ANCESTRY_ASSIGN.out.keep_lists // channel: [ val(meta), [ path(keep), ... ] ]
     mismatch_remove       = ANCESTRY_ASSIGN.out.sample_remove // channel: [ val(meta), path(mismatch_remove) ]
     pca_data              = ANCESTRY_ASSIGN.out.pca_data // channel: [ val(meta), path(pca_data) ]
+    pc1_pc2_plot          = ANCESTRY_ASSIGN.out.pc1_pc2_plot // channel: [ val(meta), path(pdf), path(png) ]
+    pc3_pc4_plot          = ANCESTRY_ASSIGN.out.pc3_pc4_plot // channel: [ val(meta), path(pdf), path(png) ]
 }

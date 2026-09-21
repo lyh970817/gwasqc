@@ -167,6 +167,18 @@ output:
       structure: [map meta, path pca_data]
       pattern: "*.ancestry_pca.tsv"
       ontologies: []
+  - pc1_pc2_plot:
+      type: file
+      description: PC1 against PC2, the reference populations in their own colours and the study samples drawn above them, as PDF and PNG
+      structure: [map meta, path pdf, path png]
+      pattern: "*.ancestry_pc1_pc2.{pdf,png}"
+      ontologies: []
+  - pc3_pc4_plot:
+      type: file
+      description: PC3 against PC4, drawn the same way, as PDF and PNG
+      structure: [map meta, path pdf, path png]
+      pattern: "*.ancestry_pc3_pc4.{pdf,png}"
+      ontologies: []
 authors:
   - "@lyh970817"
 maintainers:

@@ -1,0 +1,74 @@
+name: qc_summary
+description: Assemble the cross-stratum QC summary table from the summary rows of every stratum, and cut from it the per-stage MultiQC tables
+keywords:
+  - quality control
+  - report
+  - multiqc
+  - genotype
+tools:
+  - gawk:
+      description: GNU awk, the text-processing language used to join the rows and cut the stage tables
+      homepage: https://www.gnu.org/software/gawk/
+      documentation: https://www.gnu.org/software/gawk/manual/
+      licence: ["GPL-3.0-or-later"]
+input:
+  - summaries:
+      type: file
+      description: One summary row file per stratum, as written by stratum_report; every file must carry the same header, and the first column of each row names the stratum
+      pattern: "*.qc_summary.tsv"
+      ontologies:
+        - edam: "http://edamontology.org/format_3475" # TSV
+output:
+  summary:
+    - gwasqc_summary.tsv:
+        type: file
+        description: The rows of every stratum under one header, in stratum id order
+        pattern: "gwasqc_summary.tsv"
+        ontologies:
+          - edam: "http://edamontology.org/format_3475" # TSV
+  multiqc:
+    - "*_mqc.tsv":
+        type: file
+        description: MultiQC custom-content tables cut from the summary; the summary itself as the first section, then the filter, sex check, heterozygosity, relatedness, ancestry (when the rows carry ancestry columns) and sample removal sections
+        pattern: "*_mqc.tsv"
+        ontologies:
+          - edam: "http://edamontology.org/format_3475" # TSV
+  versions_gawk:
+    - - "${task.process}":
+          type: string
+          description: The process the version was collected from
+      - "gawk":
+          type: string
+          description: The tool name
+      - "gawk --version | head -n 1 | sed 's/^GNU Awk //; s/,.*\\$//'":
+          type: eval
+          description: The command used to retrieve the gawk version
+topics:
+  versions:
+    - - ${task.process}:
+          type: string
+          description: The process the version was collected from
+      - gawk:
+          type: string
+          description: The tool name
+      - "gawk --version | head -n 1 | sed 's/^GNU Awk //; s/,.*\\$//'":
+          type: eval
+          description: The command used to retrieve the gawk version
+authors:
+  - "@lyh970817"
+maintainers:
+  - "@lyh970817"
+containers:
+  conda:
+    linux/amd64:
+      lock_file: "modules/local/qc_summary/.conda-lock/linux_amd64-bd-d5d074ad9f29be71_1.txt"
+  docker:
+    linux/amd64:
+      build_id: "bd-d5d074ad9f29be71_1"
+      name: "community.wave.seqera.io/library/gawk:5.3.1--d5d074ad9f29be71"
+      scan_id: "sc-872432f3c6e6b071_1"
+  singularity:
+    linux/amd64:
+      build_id: "bd-55cafbff4f74c897_1"
+      name: "oras://community.wave.seqera.io/library/gawk:5.3.1--55cafbff4f74c897"
+      https: "https://community-cr-prod.seqera.io/docker/registry/v2/blobs/sha256/0c/0c4365ad2ac928e4b018455102731c78cfcf43ecd4cb8178c12cd00c02f6ee29/data"

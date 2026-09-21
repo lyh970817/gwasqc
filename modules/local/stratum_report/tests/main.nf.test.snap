@@ -1,0 +1,128 @@
+{
+    "six samples - stub": {
+        "content": [
+            {
+                "multiqc": [
+                    [
+                        {
+                            "ancestry": "EUR",
+                            "id": "test"
+                        },
+                        [
+                            "test.variant_qc_ladder_mqc.tsv:md5,0abc3d66567c8400aab3da0319f6d7d9",
+                            "test.variant_qc_plots_mqc.yaml:md5,f2a496c98bc70d027d59bed816cc2a95"
+                        ]
+                    ]
+                ],
+                "summary": [
+                    [
+                        {
+                            "ancestry": "EUR",
+                            "id": "test"
+                        },
+                        "test.qc_summary.tsv:md5,8f555354cd73631b623a209c5b544a4b"
+                    ]
+                ],
+                "versions_coreutils": [
+                    [
+                        "STRATUM_REPORT",
+                        "coreutils",
+                        "9.4"
+                    ]
+                ],
+                "versions_gawk": [
+                    [
+                        "STRATUM_REPORT",
+                        "gawk",
+                        "5.3.1"
+                    ]
+                ]
+            }
+        ],
+        "timestamp": "2026-09-21T09:32:11.04940374",
+        "meta": {
+            "nf-test": "0.9.5",
+            "nextflow": "26.04.4"
+        }
+    },
+    "six samples - gate off": {
+        "content": [
+            [
+                [
+                    {
+                        "id": "test",
+                        "ancestry": "EUR"
+                    },
+                    "test.qc_summary.tsv:md5,5a18593a687e814333e7bbb91b79de6a"
+                ]
+            ],
+            [
+                [
+                    {
+                        "id": "test",
+                        "ancestry": "EUR"
+                    },
+                    [
+                        "test.ancestry_plots_mqc.yaml:md5,f488eca636bf64ffef586f2c76dd4a18",
+                        "test.heterozygosity_plots_mqc.yaml:md5,26be23d201eb1911b6824dadceb16c65",
+                        "test.relatedness_pairs_mqc.tsv:md5,21827784b81cf78c0eeeb65f2aad8a68",
+                        "test.relatedness_plots_mqc.yaml:md5,a188bc40d94b0bc13dc351bb12827696",
+                        "test.sex_check_mismatches_mqc.tsv:md5,f7b57c9fcfd3d156de434aca04baa709",
+                        "test.sex_check_plots_mqc.yaml:md5,389ae223e707818c48d86c521237a867",
+                        "test.variant_qc_ladder_mqc.tsv:md5,82460a34475421697765cf85097fd9b8",
+                        "test.variant_qc_plots_mqc.yaml:md5,5728900eb0e265e9999d52104d68f7e6"
+                    ]
+                ]
+            ],
+            [
+                [
+                    "STRATUM_REPORT",
+                    "gawk",
+                    "5.3.1"
+                ]
+            ],
+            [
+                [
+                    "STRATUM_REPORT",
+                    "coreutils",
+                    "9.4"
+                ]
+            ]
+        ],
+        "timestamp": "2026-09-21T09:35:48.089949565",
+        "meta": {
+            "nf-test": "0.9.5",
+            "nextflow": "26.04.4"
+        }
+    },
+    "six samples - gate on - no ancestry": {
+        "content": [
+            [
+                [
+                    {
+                        "id": "test",
+                        "ancestry": "EUR"
+                    },
+                    "test.qc_summary.tsv:md5,2317f3a2692cb9a085453fa71cf518b6"
+                ]
+            ],
+            [
+                [
+                    {
+                        "id": "test",
+                        "ancestry": "EUR"
+                    },
+                    [
+                        "test.relatedness_pairs_mqc.tsv:md5,11c890a71396a988c2b2f8728f4384d3",
+                        "test.variant_qc_ladder_mqc.tsv:md5,0ac081d28dbd8ec1c234f08925ce203e"
+                    ]
+                ]
+            ]
+        ],
+        "timestamp": "2026-09-21T09:35:56.015059984",
+        "meta": {
+            "nf-test": "0.9.5",
+            "nextflow": "26.04.4"
+        }
+    }
+}

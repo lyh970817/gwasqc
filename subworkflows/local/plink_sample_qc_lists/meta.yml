@@ -78,6 +78,12 @@ output:
       structure: [map meta, path sex_remove]
       pattern: "*.sex_mismatch_remove.txt"
       ontologies: []
+  - sex_check_hist_plot:
+      type: file
+      description: Histogram of the chromosome X F by recorded sex, as PDF and PNG
+      structure: [map meta, path pdf, path png]
+      pattern: "*.sex_check_hist.{pdf,png}"
+      ontologies: []
   - het:
       type: file
       description: plink2 --het report over the pruned autosomal set outside the long-range LD regions
@@ -89,6 +95,18 @@ output:
       description: Per-sample heterozygosity F and sex-check F, joined on the sample IDs
       structure: [map meta, path scatter_data]
       pattern: "*.het_sex_scatter.tsv"
+      ontologies: []
+  - het_hist_plot:
+      type: file
+      description: Histogram of the heterozygosity F, as PDF and PNG
+      structure: [map meta, path pdf, path png]
+      pattern: "*.het_hist.{pdf,png}"
+      ontologies: []
+  - het_sex_scatter_plot:
+      type: file
+      description: Scatter of the heterozygosity F against the sex-check F, as PDF and PNG
+      structure: [map meta, path pdf, path png]
+      pattern: "*.het_sex_scatter.{pdf,png}"
       ontologies: []
   - kin0:
       type: file
@@ -119,6 +137,12 @@ output:
       description: Mean-kinship outliers as FID IID pairs; published, not applied
       structure: [map meta, path outliers]
       pattern: "*.relatedness_outliers.txt"
+      ontologies: []
+  - relatedness_hist_plot:
+      type: file
+      description: Histogram of the reported kinship coefficients, as PDF and PNG
+      structure: [map meta, path pdf, path png]
+      pattern: "*.relatedness_hist.{pdf,png}"
       ontologies: []
 authors:
   - "@lyh970817"
