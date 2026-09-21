@@ -6,7 +6,13 @@
 
 ## Introduction
 
-<!-- TODO nf-core: Add documentation about anything specific to running your pipeline. For general topics, please point to (and add to) the main nf-core website. -->
+nf-core/gwasqc quality-controls genotype array data. Each row of the samplesheet is a stratum — a PLINK 1 bed/bim/fam fileset, typically one ancestry group of a cohort — and every stratum is quality-controlled independently of every other one: nothing is pooled, and no count in the report mixes strata.
+
+Every statistic is computed by plink2 on the original fileset with the decision lists accumulated so far applied through `--extract`, `--exclude` and `--remove`, so each report describes the filtered data although no filtered fileset exists. The QC'd fileset is written exactly once, at the end, by a single `--make-bed` run over the original fileset and the complete list set. That has two consequences worth knowing before you read the output: every threshold you set becomes a published list of the variants or samples it selected, and the QC'd fileset can always be reconstructed from the input fileset and those lists.
+
+This pipeline reads and writes PLINK 1 bed/bim/fam filesets. A pgen/pvar/psam fileset is accepted by every plink2 module interface unconverted, but that route is not declared by the samplesheet schema and is untested; the VCZ format route is not implemented.
+
+All parameters are documented on the [parameters page](https://nf-co.re/gwasqc/parameters) and by the pipeline itself: `--help` prints the visible parameters, `--help_full` prints every parameter with its help text, and `--show_hidden` adds the institutional and generic boilerplate that `--help` omits.
 
 ## Samplesheet input
 
@@ -34,11 +40,15 @@ An [example samplesheet](../assets/samplesheet.csv) has been provided with the p
 
 ### QC thresholds
 
-The variant filter chain applies four thresholds, each a pipeline parameter: `--maf` (variants below this minor allele frequency are dropped), `--geno` (variants whose missing-call rate exceeds this value are dropped), `--mind` (samples whose missing-call rate, measured over the variants that survive `--geno`, exceeds this value are dropped) and `--hwe` (variants whose Hardy-Weinberg exact-test p-value is below this value are dropped). Every comparison is strict, as in plink2 itself. The decision lists are published beside the statistics they were derived from, and the QC'd fileset is written once, at the end, from the original fileset and those lists.
+The variant filter chain applies four thresholds, each a pipeline parameter: `--maf` (variants below this minor allele frequency are dropped), `--geno` (variants whose missing-call rate exceeds this value are dropped), `--mind` (samples whose missing-call rate, measured over the variants that survive `--geno`, exceeds this value are dropped) and `--hwe` (variants whose Hardy-Weinberg exact-test p-value is below this value are dropped). The decision lists are published beside the statistics they were derived from, and the QC'd fileset is written once, at the end, from the original fileset and those lists. Alongside the `--geno` and `--mind` lists the pipeline records a call-rate ladder from 90 % to 99 %, one row per rate, stating what that rate would have removed; nothing on the ladder is applied.
 
 ### Sample checks
 
-The sample checks run on an LD-pruned subset of the QC'd variants (`--ld_window_size`, `--ld_step_size`, `--ld_r2` are the `--indep-pairwise` settings) and, for the heterozygosity and relatedness reports, outside the long-range LD regions of `--high_ld_regions` and off the sex chromosomes. The sex check splits the chromosome X pseudo-autosomal regions for `--genome_build` and applies the four `--sex_check_*` thresholds through plink2 `--check-sex`; the relatedness table holds the pairs at or above `--king_table_filter`, classifies them on KING's kinship boundaries with `--relatedness_po_ibs0_max` telling parent-offspring from full-sib pairs, and flags individuals `--relatedness_indiv_sd` standard deviations above the cohort mean kinship.
+The sample checks run on an LD-pruned subset of the QC'd variants (`--ld_window_size`, `--ld_step_size`, `--ld_r2` are the `--indep-pairwise` settings) and, for the heterozygosity and relatedness reports, outside the long-range LD regions of `--high_ld_regions` and off the sex chromosomes.
+
+The sex check splits the chromosome X pseudo-autosomal regions for `--genome_build` and applies four thresholds through plink2 `--check-sex`, as that command's own modifiers: `--sex_check_max_female_xf` and `--sex_check_min_male_xf` bound the chromosome X inbreeding coefficient for a female and a male call, and `--sex_check_max_female_ycount` and `--sex_check_min_male_ycount` bound the number of non-missing chromosome Y calls each call may carry. plink2 makes the call and the pipeline lists its own `PROBLEM` verdicts; nothing is re-decided.
+
+The relatedness table holds the pairs at or above `--king_table_filter`, classifies them on KING's kinship boundaries with `--relatedness_po_ibs0_max` telling parent-offspring from full-sib pairs, and flags individuals `--relatedness_indiv_sd` standard deviations above the cohort mean kinship.
 
 Every sample check publishes its decision list, but only the missingness removals are applied by default, as in the legacy chain. With `--apply_sample_removals`, the sex mismatches, one member of each duplicate/MZ pair and, unless `--ancestry_remove_mismatched` is switched off, the ancestry mismatches are removed from the QC'd fileset as well; the mean-kinship outliers and the heterozygosity report are never applied.
 
@@ -75,6 +85,17 @@ The reference is restricted to each stratum's QC'd variants with the pipeline's 
 > [!NOTE]
 > plink2 refuses `--pca` on fewer than 50 reference samples and recommends its `approx` modifier on panels far beyond 5000 samples; the modifier reaches the decomposition through `ext.args` of `PLINK2_PCAWTS` in a custom config.
 
+### Threshold semantics
+
+The boundaries are not uniform across the pipeline, so each one is stated here exactly as it is implemented. A variant is kept by `--maf` when its minor allele frequency is at or above the threshold, as plink2's own `--maf` keeps it. A variant is listed by `--geno`, and a sample by `--mind`, only when its missing-call rate is **strictly greater than** the threshold, which is again what plink2's `--geno` and `--mind` do; every rung of the call-rate ladder uses the same strict comparison. A variant is listed by `--hwe` only when its exact-test p-value is **strictly below** the threshold.
+
+The KING degree lower bounds are **inclusive**: a pair is `duplicate_or_mz` at kinship `>= 0.354`, first-degree at `>= 0.177`, `second_degree` at `>= 0.0884` and `third_degree` at `>= 0.0442`. Because the default `--king_table_filter` is that last bound, a pair reported at exactly the filter value is classified third-degree rather than falling outside every class. A first-degree pair is `parent_offspring` when its IBS0 proportion is at or below `--relatedness_po_ibs0_max` and `full_sibling` otherwise. An individual is a mean-kinship outlier only when its mean kinship is **strictly above** the cohort mean plus `--relatedness_indiv_sd` standard deviations.
+
+A study sample is assigned its most probable super-population when that posterior is **at or above** `--ancestry_prob_threshold`, and is unassigned below it. The optional centroid rule unassigns an already-assigned sample only when its distance from its group's reference mean on some component is **strictly greater than** `--ancestry_sd_filter` standard deviations; with the parameter unset the rule does not run.
+
+> [!WARNING]
+> Do not add the `midp` modifier to the `ext.args2` of `PLINK2_HARDY`, the seam through which `--hardy` modifiers reach plink2 and which the pipeline leaves empty. plink2 does not add a column for the mid-p adjustment: it **renames** the report's `P` column to `MIDP`. The Hardy-Weinberg decision module addresses that column by name, so with `midp` set it stops with a message naming the missing column rather than writing an empty exclusion list and silently excluding nothing.
+
 ### Report
 
 The run root holds `gwasqc_summary.tsv`, one row per stratum with the samples and variants that entered, what every stage removed or listed at its threshold, the sex, heterozygosity, relatedness and ancestry counts, what `--apply_sample_removals` did or would do, and what left. The MultiQC report under `multiqc/` opens with the same table and continues with one section per QC stage: a table across strata, then the review figures of each stratum. Every number in both is read from a published list or table, so a count in the report can be traced to the file it was counted from; no threshold has to be re-entered to read it, because the thresholds are recorded in the summary. The report takes no parameters of its own beyond the MultiQC options (`--multiqc_title`, `--multiqc_config`, `--multiqc_logo`, `--multiqc_methods_description`); a custom MultiQC config extends the pipeline's `assets/multiqc_config.yml`, which orders the sections.
@@ -84,10 +105,10 @@ The run root holds `gwasqc_summary.tsv`, one row per stratum with the samples an
 The typical command for running the pipeline is as follows:
 
 ```bash
-nextflow run nf-core/gwasqc --input ./samplesheet.csv --outdir ./results  -profile docker
+nextflow run nf-core/gwasqc --input ./samplesheet.csv --reference_panel ./reference_panel.csv --reference_pop_data ./ref_pop.tsv --outdir ./results -profile docker
 ```
 
-This will launch the pipeline with the `docker` configuration profile. See below for more information about profiles.
+This will launch the pipeline with the `docker` configuration profile. See below for more information about profiles. `--input` and `--outdir` are the only parameters required in every run; `--reference_panel` and `--reference_pop_data` are required unless you pass `--skip_ancestry`. Set `--email` to receive a summary message when the run finishes, and `--email_on_fail` to receive one only when it does not.
 
 Note that the pipeline will create the following files in your working directory:
 
@@ -201,13 +222,13 @@ Whilst the default requirements set within the pipeline will hopefully work for 
 
 To change the resource requests, please see the [max resources](https://nf-co.re/docs/running/configuration/nextflow-for-your-system#set-max-resources) and [customise process resources](https://nf-co.re/docs/running/configuration/nextflow-for-your-system#customize-process-resources) section of the nf-core website.
 
-### Custom Containers
+### Custom containers
 
 In some cases, you may wish to change the container or conda environment used by a pipeline steps for a particular tool. By default, nf-core pipelines use containers and software from the [biocontainers](https://biocontainers.pro/) or [bioconda](https://bioconda.github.io/) projects. However, in some cases the pipeline specified version maybe out of date.
 
 To use a different container from the default container or conda environment specified in a pipeline, please see the [updating tool versions](https://nf-co.re/docs/running/configuration/nextflow-for-your-system#update-tool-versions) section of the nf-core website.
 
-### Custom Tool Arguments
+### Custom tool arguments
 
 A pipeline might not always support every possible argument or option of a particular tool used in pipeline. Fortunately, nf-core pipelines provide some freedom to users to insert additional parameters that the pipeline does not include by default.
 
