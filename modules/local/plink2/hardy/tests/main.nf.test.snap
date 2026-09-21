@@ -88,5 +88,29 @@
             "nf-test": "0.9.5",
             "nextflow": "26.04.4"
         }
+    },
+    "plink_simulated - bed - midp renames the P column": {
+        "content": [
+            [
+                [
+                    {
+                        "id": "plink_simulated_midp"
+                    },
+                    "plink_simulated_midp.hardy:md5,06201805f8176945c96b9b1f005168cc"
+                ]
+            ],
+            [
+                [
+                    "PLINK2_HARDY",
+                    "plink2",
+                    "2.0.0-a.6.9LM"
+                ]
+            ]
+        ],
+        "timestamp": "2026-09-21T11:13:30.489258027",
+        "meta": {
+            "nf-test": "0.9.5",
+            "nextflow": "26.04.6"
+        }
     }
 }

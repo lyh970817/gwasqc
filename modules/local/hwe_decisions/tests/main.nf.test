@@ -71,6 +71,61 @@ nextflow_process {
         }
     }
 
+    test("study_eur - chromosome X report contributing an exclusion") {
+
+        when {
+            process {
+                """
+                // No fixture chromosome X variant fails at 1e-10, so a planted chromosome X report in plink2's
+                // own column layout carries one failing variant and one passing one.
+                def planted = file("${workDir}/planted.hardy.x")
+                planted.text = [
+                    ['#CHROM', 'ID', 'A1', 'AX', 'FEMALE_HOM_A1_CT', 'FEMALE_HET_A1_CT', 'FEMALE_TWO_AX_CT', 'MALE_A1_CT', 'MALE_AX_CT', 'O(FEMALE_HET_A1)', 'E(FEMALE_HET_A1)', 'FEMALE_A1_FREQ', 'MALE_A1_FREQ', 'P'].join('\\t'),
+                    ['X', 'rs_x_fails', 'A', 'G', '0', '61', '0', '30', '31', '1', '0.5', '0.5', '0.49', '1e-12'].join('\\t'),
+                    ['X', 'rs_x_passes', 'T', 'C', '20', '31', '10', '22', '9', '0.508', '0.487', '0.582', '0.71', '0.405'].join('\\t'),
+                ].join('\\n') + '\\n'
+                input[0] = PLINK2_HARDY.out.hardy.map { meta, hardy -> [ meta, hardy, planted ] }
+                input[1] = 1e-10
+                """
+            }
+        }
+
+        then {
+            assertAll(
+                { assert process.success },
+                // The union of the two reports: the autosomal five, then the planted chromosome X failure.
+                { assert path(process.out.variant_exclude.get(0).get(1)).readLines() == ['rs1667531', 'rs1668208', 'rs1668410', 'rs1668428', 'rs1668730', 'rs_x_fails'] },
+                { assert snapshot(process.out.variant_exclude).match() },
+            )
+        }
+    }
+
+    test("study_eur - midp report without a P column fails") {
+
+        when {
+            process {
+                """
+                // plink2 renames P to MIDP under the midp modifier; the module must stop rather than exclude
+                // nothing.
+                def midp = file("${workDir}/midp.hardy")
+                midp.text = [
+                    ['#CHROM', 'ID', 'A1', 'AX', 'HOM_A1_CT', 'HET_A1_CT', 'TWO_AX_CT', 'O(HET_A1)', 'E(HET_A1)', 'MIDP'].join('\\t'),
+                    ['1', 'rs1000514', 'C', 'T', '59', '59', '7', '0.472', '0.413472', '1e-12'].join('\\t'),
+                ].join('\\n') + '\\n'
+                input[0] = [ [ id:'midp' ], midp, [] ]
+                input[1] = 1e-10
+                """
+            }
+        }
+
+        then {
+            assertAll(
+                { assert process.failed },
+                { assert process.errorReport.contains('must carry ID and P columns') },
+            )
+        }
+    }
+
     test("study_eur - stub") {
 
         options "-stub"

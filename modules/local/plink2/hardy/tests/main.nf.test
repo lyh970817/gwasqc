@@ -81,6 +81,43 @@ nextflow_process {
         }
     }
 
+    test("plink_simulated - bed - midp renames the P column") {
+
+        when {
+            params {
+                module_args2 = 'midp'
+            }
+            process {
+                """
+                input[0] = [
+                    [ id:'plink_simulated_midp' ],
+                    file(params.modules_testdata_base_path + 'genomics/homo_sapiens/popgen/plink_simulated.bed', checkIfExists: true),
+                    file(params.modules_testdata_base_path + 'genomics/homo_sapiens/popgen/plink_simulated.bim', checkIfExists: true),
+                    file(params.modules_testdata_base_path + 'genomics/homo_sapiens/popgen/plink_simulated.fam', checkIfExists: true),
+                    [],
+                    [],
+                    [],
+                    [],
+                ]
+                """
+            }
+        }
+
+        then {
+            def command = path(process.out.hardy.get(0).get(1)).parent.resolve('.command.sh').text
+            def header = path(process.out.hardy.get(0).get(1)).readLines().first().split('\t').toList()
+            assertAll(
+                { assert process.success },
+                { assert command.contains('--hardy midp') },
+                // The atom surfaces the report as plink2 writes it: the modifier renames P to MIDP rather than
+                // adding a column, which is why a consumer that reads P must not receive it.
+                { assert header.last() == 'MIDP' },
+                { assert !header.contains('P') },
+                { assert snapshot(process.out.hardy, process.out.versions_plink2).match() },
+            )
+        }
+    }
+
     test("plink_simulated - bed - stub") {
 
         options "-stub"

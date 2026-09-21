@@ -21,6 +21,9 @@ process PLINK2_HARDY {
 
     script:
     def args = task.ext.args ?: ''
+    // plink2 reads the `--hardy` modifiers (`midp`, `log10`, `zs`, `cols=`) only directly after the flag, so
+    // they travel in a second segment; every other flag goes in `args`.
+    def args2 = task.ext.args2 ?: ''
     def mode = plink_genotype_file.extension == 'pgen' ? '--pfile' : '--bfile'
     def input_prefix = plink_genotype_file.baseName
     prefix = task.ext.prefix ?: "${meta.id}"
@@ -39,7 +42,7 @@ process PLINK2_HARDY {
         ${keep_fragment} \\
         ${remove_fragment} \\
         ${args} \\
-        --hardy \\
+        --hardy ${args2} \\
         --out ${prefix}
     """
 

@@ -62,7 +62,9 @@ nextflow_process {
             process {
                 """
                 // A target bim and two reference pvars covering every class once; rs_dup occurs in both
-                // reference files, rs_absent only in the reference, and rs_pos moved on the target.
+                // reference files, rs_absent only in the reference, and rs_pos moved on the target. The pvars
+                // are written as plink2 writes them from a bim, REF from column 6 and ALT from column 5, so the
+                // reference pair (A1, A2) of every row is (ALT, REF).
                 def target = file("${workDir}/target.bim")
                 target.text = [
                     '1\\trs_match\\t0\\t100\\tA\\tG',
@@ -81,23 +83,23 @@ nextflow_process {
                 first.text = [
                     '##fileformat=PVARv1.0',
                     '#CHROM\\tPOS\\tID\\tREF\\tALT',
-                    '1\\t100\\trs_match\\tA\\tG',
-                    '1\\t200\\trs_swap\\tA\\tG',
-                    '1\\t300\\trs_flip\\tA\\tG',
-                    '1\\t400\\trs_flip_swap\\tA\\tG',
-                    '1\\t500\\trs_ambig\\tA\\tT',
-                    '1\\t550\\trs_ambig_flip\\tC\\tG',
-                    '1\\t600\\trs_mismatch\\tA\\tG',
-                    '1\\t700\\trs_indel\\tA\\tAT',
-                    '1\\t800\\trs_pos\\tA\\tG',
+                    '1\\t100\\trs_match\\tG\\tA',
+                    '1\\t200\\trs_swap\\tG\\tA',
+                    '1\\t300\\trs_flip\\tG\\tA',
+                    '1\\t400\\trs_flip_swap\\tG\\tA',
+                    '1\\t500\\trs_ambig\\tT\\tA',
+                    '1\\t550\\trs_ambig_flip\\tG\\tC',
+                    '1\\t600\\trs_mismatch\\tG\\tA',
+                    '1\\t700\\trs_indel\\tAT\\tA',
+                    '1\\t800\\trs_pos\\tG\\tA',
                 ].join('\\n') + '\\n'
                 def second = file("${workDir}/second.pvar")
                 second.text = [
                     '#CHROM\\tPOS\\tID\\tREF\\tALT',
-                    '2\\t900\\trs_chr\\tA\\tG',
-                    '2\\t1000\\trs_dup\\tA\\tG',
-                    '2\\t1000\\trs_dup\\tA\\tC',
-                    '2\\t1100\\trs_absent\\tA\\tG',
+                    '2\\t900\\trs_chr\\tG\\tA',
+                    '2\\t1000\\trs_dup\\tG\\tA',
+                    '2\\t1000\\trs_dup\\tC\\tA',
+                    '2\\t1100\\trs_absent\\tG\\tA',
                 ].join('\\n') + '\\n'
                 input[0] = [ [ id:'synthetic' ], target, [first, second] ]
                 """
@@ -115,6 +117,65 @@ nextflow_process {
                 { assert path(process.out.snplist.get(0).get(1)).readLines() == ['rs_match', 'rs_swap', 'rs_flip', 'rs_flip_swap', 'rs_chr'] },
                 { assert path(process.out.flip_update.get(0).get(1)).readLines() == ['rs_flip\tA\tG\tT\tC', 'rs_flip_swap\tA\tG\tT\tC'] },
                 { assert snapshot(process.out.snplist, process.out.flip_update, process.out.table, process.out.summary).match() },
+            )
+        }
+    }
+
+    test("study_eur - bim target against the same reference as a pvar") {
+
+        // The fixture reference converted to PLINK 2 by plink2 itself, which writes REF from bim column 6 and
+        // ALT from column 5; against the bim target every class must come out as the bim-against-bim case does.
+        setup {
+            run("PLINK2_PMERGELIST") {
+                script "../../plink2/pmergelist/main.nf"
+                process {
+                    """
+                    input[0] = [
+                        [ id:'ref_panel' ],
+                        file(params.pipelines_testdata_base_path + 'data/gwasqc/reference/ref_panel.bed', checkIfExists: true),
+                        file(params.pipelines_testdata_base_path + 'data/gwasqc/reference/ref_panel.bim', checkIfExists: true),
+                        file(params.pipelines_testdata_base_path + 'data/gwasqc/reference/ref_panel.fam', checkIfExists: true),
+                        [],
+                        [],
+                        [],
+                        [],
+                        [],
+                    ]
+                    """
+                }
+            }
+        }
+
+        when {
+            process {
+                """
+                input[0] = PLINK2_PMERGELIST.out.pgen.map { _meta, _pgen, pvar, _psam ->
+                    [
+                        [ id:'study_eur', ancestry:'EUR' ],
+                        file(params.pipelines_testdata_base_path + 'data/gwasqc/genotypes/study_eur.bim', checkIfExists: true),
+                        pvar,
+                    ]
+                }
+                """
+            }
+        }
+
+        then {
+            def flipped = ['rs1019157', 'rs1084781', 'rs1090252', 'rs1097655', 'rs1145782', 'rs1159607', 'rs1163718', 'rs1273151', 'rs1360139', 'rs1389123', 'rs1436911', 'rs1452101', 'rs1467337', 'rs1549826', 'rs1578801', 'rs1677459', 'rs1680161', 'rs1722029', 'rs1723746', 'rs1762883', 'rs1776206', 'rs1803389', 'rs1862912', 'rs1916892', 'rs1941077', 'rs1988230', 'rs1996775', 'rs2027882', 'rs2109777', 'rs2130274', 'rs2144516', 'rs2150265', 'rs2164106', 'rs2169905', 'rs2281679', 'rs2294093', 'rs2309898', 'rs2314061', 'rs2347169', 'rs2362593', 'rs2389678', 'rs2439958', 'rs2469140', 'rs2504154', 'rs2515327', 'rs2516136', 'rs2517896', 'rs2524188', 'rs2526561', 'rs2637925', 'rs2675388', 'rs2729284', 'rs2781271', 'rs2789194']
+            def table = path(process.out.table.get(0).get(1)).readLines().collect { line -> line.split('\t', -1).toList() }
+            def by_class = table.drop(1).groupBy { fields -> fields[7] }.collectEntries { name, rows -> [(name): rows.collect { fields -> fields[0] }.sort()] }
+            def summary = path(process.out.summary.get(0).get(1)).readLines().collect { line -> line.split('\t').toList() }
+            assertAll(
+                { assert process.success },
+                { assert path(process.out.table.get(0).get(1)).parent.resolve('reference/ref_panel.pvar').exists() },
+                { assert table.size() == 1 + 3632 },
+                // Identical classes to the bim reference: no row is relabelled a swap by the format change.
+                { assert by_class.keySet().sort() == ['ambiguous', 'flip', 'match'] },
+                { assert by_class.flip == flipped.sort() },
+                { assert summary.find { fields -> fields[0] == 'match' }[1] == '3538' },
+                { assert summary.find { fields -> fields[0] == 'swap' }[1] == '0' },
+                { assert path(process.out.flip_update.get(0).get(1)).readLines().collect { line -> line.split('\t')[0] }.sort() == flipped.sort() },
+                { assert snapshot(process.out.snplist, process.out.flip_update, process.out.summary).match() },
             )
         }
     }

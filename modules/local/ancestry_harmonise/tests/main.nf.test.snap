@@ -137,5 +137,41 @@
             "nf-test": "0.9.5",
             "nextflow": "26.04.4"
         }
+    },
+    "study_eur - bim target against the same reference as a pvar": {
+        "content": [
+            [
+                [
+                    {
+                        "id": "study_eur",
+                        "ancestry": "EUR"
+                    },
+                    "study_eur.ancestry_harmonised.snplist:md5,70cf086358d48ff5de5e201ac0a84af3"
+                ]
+            ],
+            [
+                [
+                    {
+                        "id": "study_eur",
+                        "ancestry": "EUR"
+                    },
+                    "study_eur.ancestry_flip_update.txt:md5,2ffcb0888e521c734c95f0730187cac2"
+                ]
+            ],
+            [
+                [
+                    {
+                        "id": "study_eur",
+                        "ancestry": "EUR"
+                    },
+                    "study_eur.ancestry_harmonisation_summary.tsv:md5,7f6ed94e1e2361503e457e2b2960b3b1"
+                ]
+            ]
+        ],
+        "timestamp": "2026-09-21T11:07:34.802918014",
+        "meta": {
+            "nf-test": "0.9.5",
+            "nextflow": "26.04.6"
+        }
     }
 }

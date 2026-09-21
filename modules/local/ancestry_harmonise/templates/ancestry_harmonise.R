@@ -44,7 +44,10 @@ read_variants <- function(path) {
             stringsAsFactors = FALSE
         )
         names(table) <- sub("^#", "", names(table))
-        data.frame(CHROM = table[["CHROM"]], POS = table[["POS"]], ID = table[["ID"]], A1 = table[["REF"]], A2 = table[["ALT"]], stringsAsFactors = FALSE)
+        # plink2 reads a .bim's A1 (column 5) as ALT and its A2 (column 6) as REF, so a .pvar fills the same two
+        # slots ALT first, and one fileset reads alike in either format: a .bim target against a .pvar reference
+        # classifies as a .bim against a .bim would.
+        data.frame(CHROM = table[["CHROM"]], POS = table[["POS"]], ID = table[["ID"]], A1 = table[["ALT"]], A2 = table[["REF"]], stringsAsFactors = FALSE)
     } else {
         table <- read.table(path, header = FALSE, comment.char = "", quote = "", colClasses = "character", stringsAsFactors = FALSE)
         data.frame(CHROM = table[[1]], POS = table[[4]], ID = table[[2]], A1 = table[[5]], A2 = table[[6]], stringsAsFactors = FALSE)

@@ -60,5 +60,23 @@
             "nf-test": "0.9.5",
             "nextflow": "26.04.4"
         }
+    },
+    "study_eur - chromosome X report contributing an exclusion": {
+        "content": [
+            [
+                [
+                    {
+                        "id": "study_eur",
+                        "ancestry": "EUR"
+                    },
+                    "study_eur.hwe_exclude.txt:md5,e1a29ffce069282a391d17c64026af9f"
+                ]
+            ]
+        ],
+        "timestamp": "2026-09-21T11:08:30.130805728",
+        "meta": {
+            "nf-test": "0.9.5",
+            "nextflow": "26.04.6"
+        }
     }
 }
