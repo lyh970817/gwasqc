@@ -10,8 +10,13 @@ Applies to new or maintained upstream-bound atomic components, including the can
 - The portable component contains `main.nf`, `meta.yml`, `environment.yml`, and `tests/main.nf.test`; snapshots
   change only when the understood output contract changes.
 - Process names are uppercase and module directories lowercase. The process directives are `tag`, `label`,
-  `conda`, and `container`. New and upstream-bound modules do not use a process-level `when:` seam; conditional
-  routing belongs in composition.
+  `conda`, `container`, and the template's `when:` seam, kept verbatim as
+  `when: task.ext.when == null || task.ext.when`. Conditional routing still belongs in composition and no
+  pipeline configuration sets `ext.when`; the seam stays because the nf-core module template of the tools
+  version `.nf-core.yml` pins (4.0.3) emits it, and every module in the `nf-core/modules` reference checkout
+  carries it, so a module without it diverges from upstream rather than anticipating it. _(decided 2026-09-21
+  from the template and the reference checkout; this reverses an earlier "no `when:` seam" rule that
+  described a proposal upstream never adopted)_
 - Choose a resource label that reflects the operation's CPU, memory, and time profile.
 
 ## Inputs and native interface

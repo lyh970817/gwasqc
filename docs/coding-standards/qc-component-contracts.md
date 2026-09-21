@@ -136,9 +136,9 @@ deviation is flagged.
   and `--geno` (`:125`), and the `--score` column selection (`:159`).
 - **[MUST]** `task.ext.args2` exists only where plink2 reads modifiers that must directly follow the command flag,
   and the module says so in a comment at the declaration: `--check-sex`
-  (`modules/local/plink2/checksex/main.nf:23-25`), `--pca` (`modules/local/plink2/pcawts/main.nf:27-29`), and
-  `--score` (`modules/local/plink2/score/main.nf:24-26`). Every other flag travels in `args`. An extension seam
-  never replaces a mandatory interface value.
+  (`modules/local/plink2/checksex/main.nf:23-25`), `--hardy` (`modules/local/plink2/hardy/main.nf`), `--pca`
+  (`modules/local/plink2/pcawts/main.nf:27-29`), and `--score` (`modules/local/plink2/score/main.nf:24-26`).
+  Every other flag travels in `args`. An extension seam never replaces a mandatory interface value.
 - **[MUST]** A pipeline-owned decision module takes its threshold as an explicit input, because the threshold is
   the module's policy rather than a tool option. It is tuple-local when one stratum must be listed at several
   thresholds, as the call-rate ladder requires (`modules/local/geno_decisions/main.nf:11-13`), and process-global
@@ -197,7 +197,9 @@ header. Never merge the two roles into one file.
   appends its own, so a reviewer can align the two: the mismatch table is the report's columns for the `PROBLEM`
   rows (`modules/local/sex_check_decisions/templates/sex_check_decisions.R:33-34`) and the relatedness pair table
   is the whole kinship table plus `DEGREE` and `RELATIONSHIP`. Consequently such a table's column set is not
-  fixed by the pipeline, and its stub cannot assert one.
+  fixed by the pipeline, and its stub derives the header from the report it is given rather than hardcoding
+  one (`modules/local/sex_check_decisions/main.nf` and `modules/local/relatedness_decisions/main.nf`, stub
+  blocks).
 - **[MUST]** A table the pipeline defines itself has a fixed header declared identically in the template, the
   module's stub, and `meta.yml`. A summary table enumerates every category, including the ones with a zero count,
   in one documented order, so the table's shape does not depend on the data
@@ -206,7 +208,10 @@ header. Never merge the two roles into one file.
   in what order, because the caller's `path(...)` glob depends on it: the ancestry keep lists are one file per
   super-population observed among the scored, labelled reference samples, in sorted order, with an empty file for
   a group to which no study sample was assigned and no file for the unassigned
-  (`modules/local/ancestry_assign/templates/ancestry_assign.R:83-84`, `:131-133`).
+  (`modules/local/ancestry_assign/templates/ancestry_assign.R:83-84`, `:131-133`). The glob output is
+  `optional: true`, because zero groups is a legitimate match count, and the stub derives the same set, and the
+  per-group columns of the assignment table, from the population table and score header it is given
+  (`modules/local/ancestry_assign/main.nf`, stub block).
 
 ## Threshold semantics
 
@@ -217,23 +222,34 @@ header. Never merge the two roles into one file.
   `modules/local/mind_decisions/templates/mind_decisions.R:38`,
   `modules/local/missingness_ladder/templates/missingness_ladder.R:37-39`), which matches plink2's own `--geno`
   and `--mind`; strict `<` for the Hardy-Weinberg p-value floor
-  (`modules/local/hwe_decisions/templates/hwe_decisions.R:36`); strict `>` for each KING degree bound and for the
-  mean-kinship outlier rule (`modules/local/relatedness_decisions/templates/relatedness_decisions.R:58-64`,
-  `:118-119`); inclusive `<=` for the parent-offspring IBS0 bound (`:67`); inclusive `>=` for the ancestry
-  posterior threshold (`modules/local/ancestry_assign/templates/ancestry_assign.R:100`); and strict `>` for the
-  centroid rule (`:113-117`).
+  (`modules/local/hwe_decisions/templates/hwe_decisions.R`); inclusive `>=` for each KING degree lower bound
+  (0.354, 0.177, 0.0884, 0.0442), as KING's inference table gives the degrees as closed intervals from
+  2^-(d+1.5), and strict `>` for the mean-kinship outlier rule
+  (`modules/local/relatedness_decisions/templates/relatedness_decisions.R`); inclusive `<=` for the
+  parent-offspring IBS0 bound; inclusive `>=` for the ancestry posterior threshold
+  (`modules/local/ancestry_assign/templates/ancestry_assign.R:100`); and strict `>` for the centroid rule
+  (`:113-117`).
 - **[MUST]** Where a pipeline-owned boundary sits at the same value as a plink2 flag's boundary, the two must
   agree or the disagreement must be recorded, because a row plink2 reports at exactly its own boundary then falls
-  outside the module's class.
+  outside the module's class. The live instance is `--king-table-filter`, which plink2 applies inclusively at
+  the default third-degree bound: the inclusive KING bounds above are what keep a pair reported at exactly the
+  filter value third-degree rather than unrelated, and a test holds the pair at the bound
+  (`modules/local/relatedness_decisions/tests/main.nf.test`, the bare ID1/ID2 case).
 - **[MUST]** A rule that can unassign or exclude a record names itself in the output, so every reported count is
   attributable: the assignment table carries a `STATUS` per sample and the summary table carries the `RULE` text
   that produced each row (`modules/local/ancestry_assign/templates/ancestry_assign.R:99-117`, `:139-150`).
-- **[SHOULD]** A missing required column is a hard failure, not an empty result. A template that indexes a report
-  by a name that is absent must `stop()`, as the `data.table` templates do
-  (`modules/local/sex_check_decisions/templates/sex_check_decisions.R:27-29`,
+- **[MUST]** A missing required column is a hard failure, not an empty result. A template that indexes a report
+  by a name that is absent must `stop()` with a message naming the columns it needs and the ones it found, as
+  every decision and plot template does
+  (`modules/local/geno_decisions/templates/geno_decisions.R`, `modules/local/mind_decisions/templates/mind_decisions.R`,
+  `modules/local/hwe_decisions/templates/hwe_decisions.R`,
+  `modules/local/missingness_ladder/templates/missingness_ladder.R`,
+  `modules/local/relatedness_decisions/templates/relatedness_decisions.R`,
+  `modules/local/sex_check_decisions/templates/sex_check_decisions.R:27-29`,
   `modules/local/heterozygosity_plots/templates/heterozygosity_plots.R:34-39`,
-  `modules/local/ancestry_assign/templates/ancestry_assign.R:56-58`, `:67-69`, `:74-76`); silently writing an
-  empty decision list with exit status 0 is a review finding.
+  `modules/local/ancestry_assign/templates/ancestry_assign.R:56-58`, `:67-69`, `:74-76`), and each module's
+  tests hold one case that asserts the failure. Silently writing an empty decision list with exit status 0 is a
+  review finding. _(raised from SHOULD on 2026-09-21, when the last base-R templates gained their guards)_
 
 ## Statistics table contracts
 
@@ -257,8 +273,11 @@ header. Never merge the two roles into one file.
     (`modules/local/sex_check_decisions/templates/sex_check_decisions.R:27-29`,
     `modules/local/heterozygosity_plots/templates/heterozygosity_plots.R:37-39`);
   - the Hardy-Weinberg `P` column, which plink2 _renames_ to `MIDP` under a `midp` modifier rather than adding a
-    column, so that modifier must stay out of `PLINK2_HARDY`'s `ext.args`
-    (`modules/local/hwe_decisions/templates/hwe_decisions.R:35-36`);
+    column, so that modifier must stay out of `PLINK2_HARDY`'s `ext.args2`, the seam through which `--hardy`
+    modifiers reach plink2 and which the pipeline leaves empty: the atom surfaces the report as plink2 writes it
+    and a test asserts the rename (`modules/local/plink2/hardy/tests/main.nf.test`, the `midp` case), and
+    `hwe_decisions` stops on the missing `P` rather than excluding nothing
+    (`modules/local/hwe_decisions/templates/hwe_decisions.R`, `modules/local/hwe_decisions/tests/main.nf.test`);
   - the allele-weight column positions the `--score` arguments address, which hold only because
     `vcols=chrom,ref,alt` suppresses the provisional-reference column; without it plink2 shifts the weighted
     allele and the weights one column right and the projection silently uses the wrong ones
@@ -280,9 +299,10 @@ header. Never merge the two roles into one file.
   - `.het` from `--het` — `F`, joined to the sex-check report on the ID columns and renamed at the module boundary
     so the two `F` columns cannot be confused
     (`modules/local/heterozygosity_plots/templates/heterozygosity_plots.R:34-42`).
-  - `.kin0` from `--make-king-table` — `KINSHIP`, `IBS0`, and the pair ID columns; every other column passes
-    through into the pair table (`modules/local/relatedness_decisions/templates/relatedness_decisions.R:44-50`,
-    `:56-57`).
+  - `.kin0` from `--make-king-table` — `KINSHIP`, `IBS0`, and the pair ID columns, `IID1`/`IID2` as the pinned
+    plink2 writes them (with `FID1`/`FID2` beside them when the fileset carries family IDs) or `ID1`/`ID2` for a
+    report in the bare id colset; every other column passes through into the pair table
+    (`modules/local/relatedness_decisions/templates/relatedness_decisions.R`).
   - `.sscore`, and `.sscore.vars` when `list-variants` is configured, from `--score`
     (`modules/local/plink2/score/main.nf:14-15`) — the principal-component columns, discovered by pattern over the
     header and ordered numerically, because their names come from the weight file's own header under `header-read`
@@ -294,10 +314,13 @@ header. Never merge the two roles into one file.
     lists rather than tables and follow the list format above.
 - **[MUST]** A variant file read by a pipeline-owned module is parsed by its extension, and each branch's column
   mapping is explicit: a `.pvar` is re-parsed from its own `#CHROM` header line, a `.bim` positionally
-  (`modules/local/ancestry_harmonise/templates/ancestry_harmonise.R:32-52`,
+  (`modules/local/ancestry_harmonise/templates/ancestry_harmonise.R`, `read_variants`;
   `modules/local/highld_exclude/main.nf:39-40`). The two formats order the allele columns oppositely, so a module
-  that compares alleles across two variant files must receive both in the same format; document that requirement
-  at the interface rather than guessing per file.
+  that compares alleles across two variant files maps them onto one pair of slots the way plink2 itself does when
+  it converts between the formats: bim column 5 and pvar `ALT` are A1, bim column 6 and pvar `REF` are A2. A
+  bim and a pvar of one fileset then classify alike, and a test holds a bim target against the same reference
+  read as a pvar (`modules/local/ancestry_harmonise/tests/main.nf.test`); document the mapping at the interface
+  rather than requiring one format.
 - **[MUST]** The allele-weight and allele-count tables of one `PLINK2_PCAWTS` run are a matched pair over one
   filtered variant set, and a projection consumes both from the same run: the weight file's column layout is what
   the `--score` column arguments address, and the count file is what `--read-freq` standardises against. Splitting
@@ -353,7 +376,9 @@ header. Never merge the two roles into one file.
   component, because the per-group keep lists are named after them.
 - **[MUST]** The vocabulary is read once at ingress from the table itself and passed as a validated value, never
   reconstructed downstream and never defaulted to a built-in population list
-  (`subworkflows/local/utils_nfcore_gwasqc_pipeline/main.nf:117`).
+  (`subworkflows/local/utils_nfcore_gwasqc_pipeline/main.nf:117`). The one downstream reader, `ancestry_assign`,
+  guards every column it uses (`IID`, `pop`, `super_pop`; `FID` only when the score tables carry one) and stops
+  on a missing one (`modules/local/ancestry_assign/templates/ancestry_assign.R:56-58`).
 - **[MUST]** The two reference assets are required together: the ancestry stage needs both, and ingress rejects a
   run that requests it with either missing rather than failing later
   (`subworkflows/local/utils_nfcore_gwasqc_pipeline/main.nf:113-118`). When the stage is skipped the reference
@@ -407,7 +432,11 @@ header. Never merge the two roles into one file.
   `publishDir = [enabled: false]` (`conf/modules/plink2.config:127`, `conf/modules/qc_decisions.config:31`),
   because the base selector would otherwise reach it, while a process no selector publishes is already suppressed
   by the process-wide default and needs nothing. State which case applies in the selector's comment rather than
-  leaving a reader to work out whether an omission is deliberate.
+  leaving a reader to work out whether an omission is deliberate: "deliberately unpublished as an alias of the
+  published X" for the first (`conf/modules/plink2.config`, `PLINK2_MAKEBED_REFERENCE`;
+  `conf/modules/qc_decisions.config`, `GENO_DECISIONS_LADDER`) and "unpublished by the process-wide default"
+  for the second (`conf/modules/plink2.config`, `PLINK2_MISSING_LADDER`, `PLINK2_MAKEKINGTABLE`,
+  `PLINK2_PMERGELIST` and the score aliases; `conf/modules/multiqc.config`, `STRATUM_REPORT`).
 - **[MUST]** Where a prefix must distinguish an alias's outputs in the same published directory, `ext.prefix`
   carries the distinguishing token and the module stays unaware of it: `${meta.id}.maf`, `${meta.id}.qc`,
   `${meta.id}.ancestry`, `${meta.id}.ancestry_reference`, `${meta.id}.ancestry_study`
