@@ -6,7 +6,8 @@
                     [
                         {
                             "ancestry": "EUR",
-                            "id": "test"
+                            "id": "test",
+                            "sample_qc_marker_set": "study"
                         },
                         [
                             "test.variant_qc_ladder_mqc.tsv:md5,0abc3d66567c8400aab3da0319f6d7d9",
@@ -18,9 +19,10 @@
                     [
                         {
                             "ancestry": "EUR",
-                            "id": "test"
+                            "id": "test",
+                            "sample_qc_marker_set": "study"
                         },
-                        "test.qc_summary.tsv:md5,8f555354cd73631b623a209c5b544a4b"
+                        "test.qc_summary.tsv:md5,1900e33e978d53947dae4bb619b95424"
                     ]
                 ],
                 "versions_coreutils": [
@@ -39,7 +41,58 @@
                 ]
             }
         ],
-        "timestamp": "2026-09-21T09:32:11.04940374",
+        "timestamp": "2026-09-21T16:54:50.431318979",
+        "meta": {
+            "nf-test": "0.9.5",
+            "nextflow": "26.04.4"
+        }
+    },
+    "six samples - pruning collapse note": {
+        "content": [
+            [
+                [
+                    {
+                        "id": "test",
+                        "ancestry": "EUR",
+                        "sample_qc_marker_set": "study"
+                    },
+                    "test.qc_summary.tsv:md5,309ec599767f24894c38403ac5fba6c5"
+                ]
+            ]
+        ],
+        "timestamp": "2026-09-21T16:54:38.011350469",
+        "meta": {
+            "nf-test": "0.9.5",
+            "nextflow": "26.04.4"
+        }
+    },
+    "six samples - shared marker set": {
+        "content": [
+            [
+                [
+                    {
+                        "id": "test",
+                        "ancestry": "EUR",
+                        "sample_qc_marker_set": "shared"
+                    },
+                    "test.qc_summary.tsv:md5,381e17dace42365d65071586cfd0cd0d"
+                ]
+            ],
+            [
+                [
+                    {
+                        "id": "test",
+                        "ancestry": "EUR",
+                        "sample_qc_marker_set": "shared"
+                    },
+                    [
+                        "test.heterozygosity_plots_mqc.yaml:md5,df566dae69083a172ce9146c0e72be25",
+                        "test.variant_qc_ladder_mqc.tsv:md5,0ac081d28dbd8ec1c234f08925ce203e"
+                    ]
+                ]
+            ]
+        ],
+        "timestamp": "2026-09-21T16:54:32.322724797",
         "meta": {
             "nf-test": "0.9.5",
             "nextflow": "26.04.4"
@@ -51,24 +104,26 @@
                 [
                     {
                         "id": "test",
-                        "ancestry": "EUR"
+                        "ancestry": "EUR",
+                        "sample_qc_marker_set": "study"
                     },
-                    "test.qc_summary.tsv:md5,5a18593a687e814333e7bbb91b79de6a"
+                    "test.qc_summary.tsv:md5,f6d47fbbf1253f87a01fea4d492a2de2"
                 ]
             ],
             [
                 [
                     {
                         "id": "test",
-                        "ancestry": "EUR"
+                        "ancestry": "EUR",
+                        "sample_qc_marker_set": "study"
                     },
                     [
                         "test.ancestry_plots_mqc.yaml:md5,f488eca636bf64ffef586f2c76dd4a18",
-                        "test.heterozygosity_plots_mqc.yaml:md5,26be23d201eb1911b6824dadceb16c65",
-                        "test.relatedness_pairs_mqc.tsv:md5,21827784b81cf78c0eeeb65f2aad8a68",
-                        "test.relatedness_plots_mqc.yaml:md5,a188bc40d94b0bc13dc351bb12827696",
-                        "test.sex_check_mismatches_mqc.tsv:md5,f7b57c9fcfd3d156de434aca04baa709",
-                        "test.sex_check_plots_mqc.yaml:md5,389ae223e707818c48d86c521237a867",
+                        "test.heterozygosity_plots_mqc.yaml:md5,3d9594184cf651f4693858355540de68",
+                        "test.relatedness_pairs_mqc.tsv:md5,420d124bb83022150a83e4b8d0110c80",
+                        "test.relatedness_plots_mqc.yaml:md5,f98785b199fa36c6919ef9152adbecaa",
+                        "test.sex_check_mismatches_mqc.tsv:md5,4dd4f4e99ca62062f90f254a4ef70d7a",
+                        "test.sex_check_plots_mqc.yaml:md5,d946bb897c876dc35cb0829c5a74cbe7",
                         "test.variant_qc_ladder_mqc.tsv:md5,82460a34475421697765cf85097fd9b8",
                         "test.variant_qc_plots_mqc.yaml:md5,5728900eb0e265e9999d52104d68f7e6"
                     ]
@@ -89,7 +144,7 @@
                 ]
             ]
         ],
-        "timestamp": "2026-09-21T09:35:48.089949565",
+        "timestamp": "2026-09-21T16:54:26.089905732",
         "meta": {
             "nf-test": "0.9.5",
             "nextflow": "26.04.4"
@@ -101,25 +156,27 @@
                 [
                     {
                         "id": "test",
-                        "ancestry": "EUR"
+                        "ancestry": "EUR",
+                        "sample_qc_marker_set": "study"
                     },
-                    "test.qc_summary.tsv:md5,2317f3a2692cb9a085453fa71cf518b6"
+                    "test.qc_summary.tsv:md5,afdde05e41241a8b0f6822c9dfd513c8"
                 ]
             ],
             [
                 [
                     {
                         "id": "test",
-                        "ancestry": "EUR"
+                        "ancestry": "EUR",
+                        "sample_qc_marker_set": "study"
                     },
                     [
-                        "test.relatedness_pairs_mqc.tsv:md5,11c890a71396a988c2b2f8728f4384d3",
+                        "test.relatedness_pairs_mqc.tsv:md5,18d822ba5068f1027db00f5c3c1fe473",
                         "test.variant_qc_ladder_mqc.tsv:md5,0ac081d28dbd8ec1c234f08925ce203e"
                     ]
                 ]
             ]
         ],
-        "timestamp": "2026-09-21T09:35:56.015059984",
+        "timestamp": "2026-09-21T16:54:43.687633777",
         "meta": {
             "nf-test": "0.9.5",
             "nextflow": "26.04.4"

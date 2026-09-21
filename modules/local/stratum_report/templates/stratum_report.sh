@@ -7,7 +7,9 @@
 #
 # Files written:
 #
-#   <prefix>.qc_summary.tsv                     one header row and one row of counts for the stratum
+#   <prefix>.qc_summary.tsv                     one header row and one row of counts for the stratum, with the
+#                                               marker set of its sample checks and a note when study-mode
+#                                               pruning collapsed
 #   <prefix>.variant_qc_ladder_mqc.tsv          the call-rate ladder, one MultiQC row per rung
 #   <prefix>.sex_check_mismatches_mqc.tsv       the sex mismatch table, one row per sample; absent when empty
 #   <prefix>.relatedness_pairs_mqc.tsv          the duplicate/MZ and first-degree pairs; absent when empty
@@ -22,6 +24,8 @@ maf=$(gawk -v value='!{maf}' 'BEGIN { printf "%g", value }')
 geno=$(gawk -v value='!{geno}' 'BEGIN { printf "%g", value }')
 mind=$(gawk -v value='!{mind}' 'BEGIN { printf "%g", value }')
 hwe=$(gawk -v value='!{hwe}' 'BEGIN { printf "%g", value }')
+ld_min_retained_fraction=$(gawk -v value='!{ld_min_retained_fraction}' 'BEGIN { printf "%g", value }')
+sample_qc_marker_set='!{meta.sample_qc_marker_set}'
 apply_sample_removals='!{apply_sample_removals}'
 ancestry_remove_mismatched='!{ancestry_remove_mismatched}'
 fam='!{fam}'
@@ -31,8 +35,9 @@ geno_exclude='!{geno_exclude}'
 mind_remove='!{mind_remove}'
 hwe_exclude='!{hwe_exclude}'
 ladder='!{ladder}'
-prune_in='!{prune_in}'
-highld_exclude='!{highld_exclude}'
+prune_in='!{prune_in_file}'
+highld_exclude='!{highld_exclude_file}'
+shared_markers='!{shared_markers_file}'
 sex_mismatch='!{sex_mismatch}'
 het='!{het}'
 relatedness_pairs='!{relatedness_pairs}'
@@ -76,8 +81,6 @@ samples_mind_removed=$(lines "$mind_remove")
 samples_after_mind=$((samples_input - samples_mind_removed))
 variants_hwe_removed=$(lines "$hwe_exclude")
 variants_after_hwe=$((variants_after_geno - variants_hwe_removed))
-variants_ld_pruned_in=$(lines "$prune_in")
-variants_highld_excluded=$(lines "$highld_exclude")
 add stratum "$stratum"
 add ancestry "$ancestry"
 add samples_input "$samples_input"
@@ -94,10 +97,35 @@ add samples_after_mind "$samples_after_mind"
 add hwe_threshold "$hwe"
 add variants_hwe_removed "$variants_hwe_removed"
 add variants_after_hwe "$variants_after_hwe"
+
+# The marker set of the sample checks. In study mode it is the stratum's own pruned autosomal set outside the
+# long-range LD regions, and pruning that kept fewer than the configured fraction of the QC'd variants is
+# noted, because pairwise r-squared over a handful of samples collapses the set; in shared mode there is no
+# study-side pruning and the set is the reference-pruned shared marker list, so the pruning columns read NA.
+sample_qc_note=''
+if [ "$sample_qc_marker_set" = 'shared' ]; then
+    variants_ld_pruned_in='NA'
+    variants_ld_pruned_out='NA'
+    variants_highld_excluded='NA'
+    variants_sample_checks='NA'
+    sample_qc_markers=$(lines "$shared_markers")
+else
+    variants_ld_pruned_in=$(lines "$prune_in")
+    variants_ld_pruned_out=$((variants_after_hwe - variants_ld_pruned_in))
+    variants_highld_excluded=$(lines "$highld_exclude")
+    variants_sample_checks=$((variants_ld_pruned_in - variants_highld_excluded))
+    sample_qc_markers=$variants_sample_checks
+    if gawk -v kept="$variants_ld_pruned_in" -v total="$variants_after_hwe" -v floor="$ld_min_retained_fraction" 'BEGIN { exit !(total > 0 && kept / total < floor) }'; then
+        sample_qc_note=$(gawk -v kept="$variants_ld_pruned_in" -v total="$variants_after_hwe" -v floor="$ld_min_retained_fraction" 'BEGIN { printf "LD pruning retained %d of %d QC variants (%.1f%%, below the --ld_min_retained_fraction floor of %g); the study-pruned marker set is unreliable at this sample size, consider --sample_qc_marker_set shared", kept, total, 100 * kept / total, floor }')
+    fi
+fi
 add variants_ld_pruned_in "$variants_ld_pruned_in"
-add variants_ld_pruned_out $((variants_after_hwe - variants_ld_pruned_in))
+add variants_ld_pruned_out "$variants_ld_pruned_out"
 add variants_highld_excluded "$variants_highld_excluded"
-add variants_sample_checks $((variants_ld_pruned_in - variants_highld_excluded))
+add variants_sample_checks "$variants_sample_checks"
+add sample_qc_marker_set "$sample_qc_marker_set"
+add sample_qc_markers "$sample_qc_markers"
+add sample_qc_note "$sample_qc_note"
 
 # Sex check: plink2's PROBLEM rows, tabled with their header.
 sex_check_problems=$(rows "$sex_mismatch")
@@ -203,9 +231,9 @@ mqc_header() {
     printf '# id: %s\n# parent_id: %s\n# parent_name: "%s"\n# parent_description: "%s"\n# section_name: "%s"\n# description: "%s"\n# plot_type: table\n' "$1" "$2" "$3" "$4" "$5" "$6"
 }
 variant_qc_description='Per stratum: the input fileset, what each filter of the MAF, missingness and Hardy-Weinberg chain removes at its threshold, the call-rate ladder, the LD-pruned set the sample checks run on, and the review histograms.'
-sex_check_description='plink2 --check-sex on the pruned set after the pseudo-autosomal split. Its PROBLEM calls are the mismatches, tabled and listed for removal.'
-heterozygosity_description='Report only: the plink2 --het inbreeding coefficient F over the pruned autosomal set outside the long-range LD regions. No threshold is applied and no sample is listed.'
-relatedness_description='KING-robust kinship over the same set, pairs at or above the table filter classified on KING boundaries. One member of each duplicate/MZ pair is listed for removal; the mean-kinship outliers are listed and never applied.'
+sex_check_description='plink2 --check-sex after the pseudo-autosomal split, over the pruned set in study mode and over every QC-passing variant in shared mode. Its PROBLEM calls are the mismatches, tabled and listed for removal.'
+heterozygosity_description='Report only: the plink2 --het inbreeding coefficient F over the autosomal marker set of each stratum, the pruned set outside the long-range LD regions in study mode and the shared reference-pruned markers against the matched reference frequencies in shared mode. No threshold is applied and no sample is listed.'
+relatedness_description='KING-robust kinship over the same autosomal marker set, pairs at or above the table filter classified on KING boundaries. One member of each duplicate/MZ pair is listed for removal; the mean-kinship outliers are listed and never applied.'
 ancestry_description='Study samples projected onto the reference principal components and assigned by linear discriminant analysis. The samples not assigned to the stratum label are its mismatches.'
 
 {
@@ -324,8 +352,13 @@ image_section() {
         printf "</div>'\n"
     } > "${prefix}.${stage}_plots_mqc.yaml"
 }
+if [ "$sample_qc_marker_set" = 'shared' ]; then
+    marker_note="the shared marker set: $sample_qc_markers reference-pruned markers with the ancestry-matched reference frequencies as the heterozygosity baseline, and every QC-passing chromosome X and Y variant, unpruned, for the sex check"
+else
+    marker_note="the study marker set: $sample_qc_markers pruned autosomal variants outside the long-range LD regions, and the pruned set with chromosome X for the sex check"
+fi
 image_section variant_qc gwasqc_variant_qc 'Variant and sample filters' "$variant_qc_description" "Missingness histograms, the call-rate ladder and the Hardy-Weinberg histograms of $stratum." "$variant_qc_images"
-image_section sex_check gwasqc_sex_check 'Sex check' "$sex_check_description" "Chromosome X F histogram by recorded sex of $stratum." "$sex_check_images"
-image_section heterozygosity gwasqc_heterozygosity 'Heterozygosity' "$heterozygosity_description" "F histogram and the heterozygosity-against-sex-check scatter of $stratum." "$heterozygosity_images"
-image_section relatedness gwasqc_relatedness 'Relatedness' "$relatedness_description" "Kinship histogram of $stratum." "$relatedness_images"
+image_section sex_check gwasqc_sex_check 'Sex check' "$sex_check_description" "Chromosome X F histogram by recorded sex of $stratum, over $marker_note." "$sex_check_images"
+image_section heterozygosity gwasqc_heterozygosity 'Heterozygosity' "$heterozygosity_description" "F histogram, with the reference distribution beneath the study's in shared mode, and the heterozygosity-against-sex-check scatter of $stratum, over $marker_note." "$heterozygosity_images"
+image_section relatedness gwasqc_relatedness 'Relatedness' "$relatedness_description" "Kinship histogram of $stratum, over $marker_note." "$relatedness_images"
 image_section ancestry gwasqc_ancestry 'Ancestry' "$ancestry_description" "Reference principal components with the study samples of $stratum drawn above the reference populations." "$ancestry_images"

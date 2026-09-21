@@ -1,4 +1,28 @@
 {
+    "plink_simulated - bed - read_freq": {
+        "content": [
+            [
+                [
+                    {
+                        "id": "plink_simulated_read_freq"
+                    },
+                    "plink_simulated_read_freq.het:md5,4cf518af4ed9fea199c444efe0a6ec33"
+                ]
+            ],
+            [
+                [
+                    "PLINK2_HET",
+                    "plink2",
+                    "2.0.0-a.6.9LM"
+                ]
+            ]
+        ],
+        "timestamp": "2026-09-21T16:41:15.083158383",
+        "meta": {
+            "nf-test": "0.9.5",
+            "nextflow": "26.04.4"
+        }
+    },
     "plink_simulated - pgen - extract list": {
         "content": [
             [
@@ -17,7 +41,7 @@
                 ]
             ]
         ],
-        "timestamp": "2026-09-20T15:09:07.763358235",
+        "timestamp": "2026-09-21T16:41:01.520405515",
         "meta": {
             "nf-test": "0.9.5",
             "nextflow": "26.04.4"
@@ -41,7 +65,7 @@
                 ]
             ]
         ],
-        "timestamp": "2026-09-20T15:08:54.515056526",
+        "timestamp": "2026-09-21T16:40:46.363597097",
         "meta": {
             "nf-test": "0.9.5",
             "nextflow": "26.04.4"
@@ -75,7 +99,7 @@
                 ]
             }
         ],
-        "timestamp": "2026-09-20T15:09:16.291979426",
+        "timestamp": "2026-09-21T16:41:25.324443789",
         "meta": {
             "nf-test": "0.9.5",
             "nextflow": "26.04.4"

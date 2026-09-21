@@ -34,6 +34,7 @@ custom_content:
   order:
     - gwasqc_qc_summary
     - gwasqc_variant_qc
+    - gwasqc_sample_qc_markers
     - gwasqc_sex_check
     - gwasqc_heterozygosity
     - gwasqc_relatedness
