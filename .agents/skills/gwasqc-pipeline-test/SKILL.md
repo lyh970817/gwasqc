@@ -23,7 +23,9 @@ The resolver reports a missing fixture samplesheet on stderr and continues, so t
 nf-schema validation error. Read that warning before diagnosing a schema failure as a pipeline defect.
 
 Set `GWASQC_TEST_FIXTURES` to a local checkout of the fixture branch for an offline run or a modified fixture
-copy. Neither `shell.nix` nor `.envrc` exports it, so supply it per invocation, and never commit a local
+copy, or to the raw URL of a fork branch to test unmerged fixtures; `.github/workflows/nf-test.yml` carries the
+same variable, empty by default, for CI. The pipeline default in `nextflow.config` is the one knob to change when
+the fixtures move. Neither `shell.nix` nor `.envrc` exports it, so supply it per invocation, and never commit a local
 fixture path.
 
 ## Run the requested scope
