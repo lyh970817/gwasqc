@@ -1,0 +1,116 @@
+{
+    "plink_simulated - bed - keep list": {
+        "content": [
+            [
+                [
+                    {
+                        "id": "plink_simulated_kept"
+                    },
+                    "plink_simulated_kept.afreq:md5,6e12e17cf448e02443a71f134970c80a"
+                ]
+            ],
+            [
+                [
+                    "PLINK2_FREQ",
+                    "plink2",
+                    "2.0.0-a.6.9LM"
+                ]
+            ]
+        ],
+        "timestamp": "2026-09-21T16:40:26.210038001",
+        "meta": {
+            "nf-test": "0.9.5",
+            "nextflow": "26.04.4"
+        }
+    },
+    "plink_simulated - bed": {
+        "content": [
+            [
+                [
+                    {
+                        "id": "plink_simulated"
+                    },
+                    "plink_simulated.afreq:md5,5c3d6aa61306cd664f6623080ae29db6"
+                ]
+            ],
+            [
+                [
+                    "PLINK2_FREQ",
+                    "plink2",
+                    "2.0.0-a.6.9LM"
+                ]
+            ]
+        ],
+        "timestamp": "2026-09-21T16:39:59.185859898",
+        "meta": {
+            "nf-test": "0.9.5",
+            "nextflow": "26.04.4"
+        }
+    },
+    "plink_simulated - pgen - counts - extract list": {
+        "content": [
+            [
+                [
+                    {
+                        "id": "plink_simulated_pgen"
+                    },
+                    "plink_simulated_pgen.acount:md5,c93f0cfa15e44b9ec7ef5949a2628daa"
+                ]
+            ],
+            [
+                [
+                    "PLINK2_FREQ",
+                    "plink2",
+                    "2.0.0-a.6.9LM"
+                ]
+            ]
+        ],
+        "timestamp": "2026-09-21T16:40:15.031011904",
+        "meta": {
+            "nf-test": "0.9.5",
+            "nextflow": "26.04.4"
+        }
+    },
+    "plink_simulated - bed - stub": {
+        "content": [
+            {
+                "acount": [
+                    [
+                        {
+                            "id": "plink_simulated"
+                        },
+                        "plink_simulated.acount:md5,d41d8cd98f00b204e9800998ecf8427e"
+                    ]
+                ],
+                "afreq": [
+                    [
+                        {
+                            "id": "plink_simulated"
+                        },
+                        "plink_simulated.afreq:md5,d41d8cd98f00b204e9800998ecf8427e"
+                    ]
+                ],
+                "log": [
+                    [
+                        {
+                            "id": "plink_simulated"
+                        },
+                        "plink_simulated.log:md5,d41d8cd98f00b204e9800998ecf8427e"
+                    ]
+                ],
+                "versions_plink2": [
+                    [
+                        "PLINK2_FREQ",
+                        "plink2",
+                        "2.0.0-a.6.9LM"
+                    ]
+                ]
+            }
+        ],
+        "timestamp": "2026-09-21T16:40:35.764857869",
+        "meta": {
+            "nf-test": "0.9.5",
+            "nextflow": "26.04.4"
+        }
+    }
+}
