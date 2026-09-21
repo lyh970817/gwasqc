@@ -355,14 +355,14 @@
                             "ancestry": "AFR",
                             "id": "study_afr"
                         },
-                        "study_afr.ancestry_assignment.tsv:md5,6afa188feffd4d3ea0b0ef6bc692d06b"
+                        "study_afr.ancestry_assignment.tsv:md5,3d69eec6460368baca3bc094bb552876"
                     ],
                     [
                         {
                             "ancestry": "EUR",
                             "id": "study_eur"
                         },
-                        "study_eur.ancestry_assignment.tsv:md5,6afa188feffd4d3ea0b0ef6bc692d06b"
+                        "study_eur.ancestry_assignment.tsv:md5,3d69eec6460368baca3bc094bb552876"
                     ]
                 ],
                 "eigenval": [
@@ -467,14 +467,26 @@
                             "ancestry": "AFR",
                             "id": "study_afr"
                         },
-                        "study_afr.ancestry_AFR.keep:md5,d41d8cd98f00b204e9800998ecf8427e"
+                        [
+                            "study_afr.ancestry_AFR.keep:md5,d41d8cd98f00b204e9800998ecf8427e",
+                            "study_afr.ancestry_AMR.keep:md5,d41d8cd98f00b204e9800998ecf8427e",
+                            "study_afr.ancestry_CSA.keep:md5,d41d8cd98f00b204e9800998ecf8427e",
+                            "study_afr.ancestry_EAS.keep:md5,d41d8cd98f00b204e9800998ecf8427e",
+                            "study_afr.ancestry_EUR.keep:md5,d41d8cd98f00b204e9800998ecf8427e"
+                        ]
                     ],
                     [
                         {
                             "ancestry": "EUR",
                             "id": "study_eur"
                         },
-                        "study_eur.ancestry_EUR.keep:md5,d41d8cd98f00b204e9800998ecf8427e"
+                        [
+                            "study_eur.ancestry_AFR.keep:md5,d41d8cd98f00b204e9800998ecf8427e",
+                            "study_eur.ancestry_AMR.keep:md5,d41d8cd98f00b204e9800998ecf8427e",
+                            "study_eur.ancestry_CSA.keep:md5,d41d8cd98f00b204e9800998ecf8427e",
+                            "study_eur.ancestry_EAS.keep:md5,d41d8cd98f00b204e9800998ecf8427e",
+                            "study_eur.ancestry_EUR.keep:md5,d41d8cd98f00b204e9800998ecf8427e"
+                        ]
                     ]
                 ],
                 "mismatch_remove": [
@@ -551,14 +563,14 @@
                             "ancestry": "AFR",
                             "id": "study_afr"
                         },
-                        "study_afr.ancestry_pca.tsv:md5,94490ff822e78dbc2b548bd36d1529b5"
+                        "study_afr.ancestry_pca.tsv:md5,d9313af748d69aec36d4baf0db193c3e"
                     ],
                     [
                         {
                             "ancestry": "EUR",
                             "id": "study_eur"
                         },
-                        "study_eur.ancestry_pca.tsv:md5,94490ff822e78dbc2b548bd36d1529b5"
+                        "study_eur.ancestry_pca.tsv:md5,d9313af748d69aec36d4baf0db193c3e"
                     ]
                 ],
                 "prune_in": [
@@ -667,22 +679,22 @@
                             "ancestry": "AFR",
                             "id": "study_afr"
                         },
-                        "study_afr.ancestry_summary.tsv:md5,696f413f11a666f72b6b5cc8f905f0f2"
+                        "study_afr.ancestry_summary.tsv:md5,7985a7e668e90e6a58f4775fd1b3fcd7"
                     ],
                     [
                         {
                             "ancestry": "EUR",
                             "id": "study_eur"
                         },
-                        "study_eur.ancestry_summary.tsv:md5,696f413f11a666f72b6b5cc8f905f0f2"
+                        "study_eur.ancestry_summary.tsv:md5,7985a7e668e90e6a58f4775fd1b3fcd7"
                     ]
                 ]
             }
         ],
-        "timestamp": "2026-09-21T09:35:12.107802317",
+        "timestamp": "2026-09-21T11:34:20.772008966",
         "meta": {
             "nf-test": "0.9.5",
-            "nextflow": "26.04.4"
+            "nextflow": "26.04.6"
         }
     }
 }

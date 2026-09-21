@@ -142,6 +142,10 @@
                 "qc/study_afr/ancestry/study_afr.ancestry.highld_exclude.txt",
                 "qc/study_afr/ancestry/study_afr.ancestry.prune.in",
                 "qc/study_afr/ancestry/study_afr.ancestry_AFR.keep",
+                "qc/study_afr/ancestry/study_afr.ancestry_AMR.keep",
+                "qc/study_afr/ancestry/study_afr.ancestry_CSA.keep",
+                "qc/study_afr/ancestry/study_afr.ancestry_EAS.keep",
+                "qc/study_afr/ancestry/study_afr.ancestry_EUR.keep",
                 "qc/study_afr/ancestry/study_afr.ancestry_assignment.tsv",
                 "qc/study_afr/ancestry/study_afr.ancestry_flip_update.txt",
                 "qc/study_afr/ancestry/study_afr.ancestry_harmonisation.tsv",
@@ -212,6 +216,10 @@
                 "qc/study_eur/ancestry/study_eur.ancestry.eigenval",
                 "qc/study_eur/ancestry/study_eur.ancestry.highld_exclude.txt",
                 "qc/study_eur/ancestry/study_eur.ancestry.prune.in",
+                "qc/study_eur/ancestry/study_eur.ancestry_AFR.keep",
+                "qc/study_eur/ancestry/study_eur.ancestry_AMR.keep",
+                "qc/study_eur/ancestry/study_eur.ancestry_CSA.keep",
+                "qc/study_eur/ancestry/study_eur.ancestry_EAS.keep",
                 "qc/study_eur/ancestry/study_eur.ancestry_EUR.keep",
                 "qc/study_eur/ancestry/study_eur.ancestry_assignment.tsv",
                 "qc/study_eur/ancestry/study_eur.ancestry_flip_update.txt",
@@ -280,10 +288,10 @@
                 "qc/study_eur/sex_check/study_eur.sexcheck"
             ]
         ],
-        "timestamp": "2026-09-21T09:43:09.474503266",
+        "timestamp": "2026-09-21T11:35:19.114641684",
         "meta": {
             "nf-test": "0.9.5",
-            "nextflow": "26.04.4"
+            "nextflow": "26.04.6"
         }
     },
     "-profile test": {
