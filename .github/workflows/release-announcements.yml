@@ -7,6 +7,8 @@ on:
 
 jobs:
   toot:
+    # The announcement accounts belong to nf-core; a fork has no token for them.
+    if: github.repository == 'nf-core/gwasqc'
     runs-on: ubuntu-latest
     steps:
       - name: get topics and convert to hashtags
@@ -32,6 +34,7 @@ jobs:
             ${{ steps.get_topics.outputs.topics }} #nfcore #openscience #nextflow #bioinformatics
 
   bsky-post:
+    if: github.repository == 'nf-core/gwasqc'
     runs-on: ubuntu-latest
     steps:
       - uses: zentered/bluesky-post-action@5a91cc2ad10a304a4e96c16182dbe4918710bcf6 # v0.4.0
