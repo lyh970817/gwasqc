@@ -7,3 +7,6 @@ dependencies:
   - conda-forge::r-base=4.4.3
   - conda-forge::r-data.table=1.17.8
   - conda-forge::r-ggplot2=3.5.2
+  # MASS supplies the linear discriminant classifier; it is pinned at the version the lock file already
+  # resolves as an import of ggplot2, so the frozen image is unchanged by declaring it.
+  - conda-forge::r-mass=7.3_66

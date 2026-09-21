@@ -56,3 +56,17 @@ authors:
   - "@lyh970817"
 maintainers:
   - "@lyh970817"
+containers:
+  conda:
+    linux/amd64:
+      lock_file: "modules/local/geno_decisions/.conda-lock/linux_amd64-bd-04f3c4b5f283a84a_1.txt"
+  docker:
+    linux/amd64:
+      build_id: "bd-04f3c4b5f283a84a_1"
+      name: "community.wave.seqera.io/library/r-base:4.3.1--04f3c4b5f283a84a"
+      scan_id: "sc-7f299ea003b47555_1"
+  singularity:
+    linux/amd64:
+      build_id: "bd-4bf2a8fa2a798942_1"
+      name: "oras://community.wave.seqera.io/library/r-base:4.3.1--4bf2a8fa2a798942"
+      https: "https://community-cr-prod.seqera.io/docker/registry/v2/blobs/sha256/1e/1e753f05d15c5dbdb69c91490c0cb0b21388dbcc50da845d0d6263cd11a4bbff/data"

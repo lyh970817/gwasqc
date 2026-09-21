@@ -4,8 +4,8 @@ process HWE_DECISIONS {
 
     conda "${moduleDir}/environment.yml"
     container "${workflow.containerEngine in ['singularity', 'apptainer'] && !task.ext.singularity_pull_docker_container
-        ? 'https://depot.galaxyproject.org/singularity/r-base:4.3.1'
-        : 'quay.io/biocontainers/r-base:4.3.1'}"
+        ? 'https://community-cr-prod.seqera.io/docker/registry/v2/blobs/sha256/1e/1e753f05d15c5dbdb69c91490c0cb0b21388dbcc50da845d0d6263cd11a4bbff/data'
+        : 'community.wave.seqera.io/library/r-base:4.3.1--04f3c4b5f283a84a'}"
 
     input:
     tuple val(meta), path(hardy), path(hardy_x)
