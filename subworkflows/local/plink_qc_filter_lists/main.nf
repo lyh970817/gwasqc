@@ -11,8 +11,10 @@ include { MIND_DECISIONS                            } from '../../../modules/loc
 include { GENO_DECISIONS as GENO_DECISIONS_LADDER   } from '../../../modules/local/geno_decisions/main'
 include { PLINK2_MISSING as PLINK2_MISSING_LADDER   } from '../../../modules/local/plink2/missing/main'
 include { MISSINGNESS_LADDER                        } from '../../../modules/local/missingness_ladder/main'
+include { MISSINGNESS_PLOTS                         } from '../../../modules/local/missingness_plots/main'
 include { PLINK2_HARDY                              } from '../../../modules/local/plink2/hardy/main'
 include { HWE_DECISIONS                             } from '../../../modules/local/hwe_decisions/main'
+include { HWE_PLOTS                                 } from '../../../modules/local/hwe_plots/main'
 
 workflow PLINK_QC_FILTER_LISTS {
     take:
@@ -108,6 +110,21 @@ workflow PLINK_QC_FILTER_LISTS {
     MISSINGNESS_LADDER(ch_ladder_inputs)
 
     //
+    // MODULE: Missingness histograms with the thresholds marked, and the ladder as a table image
+    //
+    def ch_missingness_plot_inputs = PLINK2_MISSING_VARIANTS.out.vmiss
+        .map { meta, vmiss -> [meta.id, meta, vmiss] }
+        .join(PLINK2_MISSING_SAMPLES.out.smiss.map { meta, smiss -> [meta.id, smiss] }, by: 0, failOnDuplicate: true, failOnMismatch: true)
+        .join(MISSINGNESS_LADDER.out.ladder.map { meta, ladder -> [meta.id, ladder] }, by: 0, failOnDuplicate: true, failOnMismatch: true)
+        .map { _id, meta, vmiss, smiss, ladder -> [meta, vmiss, smiss, ladder] }
+
+    MISSINGNESS_PLOTS(
+        ch_missingness_plot_inputs,
+        geno,
+        mind,
+    )
+
+    //
     // MODULE: Hardy-Weinberg reports on the missingness-filtered set, as the legacy chain measured them
     //
     def ch_hardy_inputs = ch_maf_genotypes_by_id
@@ -127,6 +144,12 @@ workflow PLINK_QC_FILTER_LISTS {
 
     HWE_DECISIONS(ch_hwe_inputs, hwe)
 
+    //
+    // MODULE: Hardy-Weinberg p-value histograms, over every variant and within the legacy window, with the
+    // threshold marked
+    //
+    HWE_PLOTS(ch_hwe_inputs, hwe)
+
     emit:
     maf_snplist        = PLINK2_WRITESNPLIST.out.snplist // channel: [ val(meta), path(snplist) ]
     vmiss              = PLINK2_MISSING_VARIANTS.out.vmiss // channel: [ val(meta), path(vmiss) ], over the MAF-passing variants
@@ -137,4 +160,13 @@ workflow PLINK_QC_FILTER_LISTS {
     hardy              = PLINK2_HARDY.out.hardy // channel: [ val(meta), path(hardy) ]
     hardy_x            = PLINK2_HARDY.out.hardy_x // channel: [ val(meta), path(hardy_x) ], optional
     hwe_exclude        = HWE_DECISIONS.out.variant_exclude // channel: [ val(meta), path(hwe_exclude) ]
+    vmiss_hist_data    = MISSINGNESS_PLOTS.out.variant_hist_data // channel: [ val(meta), path(vmiss_hist) ]
+    vmiss_hist_plot    = MISSINGNESS_PLOTS.out.variant_hist_plot // channel: [ val(meta), path(pdf), path(png) ]
+    smiss_hist_data    = MISSINGNESS_PLOTS.out.sample_hist_data // channel: [ val(meta), path(smiss_hist) ]
+    smiss_hist_plot    = MISSINGNESS_PLOTS.out.sample_hist_plot // channel: [ val(meta), path(pdf), path(png) ]
+    ladder_plot        = MISSINGNESS_PLOTS.out.ladder_plot // channel: [ val(meta), path(pdf), path(png) ]
+    hwe_hist_data      = HWE_PLOTS.out.hist_data // channel: [ val(meta), path(hwe_hist) ]
+    hwe_hist_plot      = HWE_PLOTS.out.hist_plot // channel: [ val(meta), path(pdf), path(png) ]
+    hwe_window_data    = HWE_PLOTS.out.window_data // channel: [ val(meta), path(hwe_hist_window) ]
+    hwe_window_plot    = HWE_PLOTS.out.window_plot // channel: [ val(meta), path(pdf), path(png) ]
 }

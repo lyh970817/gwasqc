@@ -113,7 +113,10 @@ nextflow_workflow {
                 { assert relatedness_remove.study_afr.readLines() == ['AFR_S021 AFR_S021'] },
                 { assert relationships('study_eur').subMap(['EUR_S020/EUR_S021', 'EUR_S030/EUR_S031', 'EUR_S032/EUR_S033']) == ['EUR_S020/EUR_S021': 'duplicate_or_mz', 'EUR_S030/EUR_S031': 'parent_offspring', 'EUR_S032/EUR_S033': 'full_sibling'] },
                 { assert relationships('study_afr').subMap(['AFR_S020/AFR_S021', 'AFR_S030/AFR_S031', 'AFR_S032/AFR_S033']) == ['AFR_S020/AFR_S021': 'duplicate_or_mz', 'AFR_S030/AFR_S031': 'parent_offspring', 'AFR_S032/AFR_S033': 'full_sibling'] },
-                { assert snapshot(sanitizeOutput(workflow.out)).match() },
+                // The figure emits carry PDFs, whose bytes change with the creation time R writes into them,
+                // so they are asserted for presence per stratum and left out of the content snapshot.
+                { assert [workflow.out.sex_check_hist_plot, workflow.out.het_hist_plot, workflow.out.het_sex_scatter_plot, workflow.out.relatedness_hist_plot].every { emission -> emission.size() == 2 && emission.every { entry -> path(entry[1]).size() > 0 && path(entry[2]).size() > 0 } } },
+                { assert snapshot(sanitizeOutput(workflow.out).findAll { entry -> !entry.key.endsWith('_plot') }).match() },
             )
         }
     }

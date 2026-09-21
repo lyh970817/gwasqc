@@ -1,0 +1,111 @@
+{
+    "study_eur - stub": {
+        "content": [
+            {
+                "hist_data": [
+                    [
+                        {
+                            "ancestry": "EUR",
+                            "id": "study_eur"
+                        },
+                        "study_eur.hwe_hist.tsv:md5,c3b21ef0d419575df84183dc1c6e4bc5"
+                    ]
+                ],
+                "hist_plot": [
+                    [
+                        {
+                            "ancestry": "EUR",
+                            "id": "study_eur"
+                        },
+                        "study_eur.hwe_hist.pdf:md5,d41d8cd98f00b204e9800998ecf8427e",
+                        "study_eur.hwe_hist.png:md5,d41d8cd98f00b204e9800998ecf8427e"
+                    ]
+                ],
+                "versions": [
+                    "versions.yml:md5,e7753050ebb454a3b5d684d66643378d"
+                ],
+                "window_data": [
+                    [
+                        {
+                            "ancestry": "EUR",
+                            "id": "study_eur"
+                        },
+                        "study_eur.hwe_hist_window.tsv:md5,910ea7ecf6e1945c3b778713cce4de69"
+                    ]
+                ],
+                "window_plot": [
+                    [
+                        {
+                            "ancestry": "EUR",
+                            "id": "study_eur"
+                        },
+                        "study_eur.hwe_hist_window.pdf:md5,d41d8cd98f00b204e9800998ecf8427e",
+                        "study_eur.hwe_hist_window.png:md5,d41d8cd98f00b204e9800998ecf8427e"
+                    ]
+                ]
+            }
+        ],
+        "timestamp": "2026-09-21T09:17:39.89393171",
+        "meta": {
+            "nf-test": "0.9.5",
+            "nextflow": "26.04.4"
+        }
+    },
+    "study_eur - autosomal report only": {
+        "content": [
+            [
+                [
+                    {
+                        "id": "study_eur",
+                        "ancestry": "EUR"
+                    },
+                    "study_eur.hwe_hist.tsv:md5,f62d2fcc1728114d81bfa329a506eba2"
+                ]
+            ],
+            [
+                [
+                    {
+                        "id": "study_eur",
+                        "ancestry": "EUR"
+                    },
+                    "study_eur.hwe_hist_window.tsv:md5,ed2699138153b23bc6e0c27c4d5bcaa6"
+                ]
+            ]
+        ],
+        "timestamp": "2026-09-21T09:17:33.060500422",
+        "meta": {
+            "nf-test": "0.9.5",
+            "nextflow": "26.04.4"
+        }
+    },
+    "study_eur - with chromosome X report": {
+        "content": [
+            [
+                [
+                    {
+                        "id": "study_eur",
+                        "ancestry": "EUR"
+                    },
+                    "study_eur.hwe_hist.tsv:md5,b17609647e5b8b6981419c6c2be723d0"
+                ]
+            ],
+            [
+                [
+                    {
+                        "id": "study_eur",
+                        "ancestry": "EUR"
+                    },
+                    "study_eur.hwe_hist_window.tsv:md5,a4833329a880145f6e265afe256fc239"
+                ]
+            ],
+            [
+                "versions.yml:md5,e7753050ebb454a3b5d684d66643378d"
+            ]
+        ],
+        "timestamp": "2026-09-21T09:17:24.674928839",
+        "meta": {
+            "nf-test": "0.9.5",
+            "nextflow": "26.04.4"
+        }
+    }
+}

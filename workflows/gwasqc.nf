@@ -6,6 +6,8 @@
 
 // MODULE: Local to the pipeline
 include { PLINK2_MAKEBED         } from '../modules/local/plink2/makebed/main'
+include { STRATUM_REPORT         } from '../modules/local/stratum_report/main'
+include { QC_SUMMARY             } from '../modules/local/qc_summary/main'
 
 // SUBWORKFLOW: Local to the pipeline
 include { PLINK_QC_FILTER_LISTS  } from '../subworkflows/local/plink_qc_filter_lists'
@@ -33,6 +35,7 @@ workflow GWASQC {
     take:
     ch_samplesheet // channel: [ val(meta), path(bed), path(bim), path(fam) ]
     ch_reference // channel: [ val(meta), path(bed), path(bim), path(fam) ], one item per reference fileset; empty when ancestry is skipped
+    maf // value: minor allele frequency threshold, applied by PLINK2_WRITESNPLIST through ext.args and recorded in the report
     geno // value: maximum per-variant missing-call rate
     mind // value: maximum per-sample missing-call rate
     hwe // value: Hardy-Weinberg exact-test p-value floor
@@ -105,6 +108,8 @@ workflow GWASQC {
     // are projected with the mind removals applied; the mismatch removal list is the one product the
     // terminal materialisation may consume. When the stage is skipped every stratum carries an empty slot.
     def ch_ancestry_remove_by_id = ch_samplesheet.map { meta, _bed, _bim, _fam -> [meta.id, []] }
+    // [ id, summary, mismatch_remove, [ png, ... ] ] for the report; every slot empty when the stage is skipped
+    def ch_ancestry_report_by_id = ch_samplesheet.map { meta, _bed, _bim, _fam -> [meta.id, [], [], []] }
     if (!skip_ancestry) {
         ANCESTRY_INFERENCE(
             ch_filter_lists_by_id.map { _id, meta, bed, bim, fam, maf_snplist, geno_exclude, hwe_exclude, mind_remove ->
@@ -121,6 +126,12 @@ workflow GWASQC {
             ancestry_sd_filter ?: 0,
         )
         ch_ancestry_remove_by_id = ANCESTRY_INFERENCE.out.mismatch_remove.map { meta, mismatch_remove -> [meta.id, mismatch_remove] }
+        ch_ancestry_report_by_id = ANCESTRY_INFERENCE.out.summary
+            .map { meta, summary -> [meta.id, summary] }
+            .join(ch_ancestry_remove_by_id, by: 0, failOnDuplicate: true, failOnMismatch: true)
+            .join(ANCESTRY_INFERENCE.out.pc1_pc2_plot.map { meta, _pdf, png -> [meta.id, png] }, by: 0, failOnDuplicate: true, failOnMismatch: true)
+            .join(ANCESTRY_INFERENCE.out.pc3_pc4_plot.map { meta, _pdf, png -> [meta.id, png] }, by: 0, failOnDuplicate: true, failOnMismatch: true)
+            .map { id, summary, mismatch_remove, pc1_pc2, pc3_pc4 -> [id, summary, mismatch_remove, [pc1_pc2, pc3_pc4]] }
     }
 
     //
@@ -143,6 +154,64 @@ workflow GWASQC {
         }
 
     PLINK2_MAKEBED(ch_makebed_inputs)
+
+    //
+    // MODULE: Per-stratum QC summary row and MultiQC fragments, from the lists, tables and figures above
+    //
+    // Every count the report carries is read from a published list or table, never from a log; the figures
+    // are gathered by the report section they belong to. The QC'd fileset closes the row with what left.
+    def ch_variant_qc_images_by_id = PLINK_QC_FILTER_LISTS.out.vmiss_hist_plot
+        .map { meta, _pdf, png -> [meta.id, png] }
+        .join(PLINK_QC_FILTER_LISTS.out.smiss_hist_plot.map { meta, _pdf, png -> [meta.id, png] }, by: 0, failOnDuplicate: true, failOnMismatch: true)
+        .join(PLINK_QC_FILTER_LISTS.out.ladder_plot.map { meta, _pdf, png -> [meta.id, png] }, by: 0, failOnDuplicate: true, failOnMismatch: true)
+        .join(PLINK_QC_FILTER_LISTS.out.hwe_hist_plot.map { meta, _pdf, png -> [meta.id, png] }, by: 0, failOnDuplicate: true, failOnMismatch: true)
+        .join(PLINK_QC_FILTER_LISTS.out.hwe_window_plot.map { meta, _pdf, png -> [meta.id, png] }, by: 0, failOnDuplicate: true, failOnMismatch: true)
+        .map { id, vmiss_hist, smiss_hist, ladder, hwe_hist, hwe_window -> [id, [vmiss_hist, smiss_hist, ladder, hwe_hist, hwe_window]] }
+    def ch_heterozygosity_images_by_id = PLINK_SAMPLE_QC_LISTS.out.het_hist_plot
+        .map { meta, _pdf, png -> [meta.id, png] }
+        .join(PLINK_SAMPLE_QC_LISTS.out.het_sex_scatter_plot.map { meta, _pdf, png -> [meta.id, png] }, by: 0, failOnDuplicate: true, failOnMismatch: true)
+        .map { id, het_hist, het_sex_scatter -> [id, [het_hist, het_sex_scatter]] }
+
+    def ch_report_inputs = ch_samplesheet_by_id
+        .join(PLINK_QC_FILTER_LISTS.out.maf_snplist.map { meta, snplist -> [meta.id, snplist] }, by: 0, failOnDuplicate: true, failOnMismatch: true)
+        .join(PLINK_QC_FILTER_LISTS.out.geno_exclude.map { meta, geno_exclude -> [meta.id, geno_exclude] }, by: 0, failOnDuplicate: true, failOnMismatch: true)
+        .join(PLINK_QC_FILTER_LISTS.out.mind_remove.map { meta, mind_remove -> [meta.id, mind_remove] }, by: 0, failOnDuplicate: true, failOnMismatch: true)
+        .join(PLINK_QC_FILTER_LISTS.out.hwe_exclude.map { meta, hwe_exclude -> [meta.id, hwe_exclude] }, by: 0, failOnDuplicate: true, failOnMismatch: true)
+        .join(PLINK_QC_FILTER_LISTS.out.missingness_ladder.map { meta, ladder -> [meta.id, ladder] }, by: 0, failOnDuplicate: true, failOnMismatch: true)
+        .join(PLINK_SAMPLE_QC_LISTS.out.prune_in.map { meta, prune_in -> [meta.id, prune_in] }, by: 0, failOnDuplicate: true, failOnMismatch: true)
+        .join(PLINK_SAMPLE_QC_LISTS.out.highld_exclude.map { meta, highld_exclude -> [meta.id, highld_exclude] }, by: 0, failOnDuplicate: true, failOnMismatch: true)
+        .join(PLINK_SAMPLE_QC_LISTS.out.sex_mismatch.map { meta, sex_mismatch -> [meta.id, sex_mismatch] }, by: 0, failOnDuplicate: true, failOnMismatch: true)
+        .join(PLINK_SAMPLE_QC_LISTS.out.het.map { meta, het -> [meta.id, het] }, by: 0, failOnDuplicate: true, failOnMismatch: true)
+        .join(PLINK_SAMPLE_QC_LISTS.out.relatedness_pairs.map { meta, pairs -> [meta.id, pairs] }, by: 0, failOnDuplicate: true, failOnMismatch: true)
+        .join(PLINK_SAMPLE_QC_LISTS.out.relatedness_remove.map { meta, relatedness_remove -> [meta.id, relatedness_remove] }, by: 0, failOnDuplicate: true, failOnMismatch: true)
+        .join(PLINK_SAMPLE_QC_LISTS.out.relatedness_outliers.map { meta, outliers -> [meta.id, outliers] }, by: 0, failOnDuplicate: true, failOnMismatch: true)
+        .join(ch_ancestry_report_by_id, by: 0, failOnDuplicate: true, failOnMismatch: true)
+        .join(PLINK2_MAKEBED.out.bed.map { meta, _bed, bim, fam -> [meta.id, bim, fam] }, by: 0, failOnDuplicate: true, failOnMismatch: true)
+        .join(ch_variant_qc_images_by_id, by: 0, failOnDuplicate: true, failOnMismatch: true)
+        .join(PLINK_SAMPLE_QC_LISTS.out.sex_check_hist_plot.map { meta, _pdf, png -> [meta.id, [png]] }, by: 0, failOnDuplicate: true, failOnMismatch: true)
+        .join(ch_heterozygosity_images_by_id, by: 0, failOnDuplicate: true, failOnMismatch: true)
+        .join(PLINK_SAMPLE_QC_LISTS.out.relatedness_hist_plot.map { meta, _pdf, png -> [meta.id, [png]] }, by: 0, failOnDuplicate: true, failOnMismatch: true)
+        .map { _id, meta, _bed, bim, fam, maf_snplist, geno_exclude, mind_remove, hwe_exclude, ladder, prune_in, highld_exclude, sex_mismatch, het, relatedness_pairs, relatedness_remove, relatedness_outliers, ancestry_summary, ancestry_mismatch_remove, ancestry_images, qc_bim, qc_fam, variant_qc_images, sex_check_images, heterozygosity_images, relatedness_images ->
+            [meta, fam, bim, maf_snplist, geno_exclude, mind_remove, hwe_exclude, ladder, prune_in, highld_exclude, sex_mismatch, het, relatedness_pairs, relatedness_remove, relatedness_outliers, ancestry_summary, ancestry_mismatch_remove, qc_bim, qc_fam, variant_qc_images, sex_check_images, heterozygosity_images, relatedness_images, ancestry_images]
+        }
+
+    STRATUM_REPORT(
+        ch_report_inputs,
+        maf,
+        geno,
+        mind,
+        hwe,
+        apply_sample_removals,
+        ancestry_remove_mismatched,
+    )
+
+    //
+    // MODULE: Cross-stratum summary, published at the run root, and the per-stage MultiQC tables cut from it
+    //
+    QC_SUMMARY(STRATUM_REPORT.out.summary.map { _meta, summary -> summary }.collect())
+
+    ch_multiqc_files = ch_multiqc_files.mix(STRATUM_REPORT.out.multiqc.map { _meta, fragments -> fragments })
+    ch_multiqc_files = ch_multiqc_files.mix(QC_SUMMARY.out.multiqc)
 
     //
     // Collate and save software versions
@@ -202,6 +271,7 @@ workflow GWASQC {
 
     emit:
     genotypes      = PLINK2_MAKEBED.out.bed // channel: [ val(meta), path(bed), path(bim), path(fam) ]
+    summary        = QC_SUMMARY.out.summary // channel: path(gwasqc_summary.tsv)
     multiqc_report = MULTIQC.out.report.map { _meta, report -> [report] }.toList() // channel: /path/to/multiqc_report.html
     versions       = ch_versions // channel: [ path(versions.yml) ]
 }

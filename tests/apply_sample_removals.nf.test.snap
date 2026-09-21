@@ -31,11 +31,21 @@
                 "HWE_DECISIONS": {
                     "r-base": "4.3.1"
                 },
+                "HWE_PLOTS": {
+                    "r-base": "4.4.3",
+                    "r-data.table": "1.17.8",
+                    "r-ggplot2": "3.5.2"
+                },
                 "MIND_DECISIONS": {
                     "r-base": "4.3.1"
                 },
                 "MISSINGNESS_LADDER": {
                     "r-base": "4.3.1"
+                },
+                "MISSINGNESS_PLOTS": {
+                    "r-base": "4.4.3",
+                    "r-data.table": "1.17.8",
+                    "r-ggplot2": "3.5.2"
                 },
                 "PLINK2_CHECKSEX": {
                     "plink2": "2.0.0-a.6.9LM"
@@ -85,6 +95,9 @@
                 "PLINK2_WRITESNPLIST": {
                     "plink2": "2.0.0-a.6.9LM"
                 },
+                "QC_SUMMARY": {
+                    "gawk": "5.3.1"
+                },
                 "RELATEDNESS_DECISIONS": {
                     "r-base": "4.4.3",
                     "r-data.table": "1.17.8",
@@ -95,6 +108,10 @@
                     "r-data.table": "1.17.8",
                     "r-ggplot2": "3.5.2"
                 },
+                "STRATUM_REPORT": {
+                    "coreutils": 9.4,
+                    "gawk": "5.3.1"
+                },
                 "Workflow": {
                     "nf-core/gwasqc": "v1.0.0dev"
                 }
@@ -104,7 +121,7 @@
                 "study_afr.qc.fam:md5,788a6f9b7623044546a44749094ae095"
             ]
         ],
-        "timestamp": "2026-09-20T20:35:43.908912985",
+        "timestamp": "2026-09-21T09:40:53.869064044",
         "meta": {
             "nf-test": "0.9.5",
             "nextflow": "26.04.4"

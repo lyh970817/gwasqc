@@ -32,10 +32,45 @@ nextflow_pipeline {
             def planted = [study_eur: [EUR_S050: 'EAS', EUR_S051: 'AFR', EUR_S052: 'AMR'], study_afr: [AFR_S050: 'EUR', AFR_S051: 'CSA', AFR_S052: 'EAS']]
             def harmonisation = { id -> lines("qc/${id}/ancestry/${id}.ancestry_harmonisation.tsv").drop(1).collect { line -> line.split('\t', -1) }.collectEntries { fields -> [(fields[0]): fields[7]] } }
             def assigned = { id -> lines("qc/${id}/ancestry/${id}.ancestry_assignment.tsv").drop(1).collect { line -> line.split('\t') }.collectEntries { fields -> [(fields[1]): fields[2]] } }
+            // The cross-stratum summary as one map per stratum, and the published tree per stage as the
+            // documented layout (docs/output.md) demands it: nothing more, nothing less.
+            def summary_rows = lines('gwasqc_summary.tsv').collect { line -> line.split('\t', -1).toList() }
+            def summary = summary_rows.drop(1).collectEntries { fields -> [(fields[0]): [summary_rows[0], fields].transpose().collectEntries { column, value -> [(column): value] }] }
+            def published = { id, stage -> new File("${params.outdir}/qc/${id}/${stage}").list().toList().collect { name -> name.replace("${id}.", '<id>.') }.sort() }
+            def layout = [
+                maf: ['<id>.maf.snplist'],
+                missingness: ['<id>.geno_exclude.txt', '<id>.mind_remove.txt', '<id>.missingness_ladder.pdf', '<id>.missingness_ladder.png', '<id>.missingness_ladder.tsv', '<id>.smiss', '<id>.smiss_hist.pdf', '<id>.smiss_hist.png', '<id>.smiss_hist.tsv', '<id>.vmiss', '<id>.vmiss_hist.pdf', '<id>.vmiss_hist.png', '<id>.vmiss_hist.tsv'],
+                hwe: ['<id>.hardy', '<id>.hardy.x', '<id>.hwe_exclude.txt', '<id>.hwe_hist.pdf', '<id>.hwe_hist.png', '<id>.hwe_hist.tsv', '<id>.hwe_hist_window.pdf', '<id>.hwe_hist_window.png', '<id>.hwe_hist_window.tsv'],
+                ld_pruning: ['<id>.highld_exclude.txt', '<id>.prune.in'],
+                sex_check: ['<id>.sex_check_hist.pdf', '<id>.sex_check_hist.png', '<id>.sex_check_hist.tsv', '<id>.sex_mismatch.tsv', '<id>.sex_mismatch_remove.txt', '<id>.sexcheck'],
+                heterozygosity: ['<id>.het', '<id>.het_hist.pdf', '<id>.het_hist.png', '<id>.het_hist.tsv', '<id>.het_sex_scatter.pdf', '<id>.het_sex_scatter.png', '<id>.het_sex_scatter.tsv'],
+                relatedness: ['<id>.relatedness_hist.pdf', '<id>.relatedness_hist.png', '<id>.relatedness_hist.tsv', '<id>.relatedness_indiv.tsv', '<id>.relatedness_outliers.txt', '<id>.relatedness_pairs.tsv', '<id>.relatedness_remove.txt'],
+                ancestry: ['<id>.ancestry.eigenval', '<id>.ancestry.highld_exclude.txt', '<id>.ancestry.prune.in', '<id>.ancestry_AFR.keep', '<id>.ancestry_AMR.keep', '<id>.ancestry_CSA.keep', '<id>.ancestry_EAS.keep', '<id>.ancestry_EUR.keep', '<id>.ancestry_assignment.tsv', '<id>.ancestry_flip_update.txt', '<id>.ancestry_harmonisation.tsv', '<id>.ancestry_harmonisation_summary.tsv', '<id>.ancestry_harmonised.snplist', '<id>.ancestry_mismatch_remove.txt', '<id>.ancestry_model.tsv', '<id>.ancestry_pc1_pc2.pdf', '<id>.ancestry_pc1_pc2.png', '<id>.ancestry_pc3_pc4.pdf', '<id>.ancestry_pc3_pc4.png', '<id>.ancestry_pca.tsv', '<id>.ancestry_summary.tsv'],
+            ]
+            def report = new File("${params.outdir}/multiqc/multiqc_report.html").text
+            def sections = ['gwasqc_qc_summary', 'gwasqc_variant_qc', 'gwasqc_variant_qc_filters', 'gwasqc_variant_qc_ladder', 'gwasqc_sex_check', 'gwasqc_sex_check_summary', 'gwasqc_sex_check_mismatches', 'gwasqc_heterozygosity', 'gwasqc_heterozygosity_summary', 'gwasqc_relatedness', 'gwasqc_relatedness_summary', 'gwasqc_relatedness_pairs', 'gwasqc_ancestry', 'gwasqc_ancestry_summary', 'gwasqc_sample_removals'] + strata.collectMany { id -> ['variant_qc', 'sex_check', 'heterozygosity', 'relatedness', 'ancestry'].collect { stage -> "gwasqc_${stage}_plots_${id}".toString() } }
             assertAll(
                 { assert workflow.success },
-                { assert new File("${params.outdir}").list().toList().sort() == ['genotypes', 'multiqc', 'pipeline_info', 'qc'] },
+                { assert new File("${params.outdir}").list().toList().sort() == ['genotypes', 'gwasqc_summary.tsv', 'multiqc', 'pipeline_info', 'qc'] },
                 { assert strata.every { id -> new File("${params.outdir}/qc/${id}").list().toList().sort() == ['ancestry', 'heterozygosity', 'hwe', 'ld_pruning', 'maf', 'missingness', 'relatedness', 'sex_check'] } },
+                { assert strata.every { id -> layout.every { stage, files -> published(id, stage) == files } } },
+                { assert strata.every { id -> new File("${params.outdir}/genotypes/${id}").list().toList().sort() == ["${id}.qc.bed", "${id}.qc.bim", "${id}.qc.fam"].collect { name -> name.toString() } } },
+                // The cross-stratum summary: one row per stratum in id order, every count consistent with the
+                // planted defects and with the lists and filesets it was counted from.
+                { assert summary_rows.drop(1).collect { fields -> fields[0] } == ['study_afr', 'study_eur'] },
+                { assert summary.study_eur.subMap(['ancestry', 'samples_input', 'variants_input', 'maf_threshold', 'variants_maf_removed', 'geno_threshold', 'variants_geno_removed', 'mind_threshold', 'samples_mind_removed', 'hwe_threshold', 'variants_hwe_removed']) == [ancestry: 'EUR', samples_input: '125', variants_input: '3962', maf_threshold: '0.01', variants_maf_removed: '8', geno_threshold: '0.05', variants_geno_removed: '24', mind_threshold: '0.05', samples_mind_removed: '2', hwe_threshold: '1e-10', variants_hwe_removed: '5'] },
+                { assert summary.study_afr.subMap(['ancestry', 'samples_input', 'variants_input', 'variants_maf_removed', 'samples_mind_removed', 'variants_hwe_removed']) == [ancestry: 'AFR', samples_input: '125', variants_input: '3962', variants_maf_removed: '9', samples_mind_removed: '2', variants_hwe_removed: '5'] },
+                { assert strata.every { id -> summary[id].subMap(['sex_check_problems', 'sex_removals', 'relatedness_duplicate_or_mz', 'relatedness_parent_offspring', 'relatedness_full_sibling', 'relatedness_removed', 'relatedness_removals', 'ancestry_unassigned', 'ancestry_mismatches', 'ancestry_removals']) == [sex_check_problems: '2', sex_removals: 'listed only', relatedness_duplicate_or_mz: '1', relatedness_parent_offspring: '1', relatedness_full_sibling: '1', relatedness_removed: '1', relatedness_removals: 'listed only', ancestry_unassigned: '0', ancestry_mismatches: '3', ancestry_removals: 'listed only'] } },
+                { assert strata.every { id -> summary[id]["ancestry_n_${prefix(id)}".toString()] == '120' } },
+                // The gate is off: the fileset lost the two mind removals, and the union of the eight listed
+                // samples is what the gate would remove.
+                { assert strata.every { id -> summary[id].subMap(['samples_removed_under_gate', 'samples_removed', 'samples_final']) == [samples_removed_under_gate: '8', samples_removed: '2', samples_final: '123'] } },
+                { assert strata.every { id -> summary[id].variants_final == lines("genotypes/${id}/${id}.qc.bim").size().toString() && summary[id].variants_after_hwe == summary[id].variants_final } },
+                { assert strata.every { id -> summary[id].variants_ld_pruned_in == lines("qc/${id}/ld_pruning/${id}.prune.in").size().toString() && summary[id].het_samples == '123' } },
+                // The MultiQC report renders every section: the summary, one parent per stage with its tables,
+                // and one figure section per stratum and stage.
+                { assert sections.every { section -> report.contains("id=\"${section}\"") } },
+                { assert report.contains('data:image/png;base64,') },
                 // Ancestry: the documented strand flips are the flip list and the ambiguous pairs are dropped,
                 // within the intersect of the reference with the QC'd variant set; the reference classifies
                 // itself perfectly leave-one-out; exactly the planted outliers leave the stratum's label, each to
@@ -106,8 +141,10 @@ nextflow_pipeline {
             def stable_path = getAllFilesFromDir(params.outdir, relative: true, includeDir: true, ignore: ['pipeline_info/*.{html,json,txt}'])
             assertAll(
                 { assert workflow.success },
-                { assert new File("${params.outdir}").list().toList().sort() == ['genotypes', 'multiqc', 'pipeline_info', 'qc'] },
+                { assert new File("${params.outdir}").list().toList().sort() == ['genotypes', 'gwasqc_summary.tsv', 'multiqc', 'pipeline_info', 'qc'] },
                 { assert workflow.trace.tasks().findAll { task -> task.name.contains('GWASQC:PLINK2_MAKEBED (') }.size() == 2 },
+                { assert workflow.trace.tasks().findAll { task -> task.name.contains('GWASQC:STRATUM_REPORT (') }.size() == 2 },
+                { assert workflow.trace.tasks().findAll { task -> task.name.contains('GWASQC:QC_SUMMARY') }.size() == 1 },
                 { assert snapshot(
                     removeNextflowVersion("$outputDir/pipeline_info/nf_core_gwasqc_software_mqc_versions.yml"),
                     stable_path

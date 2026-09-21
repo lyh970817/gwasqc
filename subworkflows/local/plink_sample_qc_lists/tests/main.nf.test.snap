@@ -18,6 +18,24 @@
                         "study_eur.het:md5,d41d8cd98f00b204e9800998ecf8427e"
                     ]
                 ],
+                "het_hist_plot": [
+                    [
+                        {
+                            "ancestry": "AFR",
+                            "id": "study_afr"
+                        },
+                        "study_afr.het_hist.pdf:md5,d41d8cd98f00b204e9800998ecf8427e",
+                        "study_afr.het_hist.png:md5,d41d8cd98f00b204e9800998ecf8427e"
+                    ],
+                    [
+                        {
+                            "ancestry": "EUR",
+                            "id": "study_eur"
+                        },
+                        "study_eur.het_hist.pdf:md5,d41d8cd98f00b204e9800998ecf8427e",
+                        "study_eur.het_hist.png:md5,d41d8cd98f00b204e9800998ecf8427e"
+                    ]
+                ],
                 "het_sex_scatter": [
                     [
                         {
@@ -32,6 +50,24 @@
                             "id": "study_eur"
                         },
                         "study_eur.het_sex_scatter.tsv:md5,23647538bcfbf89e9a8f465226f59b2e"
+                    ]
+                ],
+                "het_sex_scatter_plot": [
+                    [
+                        {
+                            "ancestry": "AFR",
+                            "id": "study_afr"
+                        },
+                        "study_afr.het_sex_scatter.pdf:md5,d41d8cd98f00b204e9800998ecf8427e",
+                        "study_afr.het_sex_scatter.png:md5,d41d8cd98f00b204e9800998ecf8427e"
+                    ],
+                    [
+                        {
+                            "ancestry": "EUR",
+                            "id": "study_eur"
+                        },
+                        "study_eur.het_sex_scatter.pdf:md5,d41d8cd98f00b204e9800998ecf8427e",
+                        "study_eur.het_sex_scatter.png:md5,d41d8cd98f00b204e9800998ecf8427e"
                     ]
                 ],
                 "highld_exclude": [
@@ -98,6 +134,24 @@
                         "study_eur.prune.out:md5,d41d8cd98f00b204e9800998ecf8427e"
                     ]
                 ],
+                "relatedness_hist_plot": [
+                    [
+                        {
+                            "ancestry": "AFR",
+                            "id": "study_afr"
+                        },
+                        "study_afr.relatedness_hist.pdf:md5,d41d8cd98f00b204e9800998ecf8427e",
+                        "study_afr.relatedness_hist.png:md5,d41d8cd98f00b204e9800998ecf8427e"
+                    ],
+                    [
+                        {
+                            "ancestry": "EUR",
+                            "id": "study_eur"
+                        },
+                        "study_eur.relatedness_hist.pdf:md5,d41d8cd98f00b204e9800998ecf8427e",
+                        "study_eur.relatedness_hist.png:md5,d41d8cd98f00b204e9800998ecf8427e"
+                    ]
+                ],
                 "relatedness_indiv": [
                     [
                         {
@@ -162,6 +216,24 @@
                         "study_eur.relatedness_remove.txt:md5,d41d8cd98f00b204e9800998ecf8427e"
                     ]
                 ],
+                "sex_check_hist_plot": [
+                    [
+                        {
+                            "ancestry": "AFR",
+                            "id": "study_afr"
+                        },
+                        "study_afr.sex_check_hist.pdf:md5,d41d8cd98f00b204e9800998ecf8427e",
+                        "study_afr.sex_check_hist.png:md5,d41d8cd98f00b204e9800998ecf8427e"
+                    ],
+                    [
+                        {
+                            "ancestry": "EUR",
+                            "id": "study_eur"
+                        },
+                        "study_eur.sex_check_hist.pdf:md5,d41d8cd98f00b204e9800998ecf8427e",
+                        "study_eur.sex_check_hist.png:md5,d41d8cd98f00b204e9800998ecf8427e"
+                    ]
+                ],
                 "sex_mismatch": [
                     [
                         {
@@ -212,7 +284,7 @@
                 ]
             }
         ],
-        "timestamp": "2026-09-20T15:27:13.181219072",
+        "timestamp": "2026-09-21T09:37:44.635863524",
         "meta": {
             "nf-test": "0.9.5",
             "nextflow": "26.04.4"
@@ -431,7 +503,7 @@
                 ]
             }
         ],
-        "timestamp": "2026-09-20T15:26:24.972502767",
+        "timestamp": "2026-09-21T10:05:27.08166998",
         "meta": {
             "nf-test": "0.9.5",
             "nextflow": "26.04.4"

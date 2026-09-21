@@ -1,0 +1,106 @@
+nextflow_process {
+
+    name "Test Process QC_SUMMARY"
+    script "../main.nf"
+    process "QC_SUMMARY"
+    config "./nextflow.config"
+
+    tag "modules"
+    tag "modules_local"
+    tag "qc_summary"
+
+    // Two summary rows in the shape stratum_report writes them, given out of order; the header carries the
+    // ancestry columns of a two-group reference.
+    test("two strata") {
+
+        when {
+            process {
+                """
+                def dir = file('qc_summary_inputs')
+                dir.mkdirs()
+                def header = ['stratum', 'ancestry', 'samples_input', 'variants_input', 'maf_threshold', 'variants_maf_removed', 'variants_after_maf', 'geno_threshold', 'variants_geno_removed', 'variants_after_geno', 'mind_threshold', 'samples_mind_removed', 'samples_after_mind', 'hwe_threshold', 'variants_hwe_removed', 'variants_after_hwe', 'variants_ld_pruned_in', 'variants_ld_pruned_out', 'variants_highld_excluded', 'variants_sample_checks', 'sex_check_problems', 'sex_removals', 'het_samples', 'het_f_mean', 'het_f_sd', 'het_f_min', 'het_f_max', 'het_outside_3sd', 'relatedness_pairs_reported', 'relatedness_duplicate_or_mz', 'relatedness_parent_offspring', 'relatedness_full_sibling', 'relatedness_second_degree', 'relatedness_third_degree', 'relatedness_removed', 'relatedness_removals', 'relatedness_outliers', 'ancestry_n_AFR', 'ancestry_n_EUR', 'ancestry_unassigned', 'ancestry_mismatches', 'ancestry_removals', 'samples_removed_under_gate', 'samples_removed', 'samples_final', 'variants_final'].join('\\t')
+                def eur = ['study_eur', 'EUR', '125', '3962', '0.01', '8', '3954', '0.05', '24', '3930', '0.05', '2', '123', '1e-10', '5', '3925', '3910', '15', '210', '3700', '2', 'listed only', '123', '-0.000900', '0.031000', '-0.080000', '0.090000', '0', '3', '1', '1', '1', '0', '0', '1', 'listed only', '2', '3', '120', '0', '3', 'listed only', '8', '2', '123', '3925'].join('\\t')
+                def afr = ['study_afr', 'AFR', '125', '3962', '0.01', '9', '3953', '0.05', '24', '3929', '0.05', '2', '123', '1e-10', '5', '3924', '3909', '15', '209', '3700', '2', 'listed only', '123', '0.001000', '0.030000', '-0.070000', '0.080000', '0', '3', '1', '1', '1', '0', '0', '1', 'listed only', '1', '120', '3', '0', '3', 'listed only', '8', '2', '123', '3924'].join('\\t')
+                def eur_file = dir.resolve('study_eur.qc_summary.tsv')
+                eur_file.text = header + '\\n' + eur + '\\n'
+                def afr_file = dir.resolve('study_afr.qc_summary.tsv')
+                afr_file.text = header + '\\n' + afr + '\\n'
+                input[0] = [eur_file, afr_file]
+                """
+            }
+        }
+
+        then {
+            def summary = path(process.out.summary.get(0)).readLines().collect { line -> line.split('\t', -1).toList() }
+            def fragments = process.out.multiqc.get(0).collect { fragment -> file(fragment.toString()) }.collectEntries { fragment -> [(fragment.name): fragment] }
+            def rows = { fragment -> fragment.readLines().findAll { line -> !line.startsWith('#') }.collect { line -> line.split('\t').toList() } }
+            def header_lines = { fragment -> fragment.readLines().findAll { line -> line.startsWith('#') } }
+            assertAll(
+                { assert process.success },
+                // One header, the rows in stratum order, every column kept.
+                { assert summary.size() == 3 },
+                { assert summary[0].size() == 46 },
+                { assert summary.drop(1).collect { fields -> fields[0] } == ['study_afr', 'study_eur'] },
+                { assert summary[2][summary[0].indexOf('ancestry_n_EUR')] == '120' },
+                { assert fragments.keySet().sort() == ['gwasqc_ancestry_summary_mqc.tsv', 'gwasqc_heterozygosity_summary_mqc.tsv', 'gwasqc_qc_summary_mqc.tsv', 'gwasqc_relatedness_summary_mqc.tsv', 'gwasqc_sample_removals_mqc.tsv', 'gwasqc_sex_check_summary_mqc.tsv', 'gwasqc_variant_qc_filters_mqc.tsv'] },
+                { assert header_lines(fragments['gwasqc_qc_summary_mqc.tsv'])[0..1] == ['# id: gwasqc_qc_summary', '# parent_id: gwasqc_qc_summary'] },
+                { assert rows(fragments['gwasqc_qc_summary_mqc.tsv'])[0] == summary[0] },
+                // The stage tables carry their columns only, the ancestry table the group columns of the header.
+                { assert rows(fragments['gwasqc_sex_check_summary_mqc.tsv']) == [['stratum', 'samples_after_mind', 'sex_check_problems', 'sex_removals'], ['study_afr', '123', '2', 'listed only'], ['study_eur', '123', '2', 'listed only']] },
+                { assert rows(fragments['gwasqc_ancestry_summary_mqc.tsv'])[0] == ['stratum', 'ancestry', 'ancestry_n_AFR', 'ancestry_n_EUR', 'ancestry_unassigned', 'ancestry_mismatches', 'ancestry_removals'] },
+                { assert header_lines(fragments['gwasqc_ancestry_summary_mqc.tsv']).contains('#         title: "N AFR"') },
+                { assert header_lines(fragments['gwasqc_variant_qc_filters_mqc.tsv']).contains('#     variants_maf_removed:') },
+                { assert header_lines(fragments['gwasqc_qc_summary_mqc.tsv']).count('#         hidden: true') == 25 },
+                { assert snapshot(process.out.summary, process.out.multiqc, process.out.versions_gawk).match() },
+            )
+        }
+    }
+
+    test("two strata - header mismatch") {
+
+        when {
+            process {
+                """
+                def dir = file('qc_summary_inputs_mismatch')
+                dir.mkdirs()
+                def eur_file = dir.resolve('study_eur.qc_summary.tsv')
+                eur_file.text = 'stratum\\tancestry\\tsamples_input\\nstudy_eur\\tEUR\\t125\\n'
+                def afr_file = dir.resolve('study_afr.qc_summary.tsv')
+                afr_file.text = 'stratum\\tancestry\\tsamples_input\\tancestry_n_AFR\\nstudy_afr\\tAFR\\t125\\t120\\n'
+                input[0] = [eur_file, afr_file]
+                """
+            }
+        }
+
+        then {
+            assertAll(
+                { assert process.failed },
+                { assert process.errorReport.contains('does not share the header') },
+            )
+        }
+    }
+
+    test("two strata - stub") {
+
+        options "-stub"
+
+        when {
+            process {
+                """
+                def dir = file('qc_summary_inputs_stub')
+                dir.mkdirs()
+                def eur_file = dir.resolve('study_eur.qc_summary.tsv')
+                eur_file.text = 'stratum\\tancestry\\nstudy_eur\\tEUR\\n'
+                input[0] = [eur_file]
+                """
+            }
+        }
+
+        then {
+            assertAll(
+                { assert process.success },
+                { assert snapshot(sanitizeOutput(process.out)).match() },
+            )
+        }
+    }
+}

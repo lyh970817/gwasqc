@@ -1,0 +1,128 @@
+name: hwe_plots
+description: Draw the Hardy-Weinberg review figures of one stratum from the plink2 --hardy reports, a histogram of the exact-test p-values of every variant and a histogram of the p-values between 0.01 and 1e-20 on a log10 scale with the exclusion threshold marked
+keywords:
+  - hardy-weinberg
+  - genotype
+  - quality control
+  - plot
+tools:
+  - r-base:
+      description: The R programming language runtime
+      homepage: https://www.r-project.org/
+      documentation: https://cran.r-project.org/manuals.html
+  - r-ggplot2:
+      description: Grammar-of-graphics plotting for R
+      homepage: https://ggplot2.tidyverse.org/
+      documentation: https://ggplot2.tidyverse.org/reference/
+  - r-data.table:
+      description: Fast tabular data handling for R
+      homepage: https://r-datatable.com/
+      documentation: https://rdatatable.gitlab.io/data.table/
+input:
+  - - meta:
+        type: map
+        description: |
+          Groovy map describing the stratum.
+          Expected keys:
+            - id (string): Stratum identifier, used as the output prefix.
+    - hardy:
+        type: file
+        description: plink2 autosomal Hardy-Weinberg exact-test report with a P column
+        pattern: "*.hardy"
+        ontologies:
+          - edam: "http://edamontology.org/format_3475" # TSV
+    - hardy_x:
+        type: file
+        description: Optional plink2 chromosome X Hardy-Weinberg report with a P column, drawn as its own series; an empty list when the fileset carries no chromosome X
+        pattern: "*.hardy.x"
+        ontologies:
+          - edam: "http://edamontology.org/format_3475" # TSV
+  - hwe:
+      type: float
+      description: Hardy-Weinberg exact-test p-value floor, drawn as a dashed line on the windowed histogram
+output:
+  hist_data:
+    - - meta:
+          type: map
+          description: Metadata map propagated from input
+      - "${prefix}.hwe_hist.tsv":
+          type: file
+          description: Counts of variant rows per report in 100 bins of the p-value over [0, 1]; the data the histogram is drawn from
+          pattern: "*.hwe_hist.tsv"
+          ontologies:
+            - edam: "http://edamontology.org/format_3475" # TSV
+  hist_plot:
+    - - meta:
+          type: map
+          description: Metadata map propagated from input
+      - "${prefix}.hwe_hist.pdf":
+          type: file
+          description: Histogram of the exact-test p-value over every variant row, stacked by report
+          pattern: "*.hwe_hist.pdf"
+          ontologies:
+            - edam: "http://edamontology.org/format_3508" # PDF
+      - "${prefix}.hwe_hist.png":
+          type: file
+          description: The histogram as an image
+          pattern: "*.hwe_hist.png"
+          ontologies:
+            - edam: "http://edamontology.org/format_3603" # PNG
+  window_data:
+    - - meta:
+          type: map
+          description: Metadata map propagated from input
+      - "${prefix}.hwe_hist_window.tsv":
+          type: file
+          description: Counts of variant rows per report in 100 bins of log10 p-value over [-20, -2], the window 1e-20 < P < 0.01; the data the windowed histogram is drawn from
+          pattern: "*.hwe_hist_window.tsv"
+          ontologies:
+            - edam: "http://edamontology.org/format_3475" # TSV
+  window_plot:
+    - - meta:
+          type: map
+          description: Metadata map propagated from input
+      - "${prefix}.hwe_hist_window.pdf":
+          type: file
+          description: Histogram of the log10 p-value within the window, stacked by report, with the threshold as a dashed line
+          pattern: "*.hwe_hist_window.pdf"
+          ontologies:
+            - edam: "http://edamontology.org/format_3508" # PDF
+      - "${prefix}.hwe_hist_window.png":
+          type: file
+          description: The windowed histogram as an image
+          pattern: "*.hwe_hist_window.png"
+          ontologies:
+            - edam: "http://edamontology.org/format_3603" # PNG
+  versions:
+    - versions.yml:
+        type: file
+        description: File containing software versions
+        pattern: "versions.yml"
+        ontologies:
+          - edam: "http://edamontology.org/format_3750" # YAML
+topics:
+  versions:
+    - versions.yml:
+        type: file
+        description: File containing software versions, written by the R template because an eval output is only accepted for a Bash script
+        pattern: "versions.yml"
+        ontologies:
+          - edam: "http://edamontology.org/format_3750" # YAML
+authors:
+  - "@lyh970817"
+maintainers:
+  - "@lyh970817"
+containers:
+  conda:
+    linux/amd64:
+      lock_file: "modules/local/hwe_plots/.conda-lock/linux_amd64-bd-785e51271c23bbdc_1.txt"
+  docker:
+    linux/amd64:
+      build_id: "bd-785e51271c23bbdc_1"
+      name: "community.wave.seqera.io/library/r-base_r-ggplot2_r-data.table:785e51271c23bbdc"
+      scan_id: "sc-940f534e023f3133_1"
+  singularity:
+    linux/amd64:
+      build_id: "bd-0012f1154a886ee6_1"
+      name: "oras://community.wave.seqera.io/library/r-base_r-ggplot2_r-data.table:0012f1154a886ee6"
+      https: "https://community-cr-prod.seqera.io/docker/registry/v2/blobs/sha256/ac/ac330e254aed1e019ded0a6140463199760e9ee8f1cf398670eb40ccee61ed14/data"

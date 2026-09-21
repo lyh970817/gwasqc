@@ -3,12 +3,45 @@ report_comment: >
   analysis pipeline. For information about how to interpret these results, please see the
   <a href="https://nf-co.re/gwasqc/dev/docs/output" target="_blank">documentation</a>.
 report_section_order:
+  # The per-stage tables precede the per-stratum figure sections of their stage; a section's order sorts
+  # ascending within its stage.
+  gwasqc_variant_qc_filters:
+    order: -20
+  gwasqc_variant_qc_ladder:
+    order: -10
+  gwasqc_sex_check_summary:
+    order: -20
+  gwasqc_sex_check_mismatches:
+    order: -10
+  gwasqc_heterozygosity_summary:
+    order: -10
+  gwasqc_relatedness_summary:
+    order: -20
+  gwasqc_relatedness_pairs:
+    order: -10
+  gwasqc_ancestry_summary:
+    order: -10
   "nf-core-gwasqc-methods-description":
     order: -1000
   software_versions:
     order: -1001
   "nf-core-gwasqc-summary":
     order: -1002
+
+# The QC stages in pipeline order, the cross-stratum summary first; every section of the report is custom
+# content fed by the pipeline's own tables and figures.
+custom_content:
+  order:
+    - gwasqc_qc_summary
+    - gwasqc_variant_qc
+    - gwasqc_sex_check
+    - gwasqc_heterozygosity
+    - gwasqc_relatedness
+    - gwasqc_ancestry
+    - gwasqc_sample_removals
+
+# Row names are stratum ids and sample ids, which MultiQC's file-name cleaning would otherwise trim.
+fn_clean_sample_names: false
 
 export_plots: true
 

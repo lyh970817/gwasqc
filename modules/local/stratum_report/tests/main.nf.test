@@ -1,0 +1,213 @@
+nextflow_process {
+
+    name "Test Process STRATUM_REPORT"
+    script "../main.nf"
+    process "STRATUM_REPORT"
+    config "./nextflow.config"
+
+    tag "modules"
+    tag "modules_local"
+    tag "stratum_report"
+
+    // The inputs are written in place with counts small enough to check by hand: six samples and ten
+    // variants in, one variant lost to each of MAF, geno and HWE, one sample to mind, one pruned out and one
+    // in a long-range LD region, one sex mismatch, one duplicate pair with one member listed, one
+    // parent-offspring and one third-degree pair, one mean-kinship outlier, and an ancestry summary with two
+    // mismatches (one assigned elsewhere, one unassigned). A 1x1 PNG stands in for every figure.
+    test("six samples - gate off") {
+
+        when {
+            process {
+                """
+                def dir = file('stratum_report_inputs')
+                dir.mkdirs()
+                def write = { name, text -> def target = dir.resolve(name); target.text = text; target }
+                def png = { name -> def target = dir.resolve(name); target.bytes = 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII='.decodeBase64(); target }
+                def fam = write.call('input.fam', (1..6).collect { i -> "S\${i} S\${i} 0 0 1 -9" }.join('\\n') + '\\n')
+                def bim = write.call('input.bim', (1..10).collect { i -> "1\\tv\${i}\\t0\\t\${i * 1000}\\tA\\tG" }.join('\\n') + '\\n')
+                def qc_fam = write.call('test.qc.fam', (1..5).collect { i -> "S\${i} S\${i} 0 0 1 -9" }.join('\\n') + '\\n')
+                def qc_bim = write.call('test.qc.bim', (1..7).collect { i -> "1\\tv\${i}\\t0\\t\${i * 1000}\\tA\\tG" }.join('\\n') + '\\n')
+                input[0] = [
+                    [ id:'test', ancestry:'EUR' ],
+                    fam,
+                    bim,
+                    write.call('test.maf.snplist', (1..9).collect { i -> "v\${i}" }.join('\\n') + '\\n'),
+                    write.call('test.geno_exclude.txt', 'v9\\n'),
+                    write.call('test.mind_remove.txt', 'S6 S6\\n'),
+                    write.call('test.hwe_exclude.txt', 'v8\\n'),
+                    write.call('test.missingness_ladder.tsv', 'call_rate\\tmissing_threshold\\tvariants_removed\\tvariants_remaining\\tsamples_removed\\tsamples_remaining\\n90\\t0.1\\t1\\t8\\t1\\t5\\n99\\t0.01\\t3\\t6\\t2\\t4\\n'),
+                    write.call('test.prune.in', (1..6).collect { i -> "v\${i}" }.join('\\n') + '\\n'),
+                    write.call('test.highld_exclude.txt', 'v6\\n'),
+                    write.call('test.sex_mismatch.tsv', 'FID\\tIID\\tPEDSEX\\tSNPSEX\\tSTATUS\\tF\\tYCOUNT\\tYRATE\\nS2\\tS2\\t2\\t1\\tPROBLEM\\t0.99\\t30\\t1\\n'),
+                    write.call('test.het', '#FID\\tIID\\tO(HOM)\\tE(HOM)\\tOBS_CT\\tF\\nS1\\tS1\\t10\\t10\\t20\\t0.01\\nS2\\tS2\\t10\\t10\\t20\\t-0.02\\nS3\\tS3\\t10\\t10\\t20\\t0.03\\nS4\\tS4\\t10\\t10\\t20\\t0\\nS5\\tS5\\t10\\t10\\t20\\t0.5\\n'),
+                    write.call('test.relatedness_pairs.tsv', 'FID1\\tIID1\\tFID2\\tIID2\\tNSNP\\tHETHET\\tIBS0\\tKINSHIP\\tDEGREE\\tRELATIONSHIP\\nS4\\tS4\\tS3\\tS3\\t5\\t0.3\\t0\\t0.5\\t0\\tduplicate_or_mz\\nS5\\tS5\\tS1\\tS1\\t5\\t0.2\\t0\\t0.25\\t1\\tparent_offspring\\nS5\\tS5\\tS2\\tS2\\t5\\t0.1\\t0.01\\t0.06\\t3\\tthird_degree\\n'),
+                    write.call('test.relatedness_remove.txt', 'S4 S4\\n'),
+                    write.call('test.relatedness_outliers.txt', 'S5 S5\\n'),
+                    write.call('test.ancestry_summary.tsv', 'GROUP\\tSTATUS\\tN_REFERENCE\\tN_STUDY\\tRULE\\nAFR\\tassigned\\t50\\t1\\tmax posterior >= 0.5\\nEUR\\tassigned\\t50\\t3\\tmax posterior >= 0.5\\nunassigned\\tbelow_threshold\\tNA\\t1\\tmax posterior < 0.5\\n'),
+                    write.call('test.ancestry_mismatch_remove.txt', 'S1 S1\\nS5 S5\\n'),
+                    qc_bim,
+                    qc_fam,
+                    [png.call('test.vmiss_hist.png'), png.call('test.smiss_hist.png')],
+                    [png.call('test.sex_check_hist.png')],
+                    [png.call('test.het_hist.png')],
+                    [png.call('test.relatedness_hist.png')],
+                    [png.call('test.ancestry_pc1_pc2.png')],
+                ]
+                input[1] = 0.01
+                input[2] = 0.05
+                input[3] = 0.05
+                input[4] = 1e-10
+                input[5] = false
+                input[6] = true
+                """
+            }
+        }
+
+        then {
+            def summary_lines = path(process.out.summary.get(0).get(1)).readLines().collect { line -> line.split('\t', -1).toList() }
+            def summary = [summary_lines[0], summary_lines[1]].transpose().collectEntries { column, value -> [(column): value] }
+            def fragments = process.out.multiqc.get(0).get(1).collect { fragment -> file(fragment.toString()) }.collectEntries { fragment -> [(fragment.name): fragment] }
+            def rows = { fragment -> fragment.readLines().findAll { line -> !line.startsWith('#') }.collect { line -> line.split('\t').toList() } }
+            assertAll(
+                { assert process.success },
+                { assert summary_lines.size() == 2 },
+                { assert summary.subMap(['stratum', 'ancestry', 'samples_input', 'variants_input', 'maf_threshold', 'variants_maf_removed', 'variants_after_maf']) == [stratum: 'test', ancestry: 'EUR', samples_input: '6', variants_input: '10', maf_threshold: '0.01', variants_maf_removed: '1', variants_after_maf: '9'] },
+                { assert summary.subMap(['geno_threshold', 'variants_geno_removed', 'variants_after_geno', 'mind_threshold', 'samples_mind_removed', 'samples_after_mind']) == [geno_threshold: '0.05', variants_geno_removed: '1', variants_after_geno: '8', mind_threshold: '0.05', samples_mind_removed: '1', samples_after_mind: '5'] },
+                { assert summary.subMap(['hwe_threshold', 'variants_hwe_removed', 'variants_after_hwe', 'variants_ld_pruned_in', 'variants_ld_pruned_out', 'variants_highld_excluded', 'variants_sample_checks']) == [hwe_threshold: '1e-10', variants_hwe_removed: '1', variants_after_hwe: '7', variants_ld_pruned_in: '6', variants_ld_pruned_out: '1', variants_highld_excluded: '1', variants_sample_checks: '5'] },
+                { assert summary.subMap(['sex_check_problems', 'sex_removals']) == [sex_check_problems: '1', sex_removals: 'listed only'] },
+                { assert summary.subMap(['het_samples', 'het_f_mean', 'het_f_sd', 'het_f_min', 'het_f_max', 'het_outside_3sd']) == [het_samples: '5', het_f_mean: '0.104000', het_f_sd: '0.222104', het_f_min: '-0.020000', het_f_max: '0.500000', het_outside_3sd: '0'] },
+                { assert summary.subMap(['relatedness_pairs_reported', 'relatedness_duplicate_or_mz', 'relatedness_parent_offspring', 'relatedness_full_sibling', 'relatedness_second_degree', 'relatedness_third_degree', 'relatedness_removed', 'relatedness_removals', 'relatedness_outliers']) == [relatedness_pairs_reported: '3', relatedness_duplicate_or_mz: '1', relatedness_parent_offspring: '1', relatedness_full_sibling: '0', relatedness_second_degree: '0', relatedness_third_degree: '1', relatedness_removed: '1', relatedness_removals: 'listed only', relatedness_outliers: '1'] },
+                { assert summary.subMap(['ancestry_n_AFR', 'ancestry_n_EUR', 'ancestry_unassigned', 'ancestry_mismatches', 'ancestry_removals']) == [ancestry_n_AFR: '1', ancestry_n_EUR: '3', ancestry_unassigned: '1', ancestry_mismatches: '2', ancestry_removals: 'listed only'] },
+                // The gate is off: the fileset lost the mind removal alone, and the union of the four lists is
+                // what the gate would have removed.
+                { assert summary.subMap(['samples_removed_under_gate', 'samples_removed', 'samples_final', 'variants_final']) == [samples_removed_under_gate: '5', samples_removed: '1', samples_final: '5', variants_final: '7'] },
+                { assert fragments.keySet().sort() == ['test.ancestry_plots_mqc.yaml', 'test.heterozygosity_plots_mqc.yaml', 'test.relatedness_pairs_mqc.tsv', 'test.relatedness_plots_mqc.yaml', 'test.sex_check_mismatches_mqc.tsv', 'test.sex_check_plots_mqc.yaml', 'test.variant_qc_ladder_mqc.tsv', 'test.variant_qc_plots_mqc.yaml'] },
+                { assert fragments['test.variant_qc_ladder_mqc.tsv'].readLines()[0] == '# id: gwasqc_variant_qc_ladder' },
+                { assert rows(fragments['test.variant_qc_ladder_mqc.tsv']).collect { fields -> fields[0..2] } == [['row', 'stratum', 'call_rate'], ['test:90%', 'test', '90'], ['test:99%', 'test', '99']] },
+                { assert rows(fragments['test.sex_check_mismatches_mqc.tsv']) == [['row', 'stratum', 'FID', 'IID', 'PEDSEX', 'SNPSEX', 'STATUS', 'F', 'YCOUNT', 'YRATE'], ['test:S2', 'test', 'S2', 'S2', '2', '1', 'PROBLEM', '0.99', '30', '1']] },
+                // Only the duplicate and first-degree pairs are tabled, and the listed duplicate member is named.
+                { assert rows(fragments['test.relatedness_pairs_mqc.tsv']) == [['row', 'stratum', 'IID1', 'IID2', 'KINSHIP', 'IBS0', 'RELATIONSHIP', 'REMOVED'], ['test:S4/S3', 'test', 'S4', 'S3', '0.5', '0', 'duplicate_or_mz', 'S4'], ['test:S5/S1', 'test', 'S5', 'S1', '0.25', '0', 'parent_offspring', 'none']] },
+                { assert fragments['test.variant_qc_plots_mqc.yaml'].readLines()[0] == 'id: gwasqc_variant_qc_plots_test' },
+                { assert fragments['test.variant_qc_plots_mqc.yaml'].text.contains('parent_id: gwasqc_variant_qc') },
+                { assert fragments['test.variant_qc_plots_mqc.yaml'].text.count('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=') == 2 },
+                { assert fragments['test.ancestry_plots_mqc.yaml'].text.contains('plot_type: image') },
+                { assert snapshot(process.out.summary, process.out.multiqc, process.out.versions_gawk, process.out.versions_coreutils).match() },
+            )
+        }
+    }
+
+    test("six samples - gate on - no ancestry") {
+
+        when {
+            process {
+                """
+                def dir = file('stratum_report_inputs_gate')
+                dir.mkdirs()
+                def write = { name, text -> def target = dir.resolve(name); target.text = text; target }
+                input[0] = [
+                    [ id:'test', ancestry:'EUR' ],
+                    write.call('input.fam', (1..6).collect { i -> "S\${i} S\${i} 0 0 1 -9" }.join('\\n') + '\\n'),
+                    write.call('input.bim', (1..10).collect { i -> "1\\tv\${i}\\t0\\t\${i * 1000}\\tA\\tG" }.join('\\n') + '\\n'),
+                    write.call('test.maf.snplist', (1..9).collect { i -> "v\${i}" }.join('\\n') + '\\n'),
+                    write.call('test.geno_exclude.txt', 'v9\\n'),
+                    write.call('test.mind_remove.txt', 'S6 S6\\n'),
+                    write.call('test.hwe_exclude.txt', 'v8\\n'),
+                    write.call('test.missingness_ladder.tsv', 'call_rate\\tmissing_threshold\\tvariants_removed\\tvariants_remaining\\tsamples_removed\\tsamples_remaining\\n90\\t0.1\\t1\\t8\\t1\\t5\\n'),
+                    write.call('test.prune.in', (1..6).collect { i -> "v\${i}" }.join('\\n') + '\\n'),
+                    write.call('test.highld_exclude.txt', 'v6\\n'),
+                    write.call('test.sex_mismatch.tsv', 'FID\\tIID\\tPEDSEX\\tSNPSEX\\tSTATUS\\tF\\tYCOUNT\\tYRATE\\n'),
+                    write.call('test.het', '#FID\\tIID\\tO(HOM)\\tE(HOM)\\tOBS_CT\\tF\\nS1\\tS1\\t10\\t10\\t20\\t0.01\\nS2\\tS2\\t10\\t10\\t20\\t-0.02\\nS3\\tS3\\t10\\t10\\t20\\t0.03\\n'),
+                    write.call('test.relatedness_pairs.tsv', 'FID1\\tIID1\\tFID2\\tIID2\\tNSNP\\tHETHET\\tIBS0\\tKINSHIP\\tDEGREE\\tRELATIONSHIP\\nS4\\tS4\\tS3\\tS3\\t5\\t0.3\\t0\\t0.5\\t0\\tduplicate_or_mz\\n'),
+                    write.call('test.relatedness_remove.txt', 'S4 S4\\n'),
+                    write.call('test.relatedness_outliers.txt', ''),
+                    [],
+                    [],
+                    write.call('test.qc.bim', (1..7).collect { i -> "1\\tv\${i}\\t0\\t\${i * 1000}\\tA\\tG" }.join('\\n') + '\\n'),
+                    write.call('test.qc.fam', (1..3).collect { i -> "S\${i} S\${i} 0 0 1 -9" }.join('\\n') + '\\n'),
+                    [],
+                    [],
+                    [],
+                    [],
+                    [],
+                ]
+                input[1] = 0.01
+                input[2] = 0.05
+                input[3] = 0.05
+                input[4] = 1e-10
+                input[5] = true
+                input[6] = true
+                """
+            }
+        }
+
+        then {
+            def summary_lines = path(process.out.summary.get(0).get(1)).readLines().collect { line -> line.split('\t', -1).toList() }
+            def summary = [summary_lines[0], summary_lines[1]].transpose().collectEntries { column, value -> [(column): value] }
+            def fragments = process.out.multiqc.get(0).get(1).collect { fragment -> file(fragment.toString()).name }
+            assertAll(
+                { assert process.success },
+                // No ancestry columns without an ancestry summary, no mismatch or pair tables without rows, no
+                // image sections without figures; the gate applied the mind, duplicate and (empty) sex lists.
+                { assert !summary.keySet().any { column -> column.startsWith('ancestry_') } },
+                { assert summary.subMap(['sex_check_problems', 'sex_removals', 'relatedness_removed', 'relatedness_removals', 'relatedness_outliers']) == [sex_check_problems: '0', sex_removals: 'applied', relatedness_removed: '1', relatedness_removals: 'applied', relatedness_outliers: '0'] },
+                { assert summary.subMap(['samples_removed_under_gate', 'samples_removed', 'samples_final']) == [samples_removed_under_gate: '2', samples_removed: '3', samples_final: '3'] },
+                { assert fragments.sort() == ['test.relatedness_pairs_mqc.tsv', 'test.variant_qc_ladder_mqc.tsv'] },
+                { assert snapshot(process.out.summary, process.out.multiqc).match() },
+            )
+        }
+    }
+
+    test("six samples - stub") {
+
+        options "-stub"
+
+        when {
+            process {
+                """
+                def dir = file('stratum_report_inputs_stub')
+                dir.mkdirs()
+                def write = { name, text -> def target = dir.resolve(name); target.text = text; target }
+                input[0] = [
+                    [ id:'test', ancestry:'EUR' ],
+                    write.call('input.fam', 'S1 S1 0 0 1 -9\\n'),
+                    write.call('input.bim', '1\\tv1\\t0\\t1000\\tA\\tG\\n'),
+                    write.call('test.maf.snplist', 'v1\\n'),
+                    write.call('test.geno_exclude.txt', ''),
+                    write.call('test.mind_remove.txt', ''),
+                    write.call('test.hwe_exclude.txt', ''),
+                    write.call('test.missingness_ladder.tsv', 'call_rate\\n'),
+                    write.call('test.prune.in', 'v1\\n'),
+                    write.call('test.highld_exclude.txt', ''),
+                    write.call('test.sex_mismatch.tsv', 'FID\\tIID\\n'),
+                    write.call('test.het', '#FID\\tIID\\tF\\n'),
+                    write.call('test.relatedness_pairs.tsv', 'FID1\\tIID1\\tFID2\\tIID2\\tKINSHIP\\tIBS0\\tRELATIONSHIP\\n'),
+                    write.call('test.relatedness_remove.txt', ''),
+                    write.call('test.relatedness_outliers.txt', ''),
+                    [],
+                    [],
+                    write.call('test.qc.bim', '1\\tv1\\t0\\t1000\\tA\\tG\\n'),
+                    write.call('test.qc.fam', 'S1 S1 0 0 1 -9\\n'),
+                    [],
+                    [],
+                    [],
+                    [],
+                    [],
+                ]
+                input[1] = 0.01
+                input[2] = 0.05
+                input[3] = 0.05
+                input[4] = 1e-10
+                input[5] = false
+                input[6] = true
+                """
+            }
+        }
+
+        then {
+            assertAll(
+                { assert process.success },
+                { assert snapshot(sanitizeOutput(process.out)).match() },
+            )
+        }
+    }
+}

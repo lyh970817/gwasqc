@@ -324,7 +324,7 @@
                 ]
             }
         ],
-        "timestamp": "2026-09-20T20:27:19.804629912",
+        "timestamp": "2026-09-21T10:02:19.479655362",
         "meta": {
             "nf-test": "0.9.5",
             "nextflow": "26.04.4"
@@ -509,6 +509,42 @@
                         "study_eur.ancestry_model.tsv:md5,aaaa4cf39bcc5ac603f4a20a9d0a2e81"
                     ]
                 ],
+                "pc1_pc2_plot": [
+                    [
+                        {
+                            "ancestry": "AFR",
+                            "id": "study_afr"
+                        },
+                        "study_afr.ancestry_pc1_pc2.pdf:md5,d41d8cd98f00b204e9800998ecf8427e",
+                        "study_afr.ancestry_pc1_pc2.png:md5,d41d8cd98f00b204e9800998ecf8427e"
+                    ],
+                    [
+                        {
+                            "ancestry": "EUR",
+                            "id": "study_eur"
+                        },
+                        "study_eur.ancestry_pc1_pc2.pdf:md5,d41d8cd98f00b204e9800998ecf8427e",
+                        "study_eur.ancestry_pc1_pc2.png:md5,d41d8cd98f00b204e9800998ecf8427e"
+                    ]
+                ],
+                "pc3_pc4_plot": [
+                    [
+                        {
+                            "ancestry": "AFR",
+                            "id": "study_afr"
+                        },
+                        "study_afr.ancestry_pc3_pc4.pdf:md5,d41d8cd98f00b204e9800998ecf8427e",
+                        "study_afr.ancestry_pc3_pc4.png:md5,d41d8cd98f00b204e9800998ecf8427e"
+                    ],
+                    [
+                        {
+                            "ancestry": "EUR",
+                            "id": "study_eur"
+                        },
+                        "study_eur.ancestry_pc3_pc4.pdf:md5,d41d8cd98f00b204e9800998ecf8427e",
+                        "study_eur.ancestry_pc3_pc4.png:md5,d41d8cd98f00b204e9800998ecf8427e"
+                    ]
+                ],
                 "pca_data": [
                     [
                         {
@@ -643,7 +679,7 @@
                 ]
             }
         ],
-        "timestamp": "2026-09-20T20:27:59.804174075",
+        "timestamp": "2026-09-21T09:35:12.107802317",
         "meta": {
             "nf-test": "0.9.5",
             "nextflow": "26.04.4"
