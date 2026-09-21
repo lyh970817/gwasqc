@@ -12,7 +12,7 @@ process PLINK2_SCORE {
 
     output:
     tuple val(meta), path("${prefix}.sscore"), emit: sscore
-    tuple val(meta), path("${prefix}.sscore.vars"), optional: true, emit: variants
+    tuple val(meta), path("${prefix}.sscore.vars"), emit: variants, optional: true
     tuple val(meta), path("${prefix}.log"), emit: log
     tuple val("${task.process}"), val("plink2"), eval("plink2 --version 2>&1 | sed 's/^PLINK v//; s/ 64.*\$//'"), emit: versions_plink2, topic: versions
 

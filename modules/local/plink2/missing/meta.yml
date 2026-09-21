@@ -65,6 +65,7 @@ output:
             e.g. `[ id:'plink_simulated' ]`
       - "${prefix}.smiss":
           type: file
+          optional: true
           description: Sample-based missing-genotype report computed over the filtered variants; absent when the `variant-only` modifier is supplied through `ext.args`
           pattern: "*.smiss"
           ontologies:
@@ -77,6 +78,7 @@ output:
             e.g. `[ id:'plink_simulated' ]`
       - "${prefix}.vmiss":
           type: file
+          optional: true
           description: Variant-based missing-genotype report computed over the filtered samples; absent when the `sample-only` modifier is supplied through `ext.args`
           pattern: "*.vmiss"
           ontologies:
@@ -121,7 +123,7 @@ maintainers:
 containers:
   conda:
     linux/amd64:
-      lock_file: "modules/nf-core/plink2/missing/.conda-lock/linux_amd64-bd-e6710830a4b7f0c6_1.txt"
+      lock_file: "modules/local/plink2/missing/.conda-lock/linux_amd64-bd-e6710830a4b7f0c6_1.txt"
   docker:
     linux/amd64:
       build_id: "bd-e6710830a4b7f0c6_1"

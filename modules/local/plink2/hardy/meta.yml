@@ -77,6 +77,7 @@ output:
             e.g. `[ id:'plink_simulated' ]`
       - "${prefix}.hardy.x":
           type: file
+          optional: true
           description: Chromosome X Hardy-Weinberg report using the Graffelman-Weir test; written only when the filtered fileset contains chromosome X variants
           pattern: "*.hardy.x"
           ontologies:
@@ -121,7 +122,7 @@ maintainers:
 containers:
   conda:
     linux/amd64:
-      lock_file: "modules/nf-core/plink2/hardy/.conda-lock/linux_amd64-bd-e6710830a4b7f0c6_1.txt"
+      lock_file: "modules/local/plink2/hardy/.conda-lock/linux_amd64-bd-e6710830a4b7f0c6_1.txt"
   docker:
     linux/amd64:
       build_id: "bd-e6710830a4b7f0c6_1"
