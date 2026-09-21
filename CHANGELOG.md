@@ -45,11 +45,11 @@ The VCZ format route is deferred to its own issue, and pre-QC batch merging is o
 - Upstream-bound PLINK 2 atomic modules, each accepting a bed/bim/fam or pgen/pvar/psam fileset and the same
   four optional filter-list slots: `plink2/writesnplist`, `plink2/missing`, `plink2/hardy`,
   `plink2/indeppairwise`, `plink2/checksex`, `plink2/het`, `plink2/makekingtable`, `plink2/makebed`,
-  `plink2/pmergelist`, `plink2/pcawts` and `plink2/score`.
+  `plink2/pmergelist`, `plink2/pcawts`, `plink2/score` and `plink2/freq`.
 - Pipeline-owned decision, plot and report modules with their plot-data tables: `geno_decisions`,
   `mind_decisions`, `hwe_decisions`, `missingness_ladder`, `missingness_plots`, `hwe_plots`, `highld_exclude`,
   `sex_check_decisions`, `heterozygosity_plots`, `relatedness_decisions`, `ancestry_harmonise`,
-  `ancestry_assign`, `stratum_report` and `qc_summary`. The missingness histograms carry a linear and a
+  `ancestry_assign`, `ancestry_reference_keep`, `stratum_report` and `qc_summary`. The missingness histograms carry a linear and a
   log-scale panel in place of the legacy fixed y-axis views, the ladder is rendered as a table image, and the
   Hardy-Weinberg histograms cover every variant and the legacy 1e-20 < P < 0.01 window.
 - Reporting: a per-stratum summary row and MultiQC custom-content fragments assembled from the published lists
@@ -60,17 +60,40 @@ The VCZ format route is deferred to its own issue, and pre-QC batch merging is o
 - Parameters: `input`, `outdir`; `genome_build`, `high_ld_regions`, `reference_panel`, `reference_pop_data`;
   `maf`, `geno`, `mind`, `hwe`; `ld_window_size`, `ld_step_size`, `ld_r2`; `sex_check_max_female_xf`,
   `sex_check_min_male_xf`, `sex_check_max_female_ycount`, `sex_check_min_male_ycount`, `king_table_filter`,
-  `relatedness_indiv_sd`, `relatedness_po_ibs0_max`, `apply_sample_removals`; `skip_ancestry`,
+  `relatedness_indiv_sd`, `relatedness_po_ibs0_max`, `apply_sample_removals`, `sample_qc_marker_set`,
+  `small_n_threshold`, `ld_min_retained_fraction`; `skip_ancestry`,
   `ancestry_ld_window_size`, `ancestry_ld_step_size`, `ancestry_ld_r2`, `ancestry_n_pcs`,
   `ancestry_prob_threshold`, `ancestry_sd_filter`, `ancestry_remove_mismatched`.
-- Synthetic two-stratum fixture on the `gwasqc` branch of `nf-core/test-datasets`, with planted sex mismatches,
-  a duplicate pair, parent-offspring and full-sibling pairs, high-missingness samples, Hardy-Weinberg
-  violations, a long-range LD block, strand-flipped and strand-ambiguous variants, known-ancestry outliers and
-  a labelled reference panel. `conf/test_fixtures.config` resolves its relative fileset paths before
-  validation, and the pipeline tests assert every planted defect by name.
+- Synthetic three-stratum fixture on the `gwasqc` branch of `nf-core/test-datasets`: two 125-sample strata
+  with planted sex mismatches, a duplicate pair, parent-offspring and full-sibling pairs, high-missingness
+  samples, Hardy-Weinberg violations, a long-range LD block, strand-flipped and strand-ambiguous variants and
+  known-ancestry outliers, a 12-sample stratum with one sex mismatch, one duplicate pair and a sample missing
+  one call at five variants, and a labelled reference panel. `conf/test_fixtures.config` resolves its relative
+  fileset paths before validation, and the pipeline tests assert every planted defect by name.
+- Per-stratum marker-set mode of the sample checks (`sample_qc_marker_set`: `auto`, `study` or `shared`, with
+  `small_n_threshold`): a stratum below the threshold after the mind filter, or every stratum under a forced
+  `shared`, runs its heterozygosity and KING relatedness reports on the harmonised, reference-pruned markers of
+  the ancestry route, with the allele frequencies of the reference samples of its own super-population as the
+  heterozygosity baseline (`--read-freq`) and those samples' own report drawn beneath the study's, and its sex
+  check on every QC-passing chromosome X and Y variant unpruned; no study-side `--indep-pairwise` runs. The
+  mode and the marker count are recorded per stratum in `gwasqc_summary.tsv`
+  (`sample_qc_marker_set`, `sample_qc_markers`, `sample_qc_note`) and in a MultiQC section, and a `study`-mode
+  stratum whose pruning kept fewer than `ld_min_retained_fraction` of its QC'd variants is noted.
+- Upstream-bound `plink2/freq` atom (`--freq`, with the `counts` modifier through `ext.args2`) and an optional
+  `--read-freq` table on `plink2/het`; pipeline-owned `ancestry_reference_keep`, which lists the reference
+  samples of a stratum's super-population from the population table as a `--keep` list.
 
 ### Changed
 
+- The heterozygosity histogram data carries a `source` column (`study`, and `reference` in the shared marker-set
+  mode) with both sources binned over one range; the `shared`-mode reference keep list, `.afreq` table and
+  `.het` report are published beside the study's report under the stratum's `heterozygosity` stage. The
+  `variants_ld_pruned_*`, `variants_highld_excluded` and `variants_sample_checks` summary columns read `NA`
+  for a stratum in the shared mode, and its `ld_pruning` directory is absent.
+- plink2's refusal to run `--indep-pairwise`, `--check-sex` and `--het` below 50 samples is lifted where the
+  marker-set mode makes the stratum's own estimates the user's choice: `--bad-ld` on the study-side pruning
+  and `--bad-freqs` on the sex check and on the `study`-mode heterozygosity report, through `ext.args`; the
+  `shared`-mode heterozygosity report reads the reference frequencies instead.
 - Publication policy: the published tree holds the QC'd fileset, the decision lists, the statistics tables,
   the plot-data tables and figures, the ladder and summary tables, the MultiQC report and the pipeline
   information. The pruned-out list, the raw KING `.kin0` table and the `--score` projections are no longer
