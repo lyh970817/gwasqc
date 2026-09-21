@@ -47,7 +47,7 @@ input:
           - edam: "http://edamontology.org/format_3475" # TSV
   - pop_data:
       type: file
-      description: Tab-separated table with a header naming FID, IID, pop and super_pop; every scored reference sample must appear in it, and the super_pop labels are the groups the classifier learns
+      description: Tab-separated table with a header naming IID, pop and super_pop, and FID when the score tables carry one; every scored reference sample must appear in it, and the super_pop labels are the groups the classifier learns. The module stops on a missing IID, pop or super_pop column
       pattern: "*.tsv"
       ontologies:
         - edam: "http://edamontology.org/format_3475" # TSV
@@ -94,7 +94,8 @@ output:
           description: Metadata map propagated from input
       - "${prefix}.ancestry_*.keep":
           type: file
-          description: One file per super-population of the population data, named after it, listing the study samples assigned to it as space-separated FID IID pairs, or bare IIDs, for plink2 --keep; empty when none is
+          optional: true
+          description: One file per super-population present among the scored, labelled reference samples, in sorted label order and named after the label, listing the study samples assigned to it as space-separated FID IID pairs, or bare IIDs, for plink2 --keep; empty when none is, and no file for the unassigned
           pattern: "*.ancestry_*.keep"
           ontologies:
             - edam: "http://edamontology.org/format_2330" # Text

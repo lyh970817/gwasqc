@@ -53,8 +53,8 @@ make_sample_key <- function(table, id_columns) {
 reference <- read_plink2_report(reference_file)
 study <- read_plink2_report(study_file)
 pop <- fread(pop_file, header = TRUE)
-if (!all(c("IID", "super_pop") %in% names(pop))) {
-    stop("the population data must carry IID and super_pop columns", call. = FALSE)
+if (!all(c("IID", "pop", "super_pop") %in% names(pop))) {
+    stop("the population data must carry IID, pop and super_pop columns", call. = FALSE)
 }
 
 # The score columns are PC<k>_AVG (or _SUM); both reports must carry the same set, in the same order.
