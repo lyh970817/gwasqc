@@ -13,9 +13,12 @@
 #   <prefix>.relatedness_hist.tsv      kinship histogram counts over the reported pairs, the data behind the plot
 #   <prefix>.relatedness_hist.pdf/.png the histogram; the PDF adds a page zoomed to a count of 100
 #
-# Pairs are classified on KING's inference boundaries (Manichaikul et al. 2010): kinship above 2^-1.5 (0.354)
-# is a duplicate or MZ pair, above 2^-2.5 (0.177) first degree, above 2^-3.5 (0.0884) second, above 2^-4.5
-# (0.0442) third. A parent-offspring pair shares one allele at every locus, so its IBS0 is bounded by the
+# Pairs are classified on KING's inference boundaries (Manichaikul et al. 2010), each degree's lower bound
+# inclusive: kinship at or above 2^-1.5 (0.354) is a duplicate or MZ pair, at or above 2^-2.5 (0.177) first
+# degree, at or above 2^-3.5 (0.0884) second, at or above 2^-4.5 (0.0442) third. KING's table gives the degrees
+# as closed intervals from these bounds, and plink2's --king-table-filter keeps a pair at exactly the filter
+# value, so a pair reported at the third-degree bound is third-degree rather than unrelated. A parent-offspring
+# pair shares one allele at every locus, so its IBS0 is bounded by the
 # genotyping error rate; full sibs are IBD0 over a quarter of the genome and show IBS0 well above it, and the
 # threshold between them is an explicit input. The duplicate rule automates the legacy manual instruction
 # ("remove the one with the higher F_MISS"); a tie drops the member whose ID sorts later. The per-individual
@@ -52,14 +55,25 @@ make_sample_key <- function(table, fid_column, iid_column) {
 kin <- read_plink2_report(kin0_file)
 smiss <- read_plink2_report(smiss_file)
 
-# Pair classification.
+# plink2 names the pair ID columns IID1/IID2, with FID1/FID2 beside them when the fileset carries family IDs;
+# ID1/ID2 is accepted as well, for a report whose id colset prints the bare form. A missing column is a
+# failure, not an empty result: an all-NA classification would write an empty removal list with exit 0.
+pair_id_columns <- if (all(c("IID1", "IID2") %in% names(kin))) c("IID1", "IID2") else c("ID1", "ID2")
+if (!all(c(pair_id_columns, "IBS0", "KINSHIP") %in% names(kin))) {
+    stop(sprintf("the kinship report must carry IID1/IID2 (or ID1/ID2), IBS0 and KINSHIP columns; found: %s", paste(names(kin), collapse = ", ")), call. = FALSE)
+}
+if (!all(c("IID", "F_MISS") %in% names(smiss))) {
+    stop(sprintf("the sample missingness report must carry IID and F_MISS columns; found: %s", paste(names(smiss), collapse = ", ")), call. = FALSE)
+}
+
+# Pair classification, each degree's lower bound inclusive.
 kinship <- as.numeric(kin[["KINSHIP"]])
 ibs0 <- as.numeric(kin[["IBS0"]])
 degree <- fcase(
-    !is.na(kinship) & kinship > 0.354, 0L,
-    !is.na(kinship) & kinship > 0.177, 1L,
-    !is.na(kinship) & kinship > 0.0884, 2L,
-    !is.na(kinship) & kinship > 0.0442, 3L,
+    !is.na(kinship) & kinship >= 0.354, 0L,
+    !is.na(kinship) & kinship >= 0.177, 1L,
+    !is.na(kinship) & kinship >= 0.0884, 2L,
+    !is.na(kinship) & kinship >= 0.0442, 3L,
     default = NA_integer_
 )
 relationship <- fcase(
@@ -88,8 +102,8 @@ if (nzchar(mind_remove_file)) {
 samples <- samples[!(sample_key %in% removed)]
 n_samples <- nrow(samples)
 
-pair_key1 <- make_sample_key(kin, "FID1", "IID1")
-pair_key2 <- make_sample_key(kin, "FID2", "IID2")
+pair_key1 <- make_sample_key(kin, "FID1", pair_id_columns[[1]])
+pair_key2 <- make_sample_key(kin, "FID2", pair_id_columns[[2]])
 
 # Duplicate/MZ removals: the member with the higher missing-call rate, once per sample.
 duplicates <- data.table(key1 = pair_key1, key2 = pair_key2, kinship = kinship)[relationship == "duplicate_or_mz"]

@@ -38,13 +38,22 @@ exceeds <- function(rates, threshold) {
     !is.na(rates) & rates > threshold
 }
 
-variant_rates <- as.numeric(read_plink2_report(vmiss_file)[["F_MISS"]])
+# A missing column is a failure, not an empty ladder: indexing an absent name would count nothing with exit 0.
+missing_rates <- function(path) {
+    report <- read_plink2_report(path)
+    if (!"F_MISS" %in% names(report)) {
+        stop(sprintf("the missingness report %s must carry an F_MISS column; found: %s", path, paste(names(report), collapse = ", ")), call. = FALSE)
+    }
+    as.numeric(report[["F_MISS"]])
+}
+
+variant_rates <- missing_rates(vmiss_file)
 
 rows <- lapply(strsplit(rungs, " ", fixed = TRUE)[[1]], function(rung) {
     fields <- strsplit(rung, "=", fixed = TRUE)[[1]]
     call_rate <- as.integer(fields[[1]])
     threshold <- round(1 - call_rate / 100, 2)
-    sample_rates <- as.numeric(read_plink2_report(fields[[2]])[["F_MISS"]])
+    sample_rates <- missing_rates(fields[[2]])
     variants_removed <- sum(exceeds(variant_rates, threshold))
     samples_removed <- sum(exceeds(sample_rates, threshold))
     data.frame(

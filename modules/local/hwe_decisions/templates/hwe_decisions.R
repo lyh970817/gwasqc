@@ -31,13 +31,19 @@ read_plink2_report <- function(path) {
     report
 }
 
-failing_ids <- function(report) {
+# A missing column is a failure, not an empty result: indexing an absent name would list nothing with exit 0.
+# plink2 renames P to MIDP under the `midp` modifier of --hardy, which this module does not read.
+failing_ids <- function(path) {
+    report <- read_plink2_report(path)
+    if (!all(c("ID", "P") %in% names(report))) {
+        stop(sprintf("the Hardy-Weinberg report %s must carry ID and P columns; found: %s (plink2 writes MIDP instead of P under the midp modifier, which is not supported)", path, paste(names(report), collapse = ", ")), call. = FALSE)
+    }
     p_values <- as.numeric(report[["P"]])
     report[["ID"]][!is.na(p_values) & p_values < hwe_threshold]
 }
 
 report_files <- c(hardy_file, if (nzchar(hardy_x_file)) hardy_x_file else character(0))
-excluded <- unique(unlist(lapply(report_files, function(path) failing_ids(read_plink2_report(path)))))
+excluded <- unique(unlist(lapply(report_files, failing_ids)))
 writeLines(excluded, paste0(prefix, ".hwe_exclude.txt"))
 
 r_version <- paste(R.version[["major"]], R.version[["minor"]], sep = ".")

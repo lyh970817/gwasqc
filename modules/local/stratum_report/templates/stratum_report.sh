@@ -294,13 +294,16 @@ EOF
             NR == 1 {
                 sub(/^#/, "", $1)
                 for (i = 1; i <= NF; i++) index_of[$i] = i
+                # The pair ID columns are IID1/IID2, or ID1/ID2 in the bare id colset the decision module also accepts.
+                iid1 = ("IID1" in index_of) ? index_of["IID1"] : index_of["ID1"]
+                iid2 = ("IID2" in index_of) ? index_of["IID2"] : index_of["ID2"]
                 print "row", "stratum", "IID1", "IID2", "KINSHIP", "IBS0", "RELATIONSHIP", "REMOVED"
                 next
             }
             $index_of["RELATIONSHIP"] ~ /^(duplicate_or_mz|parent_offspring|full_sibling)$/ {
-                first = key(index_of["FID1"], index_of["IID1"]); second = key(index_of["FID2"], index_of["IID2"])
-                listed = (first in removed) ? $index_of["IID1"] : ((second in removed) ? $index_of["IID2"] : "none")
-                print stratum ":" $index_of["IID1"] "/" $index_of["IID2"], stratum, $index_of["IID1"], $index_of["IID2"], $index_of["KINSHIP"], $index_of["IBS0"], $index_of["RELATIONSHIP"], listed
+                first = key(index_of["FID1"], iid1); second = key(index_of["FID2"], iid2)
+                listed = (first in removed) ? $iid1 : ((second in removed) ? $iid2 : "none")
+                print stratum ":" $iid1 "/" $iid2, stratum, $iid1, $iid2, $index_of["KINSHIP"], $index_of["IBS0"], $index_of["RELATIONSHIP"], listed
             }
         ' "$relatedness_pairs"
     } > "${prefix}.relatedness_pairs_mqc.tsv"

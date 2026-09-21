@@ -29,7 +29,7 @@ input:
             - id (string): Stratum identifier, used as the output prefix.
     - kin0:
         type: file
-        description: plink2 --make-king-table report with IID1, IID2, IBS0 and KINSHIP columns, optionally FID1 and FID2; pairs below a --king-table-filter are absent and count as unrelated
+        description: plink2 --make-king-table report with IID1 and IID2 (or ID1 and ID2), IBS0 and KINSHIP columns, optionally FID1 and FID2; the module stops on a missing column. Pairs below a --king-table-filter are absent and count as unrelated; a pair at exactly the filter value is classified, because every degree's lower bound (0.354, 0.177, 0.0884, 0.0442) is inclusive
         pattern: "*.kin0"
         ontologies:
           - edam: "http://edamontology.org/format_3475" # TSV
@@ -58,7 +58,7 @@ output:
           description: Metadata map propagated from input
       - "${prefix}.relatedness_pairs.tsv":
           type: file
-          description: The kinship report with DEGREE (0 duplicate/MZ, 1, 2, 3, empty below third degree) and RELATIONSHIP (duplicate_or_mz, parent_offspring, full_sibling, second_degree, third_degree, unrelated) added per pair
+          description: The kinship report with its own columns passed through unchanged and DEGREE (0 duplicate/MZ at kinship >= 0.354, 1 at >= 0.177, 2 at >= 0.0884, 3 at >= 0.0442, empty below) and RELATIONSHIP (duplicate_or_mz, parent_offspring, full_sibling, second_degree, third_degree, unrelated) added per pair
           pattern: "*.relatedness_pairs.tsv"
           ontologies:
             - edam: "http://edamontology.org/format_3475" # TSV

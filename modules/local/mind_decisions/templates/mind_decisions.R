@@ -30,6 +30,10 @@ read_plink2_report <- function(path) {
 }
 
 smiss <- read_plink2_report(smiss_file)
+# A missing column is a failure, not an empty result: indexing an absent name would list nothing with exit 0.
+if (!all(c("IID", "F_MISS") %in% names(smiss))) {
+    stop(sprintf("the sample missingness report must carry IID and F_MISS columns; found: %s", paste(names(smiss), collapse = ", ")), call. = FALSE)
+}
 sample_rates <- as.numeric(smiss[["F_MISS"]])
 
 # plink2 `--remove` reads FID IID pairs, or bare IIDs when the report carries no FID column.

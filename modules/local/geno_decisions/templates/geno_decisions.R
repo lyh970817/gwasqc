@@ -29,6 +29,10 @@ read_plink2_report <- function(path) {
 }
 
 vmiss <- read_plink2_report(vmiss_file)
+# A missing column is a failure, not an empty result: indexing an absent name would list nothing with exit 0.
+if (!all(c("ID", "F_MISS") %in% names(vmiss))) {
+    stop(sprintf("the variant missingness report must carry ID and F_MISS columns; found: %s", paste(names(vmiss), collapse = ", ")), call. = FALSE)
+}
 variant_rates <- as.numeric(vmiss[["F_MISS"]])
 writeLines(vmiss[["ID"]][!is.na(variant_rates) & variant_rates > geno_threshold], paste0(prefix, ".geno_exclude.txt"))
 

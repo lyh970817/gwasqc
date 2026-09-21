@@ -71,6 +71,27 @@ nextflow_process {
         }
     }
 
+    test("synthetic - report without F_MISS fails") {
+
+        when {
+            process {
+                """
+                // A missing required column is a failure, never an empty exclusion list.
+                def report = file("${workDir}/no_rate.vmiss")
+                report.text = '#CHROM\\tID\\tMISSING_CT\\tOBS_CT\\n1\\trs1\\t0\\t125\\n'
+                input[0] = [ [ id:'no_rate' ], report, 0.05 ]
+                """
+            }
+        }
+
+        then {
+            assertAll(
+                { assert process.failed },
+                { assert process.errorReport.contains('must carry ID and F_MISS columns') },
+            )
+        }
+    }
+
     test("study_eur - stub") {
 
         options "-stub"

@@ -96,6 +96,27 @@ nextflow_process {
         }
     }
 
+    test("study_eur - rung report without F_MISS fails") {
+
+        when {
+            process {
+                """
+                // A missing required column in any rung's report is a failure, never a rung of zeros.
+                def report = file("${workDir}/no_rate.ladder90.smiss")
+                report.text = '#FID\\tIID\\tMISSING_CT\\tOBS_CT\\nS1\\tS1\\t0\\t3962\\n'
+                input[0] = PLINK2_MISSING.out.vmiss.map { meta, vmiss -> [meta, vmiss, [90], [report]] }
+                """
+            }
+        }
+
+        then {
+            assertAll(
+                { assert process.failed },
+                { assert process.errorReport.contains('must carry an F_MISS column') },
+            )
+        }
+    }
+
     test("study_eur - stub") {
 
         options "-stub"

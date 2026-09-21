@@ -62,10 +62,10 @@
                 ]
             }
         ],
-        "timestamp": "2026-09-20T15:21:56.429557038",
+        "timestamp": "2026-09-21T11:13:22.461565699",
         "meta": {
             "nf-test": "0.9.5",
-            "nextflow": "26.04.4"
+            "nextflow": "26.04.6"
         }
     },
     "study_eur - duplicate member removed upstream": {
@@ -159,6 +159,47 @@
         "meta": {
             "nf-test": "0.9.5",
             "nextflow": "26.04.4"
+        }
+    },
+    "synthetic - bare ID1/ID2 columns and a pair at the filter bound": {
+        "content": [
+            [
+                [
+                    {
+                        "id": "bare"
+                    },
+                    "bare.relatedness_pairs.tsv:md5,fd0afe5860bcd373d4dc7d229f1ffe98"
+                ]
+            ],
+            [
+                [
+                    {
+                        "id": "bare"
+                    },
+                    "bare.relatedness_indiv.tsv:md5,e7897fc9614781f068bab699d34c3314"
+                ]
+            ],
+            [
+                [
+                    {
+                        "id": "bare"
+                    },
+                    "bare.relatedness_remove.txt:md5,59f571b281788ae897418f66c07d2f9c"
+                ]
+            ],
+            [
+                [
+                    {
+                        "id": "bare"
+                    },
+                    "bare.relatedness_outliers.txt:md5,d41d8cd98f00b204e9800998ecf8427e"
+                ]
+            ]
+        ],
+        "timestamp": "2026-09-21T11:06:41.040742308",
+        "meta": {
+            "nf-test": "0.9.5",
+            "nextflow": "26.04.6"
         }
     }
 }

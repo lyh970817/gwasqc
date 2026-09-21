@@ -114,6 +114,76 @@ nextflow_process {
         }
     }
 
+    test("synthetic - bare ID1/ID2 columns and a pair at the filter bound") {
+
+        when {
+            process {
+                """
+                // A report in the bare id colset, without family IDs, with a duplicate pair and a pair at
+                // exactly the third-degree bound that --king-table-filter keeps.
+                def kin0 = file("${workDir}/bare.kin0")
+                kin0.text = [
+                    ['#ID1', 'ID2', 'NSNP', 'HETHET', 'IBS0', 'KINSHIP'].join('\\t'),
+                    ['S2', 'S1', '3600', '0.35', '0', '0.5'].join('\\t'),
+                    ['S3', 'S1', '3600', '0.2', '0.02', '0.0442'].join('\\t'),
+                ].join('\\n') + '\\n'
+                def smiss = file("${workDir}/bare.smiss")
+                smiss.text = [
+                    ['#IID', 'MISSING_CT', 'OBS_CT', 'F_MISS'].join('\\t'),
+                    ['S1', '10', '3600', '0.0028'].join('\\t'),
+                    ['S2', '20', '3600', '0.0056'].join('\\t'),
+                    ['S3', '0', '3600', '0'].join('\\t'),
+                    ['S4', '0', '3600', '0'].join('\\t'),
+                ].join('\\n') + '\\n'
+                input[0] = [ [ id:'bare' ], kin0, smiss, [] ]
+                input[1] = 3
+                input[2] = 0.005
+                """
+            }
+        }
+
+        then {
+            def pairs = path(process.out.pairs.get(0).get(1)).readLines().collect { line -> line.split('\t').toList() }
+            def indiv = path(process.out.indiv.get(0).get(1)).readLines().collect { line -> line.split('\t').toList() }
+            assertAll(
+                { assert process.success },
+                // The report's own columns pass through unchanged, whatever the id colset names them.
+                { assert pairs[0] == ['ID1', 'ID2', 'NSNP', 'HETHET', 'IBS0', 'KINSHIP', 'DEGREE', 'RELATIONSHIP'] },
+                { assert pairs[1][6..7] == ['0', 'duplicate_or_mz'] },
+                // A pair reported at exactly the third-degree bound is third-degree, not unrelated.
+                { assert pairs[2][6..7] == ['3', 'third_degree'] },
+                // Bare IIDs key the missingness report: S2 carries the higher rate and is listed.
+                { assert path(process.out.sample_remove.get(0).get(1)).readLines() == ['S2'] },
+                { assert indiv[0] == ['IID', 'N_PAIRS_REPORTED', 'MEAN_KINSHIP', 'OUTLIER'] },
+                { assert indiv.drop(1).collect { fields -> fields[0..1] } == [['S1', '2'], ['S2', '1'], ['S3', '1'], ['S4', '0']] },
+                { assert snapshot(process.out.pairs, process.out.indiv, process.out.sample_remove, process.out.outliers).match() },
+            )
+        }
+    }
+
+    test("synthetic - report without KINSHIP fails") {
+
+        when {
+            process {
+                """
+                // A missing required column is a failure, never an all-unrelated classification.
+                def kin0 = file("${workDir}/no_kinship.kin0")
+                kin0.text = '#FID1\\tIID1\\tFID2\\tIID2\\tNSNP\\tHETHET\\tIBS0\\nS2\\tS2\\tS1\\tS1\\t3600\\t0.35\\t0\\n'
+                input[0] = PLINK2_MISSING.out.smiss.map { meta, smiss -> [meta, kin0, smiss, []] }
+                input[1] = 3
+                input[2] = 0.005
+                """
+            }
+        }
+
+        then {
+            assertAll(
+                { assert process.failed },
+                { assert process.errorReport.contains('must carry IID1/IID2 (or ID1/ID2), IBS0 and KINSHIP columns') },
+            )
+        }
+    }
+
     test("study_eur - stub") {
 
         options "-stub"
