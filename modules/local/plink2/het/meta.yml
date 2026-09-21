@@ -56,6 +56,12 @@ input:
         description: Optional sample ID list file(s) passed to `--remove`; plink2 drops the union of the listed samples; use `[]` when absent
         pattern: "*"
         ontologies: []
+    - read_freq:
+        type: file
+        description: Optional allele-frequency table passed to `--read-freq`, from plink2 `--freq` (`.afreq`), `--freq counts` (`.acount`) or `--geno-counts`, or a PLINK 1 `.frq`/`.frqx`; when given, the expected homozygosity and F are computed against these frequencies instead of the sample's own, and a variant absent from the table silently falls back to the sample's own frequency (verified on 2.0.0a.6.9); use `[]` when absent
+        pattern: "*.{afreq,acount,gcount,frq,frqx}"
+        ontologies:
+          - edam: "http://edamontology.org/format_3475" # TSV
 output:
   het:
     - - meta:
@@ -65,7 +71,7 @@ output:
             e.g. `[ id:'plink_simulated' ]`
       - "${prefix}.het":
           type: file
-          description: Per-sample heterozygosity report with the observed and expected homozygous counts, the number of variants observed and the inbreeding coefficient F, computed over the autosomal variants that pass the filters
+          description: Per-sample heterozygosity report with the observed and expected homozygous counts, the number of variants observed and the inbreeding coefficient F, computed over the autosomal variants that pass the filters, against the loaded allele frequencies when a table is given and the sample's own otherwise
           pattern: "*.het"
           ontologies:
             - edam: "http://edamontology.org/format_3475" # TSV

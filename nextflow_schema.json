@@ -136,7 +136,7 @@
             "title": "LD pruning options",
             "type": "object",
             "fa_icon": "fas fa-cut",
-            "description": "Parameters of the plink2 `--indep-pairwise` run that selects the variant set of the sex check, heterozygosity and relatedness reports.",
+            "description": "Parameters of the plink2 `--indep-pairwise` run that selects the variant set of the sex check, heterozygosity and relatedness reports of a stratum in the `study` marker-set mode, and the pruning-collapse warning.",
             "properties": {
                 "ld_window_size": {
                     "type": "integer",
@@ -159,6 +159,15 @@
                     "maximum": 1,
                     "description": "Pairwise r-squared above which one variant of a pair is pruned.",
                     "fa_icon": "fas fa-percentage"
+                },
+                "ld_min_retained_fraction": {
+                    "type": "number",
+                    "default": 0.05,
+                    "minimum": 0,
+                    "maximum": 1,
+                    "description": "Fraction of the QC'd variants below which `study`-mode LD pruning is reported as collapsed: the stratum's summary row and the MultiQC marker-set section then carry a note recommending the `shared` marker set.",
+                    "help_text": "Pairwise r-squared over a few dozen samples has an inflated upper tail, so `--indep-pairwise` on a small stratum can discard nearly every variant; an 11-sample stratum of the legacy cohort kept 0.5 %. The note is informational and nothing is re-decided.",
+                    "fa_icon": "fas fa-exclamation-triangle"
                 }
             }
         },
@@ -166,8 +175,24 @@
             "title": "Sample QC options",
             "type": "object",
             "fa_icon": "fas fa-users",
-            "description": "Thresholds of the sex check and relatedness decisions, and whether their removal lists are applied to the QC'd fileset.",
+            "description": "The marker set of the sample checks, the thresholds of the sex check and relatedness decisions, and whether their removal lists are applied to the QC'd fileset.",
             "properties": {
+                "sample_qc_marker_set": {
+                    "type": "string",
+                    "default": "auto",
+                    "enum": ["auto", "study", "shared"],
+                    "description": "Which variant set the sex check, heterozygosity and relatedness reports of each stratum run on: `study`, the stratum's own LD-pruned QC'd variants; `shared`, the harmonised, reference-pruned autosomal markers of the ancestry route, with ancestry-matched reference allele frequencies as the heterozygosity baseline; or `auto`, which chooses `shared` for a stratum with fewer than `--small_n_threshold` samples after the mind filter and `study` otherwise.",
+                    "help_text": "In `shared` mode no study-side `--indep-pairwise` runs: the heterozygosity report is computed on the study and on the ancestry-matched reference samples over the shared markers with `--read-freq` of the matched reference frequencies, KING relatedness runs on the shared markers, and the sex check runs on every QC-passing chromosome X and Y variant without pruning, because the reference carries no chromosome X. `shared` needs `--reference_panel` and `--reference_pop_data`; with `--skip_ancestry` it is an error, as is a stratum that `auto` would send to `shared`. The mode chosen for each stratum is recorded in `gwasqc_summary.tsv` and the MultiQC report.",
+                    "fa_icon": "fas fa-project-diagram"
+                },
+                "small_n_threshold": {
+                    "type": "integer",
+                    "default": 100,
+                    "minimum": 1,
+                    "description": "Under `--sample_qc_marker_set auto`, a stratum with fewer than this many samples after the mind filter uses the `shared` marker set; every other stratum uses `study`.",
+                    "help_text": "The per-stratum sample count after the mind filter is the input `.fam` line count minus the lines of the mind removal list; the comparison is strict (fewer than).",
+                    "fa_icon": "fas fa-users"
+                },
                 "sex_check_max_female_xf": {
                     "type": "number",
                     "default": 0.2,

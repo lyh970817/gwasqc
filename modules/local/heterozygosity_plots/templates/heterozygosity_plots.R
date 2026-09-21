@@ -1,10 +1,12 @@
 #!/usr/bin/env Rscript
 # Draw the heterozygosity report of one stratum: a histogram of the plink2 `--het` inbreeding coefficient and a
-# scatter of it against the `--check-sex` chromosome X F of the same samples.
+# scatter of it against the `--check-sex` chromosome X F of the same samples. When a reference `--het` report is
+# given, the histogram draws the reference distribution in grey beneath the study's, on one axis, so that the
+# study can be read against the population it was compared with.
 #
 # Files written:
 #
-#   <prefix>.het_hist.tsv               F histogram counts, the data behind the histogram
+#   <prefix>.het_hist.tsv               F histogram counts per source, the data behind the histogram
 #   <prefix>.het_hist.pdf/.png          the histogram
 #   <prefix>.het_sex_scatter.tsv        FID IID PEDSEX F_HET F_SEX per sample present in both reports
 #   <prefix>.het_sex_scatter.pdf/.png   the scatter, coloured by recorded sex
@@ -20,6 +22,7 @@ suppressPackageStartupMessages({
 
 het_file <- "${het}"
 sexcheck_file <- "${sexcheck}"
+reference_het_file <- "${reference_het_file}"
 prefix <- "${prefix}"
 process_name <- "${task.process}"
 
@@ -41,15 +44,29 @@ setnames(het, "F", "F_HET")
 setnames(sexcheck, "F", "F_SEX")
 id_columns <- intersect(intersect(c("FID", "IID"), names(het)), names(sexcheck))
 
+f_reference <- NULL
+if (nzchar(reference_het_file)) {
+    reference_het <- read_plink2_report(reference_het_file)
+    if (!"F" %in% names(reference_het)) {
+        stop("the reference heterozygosity report must carry an F column", call. = FALSE)
+    }
+    f_reference <- as.numeric(reference_het[["F"]])
+}
+
 sex_labels <- c("2" = "female (2)", "1" = "male (1)", "0" = "unknown (0)")
-histogram_bins <- function(values, n_bins = 100) {
+# One set of breaks over the range of every source, so that the sources share an axis; a degenerate range
+# falls back to a fixed window around zero.
+histogram_breaks <- function(values, n_bins = 100) {
     value_range <- range(values, na.rm = TRUE)
     if (!all(is.finite(value_range)) || diff(value_range) == 0) {
         value_range <- c(-0.5, 0.5)
     }
-    breaks <- seq(value_range[[1]], value_range[[2]], length.out = n_bins + 1)
+    seq(value_range[[1]], value_range[[2]], length.out = n_bins + 1)
+}
+histogram_bins <- function(values, breaks, source) {
+    n_bins <- length(breaks) - 1
     counts <- tabulate(findInterval(values[!is.na(values)], breaks, rightmost.closed = TRUE), nbins = n_bins)
-    data.table(bin_start = head(breaks, -1), bin_end = tail(breaks, -1), count = counts)
+    data.table(source = source, bin_start = head(breaks, -1), bin_end = tail(breaks, -1), count = counts)
 }
 write_plot <- function(plot, stem) {
     pdf(paste0(stem, ".pdf"), width = 8, height = 5)
@@ -60,14 +77,25 @@ write_plot <- function(plot, stem) {
     invisible(dev.off())
 }
 
-# Histogram of the heterozygosity F over 100 bins, as the legacy het_graphs.r drew Fhat2.
-f_het <- as.numeric(het[["F_HET"]])
-bins <- histogram_bins(f_het)
+# Histogram of the heterozygosity F over 100 bins, as the legacy het_graphs.r drew Fhat2; the study rows come
+# first and the reference rows, when there is a reference, follow over the same bins.
+f_study <- as.numeric(het[["F_HET"]])
+breaks <- histogram_breaks(c(f_study, f_reference))
+bins <- histogram_bins(f_study, breaks, "study")
+if (!is.null(f_reference)) {
+    bins <- rbind(bins, histogram_bins(f_reference, breaks, "reference"))
+}
 fwrite(bins, paste0(prefix, ".het_hist.tsv"), sep = "\\t")
-histogram <- ggplot(bins[count > 0], aes(xmin = bin_start, xmax = bin_end, ymin = 0, ymax = count)) +
-    geom_rect(fill = "grey40") +
-    labs(title = paste(prefix, "heterozygosity"), x = "inbreeding coefficient F (--het)", y = "samples") +
+source_fills <- c(reference = "grey70", study = "darkorange")
+histogram <- ggplot(mapping = aes(xmin = bin_start, xmax = bin_end, ymin = 0, ymax = count, fill = source)) +
+    scale_fill_manual(values = source_fills, breaks = names(source_fills), drop = FALSE) +
+    labs(title = paste(prefix, "heterozygosity"), x = "inbreeding coefficient F (--het)", y = "samples", fill = NULL) +
     theme_bw()
+if (!is.null(f_reference)) {
+    # The reference is drawn first and the study above it, outlined so that it stays visible where the two overlap.
+    histogram <- histogram + geom_rect(data = bins[source == "reference" & count > 0], colour = NA)
+}
+histogram <- histogram + geom_rect(data = bins[source == "study" & count > 0], colour = "grey20", alpha = 0.85)
 write_plot(histogram, paste0(prefix, ".het_hist"))
 
 # Scatter of heterozygosity F against sex-check F, joined on the sample ID columns only.

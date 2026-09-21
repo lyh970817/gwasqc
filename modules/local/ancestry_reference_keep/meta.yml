@@ -1,0 +1,77 @@
+name: ancestry_reference_keep
+description: List the reference-panel samples of one stratum's ancestry as a plink2 --keep list, from the population table, so that the shared-marker sample QC measures the study against ancestry-matched reference frequencies
+keywords:
+  - ancestry
+  - reference panel
+  - genotype
+  - quality control
+tools:
+  - gawk:
+      description: GNU awk, the text-processing language used to select the rows of the population table
+      homepage: https://www.gnu.org/software/gawk/
+      documentation: https://www.gnu.org/software/gawk/manual/
+      licence: ["GPL-3.0-or-later"]
+input:
+  - meta:
+      type: map
+      description: |
+        Groovy map describing the stratum.
+        Expected keys:
+          - id (string): Stratum identifier, used as the output prefix.
+          - ancestry (string): The stratum's ancestry label; the reference samples whose super_pop equals it are listed.
+  - reference_pop_data:
+      type: file
+      description: Tab-separated table with a header naming FID, IID and super_pop, one row per reference sample; the module stops on a missing column, and on a label that matches no row
+      pattern: "*.tsv"
+      ontologies:
+        - edam: "http://edamontology.org/format_3475" # TSV
+output:
+  sample_keep:
+    - - meta:
+          type: map
+          description: Metadata map propagated from input
+      - "${prefix}.reference_keep.txt":
+          type: file
+          description: The reference samples whose super_pop equals the stratum's ancestry, one FID IID pair per line, blank-separated, no header, for plink2 --keep; never empty, because a label matching no sample stops the module
+          pattern: "*.reference_keep.txt"
+          ontologies:
+            - edam: "http://edamontology.org/format_2330" # Text
+  versions_gawk:
+    - - "${task.process}":
+          type: string
+          description: The process the version was collected from
+      - "gawk":
+          type: string
+          description: The tool name
+      - "gawk --version | head -n 1 | sed 's/^GNU Awk //; s/,.*\\$//'":
+          type: eval
+          description: The command used to retrieve the gawk version
+topics:
+  versions:
+    - - ${task.process}:
+          type: string
+          description: The process the version was collected from
+      - gawk:
+          type: string
+          description: The tool name
+      - "gawk --version | head -n 1 | sed 's/^GNU Awk //; s/,.*\\$//'":
+          type: eval
+          description: The command used to retrieve the gawk version
+authors:
+  - "@lyh970817"
+maintainers:
+  - "@lyh970817"
+containers:
+  conda:
+    linux/amd64:
+      lock_file: "modules/local/ancestry_reference_keep/.conda-lock/linux_amd64-bd-d5d074ad9f29be71_1.txt"
+  docker:
+    linux/amd64:
+      build_id: "bd-d5d074ad9f29be71_1"
+      name: "community.wave.seqera.io/library/gawk:5.3.1--d5d074ad9f29be71"
+      scan_id: "sc-872432f3c6e6b071_1"
+  singularity:
+    linux/amd64:
+      build_id: "bd-55cafbff4f74c897_1"
+      name: "oras://community.wave.seqera.io/library/gawk:5.3.1--55cafbff4f74c897"
+      https: "https://community-cr-prod.seqera.io/docker/registry/v2/blobs/sha256/0c/0c4365ad2ac928e4b018455102731c78cfcf43ecd4cb8178c12cd00c02f6ee29/data"

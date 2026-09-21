@@ -1,0 +1,172 @@
+nextflow_process {
+
+    name "Test Process PLINK2_FREQ"
+    script "../main.nf"
+    process "PLINK2_FREQ"
+    config "./nextflow.config"
+
+    tag "modules"
+    tag "modules_nfcore"
+    tag "plink2"
+    tag "plink2/freq"
+
+    test("plink_simulated - bed") {
+
+        when {
+            process {
+                """
+                input[0] = [
+                    [ id:'plink_simulated' ],
+                    file(params.modules_testdata_base_path + 'genomics/homo_sapiens/popgen/plink_simulated.bed', checkIfExists: true),
+                    file(params.modules_testdata_base_path + 'genomics/homo_sapiens/popgen/plink_simulated.bim', checkIfExists: true),
+                    file(params.modules_testdata_base_path + 'genomics/homo_sapiens/popgen/plink_simulated.fam', checkIfExists: true),
+                    [],
+                    [],
+                    [],
+                    [],
+                ]
+                """
+            }
+        }
+
+        then {
+            def command = path(process.out.afreq.get(0).get(1)).parent.resolve('.command.sh').text
+            assertAll(
+                { assert process.success },
+                { assert command.contains('--bfile plink_simulated') },
+                { assert path(process.out.afreq.get(0).get(1)).readLines().first().split('\t').toList() == ['#CHROM', 'ID', 'REF', 'ALT', 'PROVISIONAL_REF?', 'ALT_FREQS', 'OBS_CT'] },
+                // Under the default modifiers the frequency table is the one product.
+                { assert process.out.acount.size() == 0 },
+                { assert snapshot(process.out.afreq, process.out.versions_plink2).match() },
+            )
+        }
+    }
+
+    test("plink_simulated - pgen - counts - extract list") {
+
+        setup {
+            run("PLINK2_WRITESNPLIST") {
+                script "../../writesnplist/main.nf"
+                process {
+                    """
+                    input[0] = [
+                        [ id:'plink_simulated_keep' ],
+                        file(params.modules_testdata_base_path + 'genomics/homo_sapiens/popgen/plink_simulated.bed', checkIfExists: true),
+                        file(params.modules_testdata_base_path + 'genomics/homo_sapiens/popgen/plink_simulated.bim', checkIfExists: true),
+                        file(params.modules_testdata_base_path + 'genomics/homo_sapiens/popgen/plink_simulated.fam', checkIfExists: true),
+                        [],
+                        [],
+                        [],
+                        [],
+                    ]
+                    """
+                }
+            }
+        }
+
+        when {
+            params {
+                module_args2 = 'counts'
+            }
+            process {
+                """
+                input[0] = PLINK2_WRITESNPLIST.out.snplist.map { meta, snplist ->
+                    [
+                        [ id:'plink_simulated_pgen' ],
+                        file(params.modules_testdata_base_path + 'genomics/homo_sapiens/popgen/plink_simulated.pgen', checkIfExists: true),
+                        file(params.modules_testdata_base_path + 'genomics/homo_sapiens/popgen/plink_simulated.pvar', checkIfExists: true),
+                        file(params.modules_testdata_base_path + 'genomics/homo_sapiens/popgen/plink_simulated.psam', checkIfExists: true),
+                        snplist,
+                        [],
+                        [],
+                        [],
+                    ]
+                }
+                """
+            }
+        }
+
+        then {
+            def command = path(process.out.acount.get(0).get(1)).parent.resolve('.command.sh').text
+            assertAll(
+                { assert process.success },
+                { assert command.contains('--pfile plink_simulated') },
+                { assert command.contains('--extract plink_simulated_keep.snplist') },
+                { assert command.contains('--freq counts') },
+                // The `counts` modifier switches the product from the frequency table to the count table.
+                { assert path(process.out.acount.get(0).get(1)).readLines().first().split('\t').toList() == ['#CHROM', 'ID', 'REF', 'ALT', 'PROVISIONAL_REF?', 'ALT_CTS', 'OBS_CT'] },
+                { assert process.out.afreq.size() == 0 },
+                { assert snapshot(process.out.acount, process.out.versions_plink2).match() },
+            )
+        }
+    }
+
+    test("plink_simulated - bed - keep list") {
+
+        when {
+            process {
+                """
+                // Keeping the first ten samples of the fam exercises the keep fragment: the frequencies are then
+                // those of the kept samples alone, so every autosomal row observes twenty alleles.
+                def keep_list = file("${workDir}/plink_simulated_keep.txt")
+                keep_list.text = file(params.modules_testdata_base_path + 'genomics/homo_sapiens/popgen/plink_simulated.fam', checkIfExists: true)
+                    .readLines()
+                    .take(10)
+                    .collect { line -> line.split(/\\s+/).take(2).join(' ') }
+                    .join('\\n') + '\\n'
+                input[0] = [
+                    [ id:'plink_simulated_kept' ],
+                    file(params.modules_testdata_base_path + 'genomics/homo_sapiens/popgen/plink_simulated.bed', checkIfExists: true),
+                    file(params.modules_testdata_base_path + 'genomics/homo_sapiens/popgen/plink_simulated.bim', checkIfExists: true),
+                    file(params.modules_testdata_base_path + 'genomics/homo_sapiens/popgen/plink_simulated.fam', checkIfExists: true),
+                    [],
+                    [],
+                    keep_list,
+                    [],
+                ]
+                """
+            }
+        }
+
+        then {
+            def command = path(process.out.afreq.get(0).get(1)).parent.resolve('.command.sh').text
+            def rows = path(process.out.afreq.get(0).get(1)).readLines().drop(1).collect { line -> line.split('\t').toList() }
+            assertAll(
+                { assert process.success },
+                { assert command.contains('--keep plink_simulated_keep.txt') },
+                { assert path(process.out.log.get(0).get(1)).text.contains('--keep: 10 samples remaining') },
+                { assert rows.every { fields -> fields[6] == '20' } },
+                { assert snapshot(process.out.afreq, process.out.versions_plink2).match() },
+            )
+        }
+    }
+
+    test("plink_simulated - bed - stub") {
+
+        options "-stub"
+
+        when {
+            process {
+                """
+                input[0] = [
+                    [ id:'plink_simulated' ],
+                    file(params.modules_testdata_base_path + 'genomics/homo_sapiens/popgen/plink_simulated.bed', checkIfExists: true),
+                    file(params.modules_testdata_base_path + 'genomics/homo_sapiens/popgen/plink_simulated.bim', checkIfExists: true),
+                    file(params.modules_testdata_base_path + 'genomics/homo_sapiens/popgen/plink_simulated.fam', checkIfExists: true),
+                    [],
+                    [],
+                    [],
+                    [],
+                ]
+                """
+            }
+        }
+
+        then {
+            assertAll(
+                { assert process.success },
+                { assert snapshot(sanitizeOutput(process.out)).match() },
+            )
+        }
+    }
+}

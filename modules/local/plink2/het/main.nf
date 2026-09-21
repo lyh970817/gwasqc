@@ -8,7 +8,7 @@ process PLINK2_HET {
         : 'community.wave.seqera.io/library/plink2:2.0.0a.6.9--e6710830a4b7f0c6'}"
 
     input:
-    tuple val(meta), path(plink_genotype_file), path(plink_variant_file), path(plink_sample_file), path(extract), path(exclude), path(keep), path(remove)
+    tuple val(meta), path(plink_genotype_file), path(plink_variant_file), path(plink_sample_file), path(extract), path(exclude), path(keep), path(remove), path(read_freq)
 
     output:
     tuple val(meta), path("${prefix}.het"), emit: het
@@ -27,6 +27,7 @@ process PLINK2_HET {
     def exclude_fragment = exclude ? "--exclude ${exclude}" : ''
     def keep_fragment = keep ? "--keep ${keep}" : ''
     def remove_fragment = remove ? "--remove ${remove}" : ''
+    def read_freq_fragment = read_freq ? "--read-freq ${read_freq}" : ''
     def mem_mb = task.memory.toMega()
     """
     plink2 \\
@@ -37,6 +38,7 @@ process PLINK2_HET {
         ${exclude_fragment} \\
         ${keep_fragment} \\
         ${remove_fragment} \\
+        ${read_freq_fragment} \\
         ${args} \\
         --het \\
         --out ${prefix}

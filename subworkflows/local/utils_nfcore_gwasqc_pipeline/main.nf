@@ -36,6 +36,8 @@ workflow PIPELINE_INITIALISATION {
     skip_ancestry // boolean: Skip the ancestry inference, which needs both reference files
     apply_sample_removals // boolean: Apply the sample removal lists to the QC'd fileset
     ancestry_remove_mismatched // boolean: Under apply_sample_removals, remove the samples not assigned to the stratum's ancestry
+    sample_qc_marker_set //  string: Marker set of the sample checks, auto, study or shared
+    small_n_threshold // integer: Under auto, the post-mind sample count below which a stratum uses the shared marker set
     help // boolean: Display help message and exit
     help_full // boolean: Show the full help message
     show_hidden // boolean: Show hidden parameters in the help message
@@ -109,6 +111,13 @@ workflow PIPELINE_INITIALISATION {
     // super-populations of the population table: under the removal gate a label outside that vocabulary would
     // list every sample of the stratum for removal, so it is rejected before anything runs; without the gate
     // the mismatch list is only published, so the label is merely warned about.
+    //
+    // The shared marker set of the sample checks is the ancestry route's, so it needs the reference too: a
+    // forced `shared` without the reference is rejected here, and under `auto` a stratum whose input already
+    // holds fewer samples than the threshold is certain to select `shared`, so it is rejected here as well;
+    // a stratum that only falls below the threshold through the mind removals is rejected when the mode is
+    // decided, after the filter chain.
+    //
     def super_pops = null
     if (!skip_ancestry) {
         if (!reference_panel || !reference_pop_data) {
@@ -116,7 +125,10 @@ workflow PIPELINE_INITIALISATION {
         }
         super_pops = samplesheetToList(reference_pop_data, "${projectDir}/assets/schema_reference_pop.json").collect { row -> row[3] }.unique().sort()
     }
-    def ancestry_label_is_fatal = !skip_ancestry && apply_sample_removals && ancestry_remove_mismatched
+    else if (sample_qc_marker_set == 'shared') {
+        error("[nf-core/gwasqc] ERROR: --sample_qc_marker_set shared takes the sample-check markers from the ancestry route, so it needs --reference_panel and --reference_pop_data without --skip_ancestry; pass both, or choose --sample_qc_marker_set study")
+    }
+    def ancestry_label_is_fatal = !skip_ancestry && ((apply_sample_removals && ancestry_remove_mismatched) || sample_qc_marker_set == 'shared')
 
     //
     // Create channel from input file provided through params.input
@@ -124,6 +136,7 @@ workflow PIPELINE_INITIALISATION {
     def ch_samplesheet = channel.fromList(samplesheetToList(input, "${projectDir}/assets/schema_input.json"))
         .map { meta, bed, bim, fam -> validateInputFileset(meta, bed, bim, fam) }
         .map { meta, bed, bim, fam -> validateAncestryLabel(meta, bed, bim, fam, super_pops, ancestry_label_is_fatal) }
+        .map { meta, bed, bim, fam -> validateSmallStratumHasReference(meta, bed, bim, fam, skip_ancestry, sample_qc_marker_set, small_n_threshold) }
 
     //
     // Create channel from the reference panel samplesheet provided through params.reference_panel
@@ -215,6 +228,23 @@ def validateAncestryLabel(meta, bed, bim, fam, super_pops, fatal) {
     }
     return [meta, bed, bim, fam]
 }
+
+//
+// Reject, before anything runs, a stratum that `auto` is certain to send to the shared marker set while the
+// ancestry route is skipped: the post-mind count can only be at or below the input count, so an input below
+// the threshold decides the mode already. The residual case, a stratum that the mind removals take below the
+// threshold, is decided and rejected in the workflow once the mind list exists.
+//
+def validateSmallStratumHasReference(meta, bed, bim, fam, skip_ancestry, sample_qc_marker_set, small_n_threshold) {
+    if (skip_ancestry && sample_qc_marker_set == 'auto') {
+        def samples = fam.countLines()
+        if (samples < small_n_threshold) {
+            error("[nf-core/gwasqc] ERROR: stratum '${meta.id}' has ${samples} samples, fewer than --small_n_threshold ${small_n_threshold}, so --sample_qc_marker_set auto selects the shared marker set, which needs --reference_panel and --reference_pop_data without --skip_ancestry; pass both, or force --sample_qc_marker_set study")
+        }
+    }
+    return [meta, bed, bim, fam]
+}
+
 //
 // Generate methods description for MultiQC
 //

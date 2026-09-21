@@ -1,0 +1,189 @@
+nextflow_pipeline {
+
+    name "Test pipeline with the sample QC marker set forced"
+    script "../main.nf"
+    tag "pipeline"
+    tag "sample_qc_marker_set"
+
+    // `study` forced on every stratum, the 12-sample one included: plink2 prunes it under the pipeline's
+    // `--bad-ld`, and on this LD-free fixture the pruning collapses for real, to 184 of 3664 QC'd variants.
+    // That is 5.02 %, a hair above the default 5 % floor, so the scenario raises the floor to 10 % to exercise
+    // the note on the real collapse rather than on a synthetic case. The planted defects are still found on
+    // what pruning left, and the starved chromosome X also mis-calls one true female, the legacy signature
+    // the shared mode exists to avoid.
+    test("-profile test --sample_qc_marker_set study") {
+
+        when {
+            params {
+                outdir                   = "$outputDir"
+                sample_qc_marker_set     = 'study'
+                ld_min_retained_fraction = 0.1
+            }
+        }
+
+        then {
+            def lines = { relative -> new File("${params.outdir}/${relative}").readLines() }
+            def strata = ['study_eur', 'study_afr', 'study_csa']
+            def summary_rows = lines('gwasqc_summary.tsv').collect { line -> line.split('\t', -1).toList() }
+            def summary = summary_rows.drop(1).collectEntries { fields -> [(fields[0]): [summary_rows[0], fields].transpose().collectEntries { column, value -> [(column): value] }] }
+            def relationships = { id ->
+                lines("qc/${id}/relatedness/${id}.relatedness_pairs.tsv").drop(1).collect { line -> line.split('\t') }.collectEntries { fields -> [([fields[1], fields[3]].sort().join('/')): fields[9]] }
+            }
+            def retained = { id -> (summary[id].variants_ld_pruned_in as Double) / (summary[id].variants_after_hwe as Double) }
+            def report = new File("${params.outdir}/multiqc/multiqc_report.html").text
+            assertAll(
+                { assert workflow.success },
+                { assert strata.every { id -> summary[id].sample_qc_marker_set == 'study' } },
+                { assert strata.every { id -> new File("${params.outdir}/qc/${id}/ld_pruning").isDirectory() } },
+                { assert strata.every { id -> new File("${params.outdir}/qc/${id}/heterozygosity").list().toList().every { name -> !name.contains('reference') } } },
+                { assert workflow.trace.tasks().findAll { task -> task.name.contains('PLINK2_HET_REFERENCE (') }.isEmpty() },
+                // The large strata keep nearly every variant and carry no note; the small one collapses.
+                { assert ['study_eur', 'study_afr'].every { id -> retained(id) > 0.9 && summary[id].sample_qc_note == '' } },
+                { assert summary.study_csa.subMap(['variants_after_hwe', 'variants_ld_pruned_in']) == [variants_after_hwe: '3664', variants_ld_pruned_in: '184'] },
+                { assert retained('study_csa') < 0.06 },
+                { assert summary.study_csa.sample_qc_note == 'LD pruning retained 184 of 3664 QC variants (5.0%, below the --ld_min_retained_fraction floor of 0.1); the study-pruned marker set is unreliable at this sample size, consider --sample_qc_marker_set shared' },
+                { assert summary.study_csa.sample_qc_markers == (lines('qc/study_csa/ld_pruning/study_csa.prune.in').size() - lines('qc/study_csa/ld_pruning/study_csa.highld_exclude.txt').size()).toString() },
+                { assert report.contains('id="gwasqc_sample_qc_markers"') },
+                { assert report.contains('consider --sample_qc_marker_set shared') },
+                // The planted defects on the study-pruned markers: the duplicate pair is an exact copy, so it
+                // is found on any marker set, and the sex mismatch survives the collapsed chromosome X, which
+                // also mis-calls the true female CSA_S004 (two chromosome Y variants and a handful of X ones
+                // are all that pruning left, so its F lands between the thresholds).
+                { assert relationships('study_csa')['CSA_S005/CSA_S006'] == 'duplicate_or_mz' },
+                { assert lines('qc/study_csa/relatedness/study_csa.relatedness_remove.txt').size() == 1 },
+                { assert lines('qc/study_csa/sex_check/study_csa.sex_mismatch_remove.txt') == ['CSA_S004 CSA_S004', 'CSA_S010 CSA_S010'] },
+                { assert ['study_eur', 'study_afr'].every { id -> lines("qc/${id}/sex_check/${id}.sex_mismatch_remove.txt").size() == 2 && lines("qc/${id}/relatedness/${id}.relatedness_remove.txt").size() == 1 } },
+                { assert snapshot(
+                    removeNextflowVersion("$outputDir/pipeline_info/nf_core_gwasqc_software_mqc_versions.yml"),
+                    path("${params.outdir}/gwasqc_summary.tsv")
+                ).match() }
+            )
+        }
+    }
+
+    // `shared` forced on every stratum: the 125-sample strata take the reference-pruned markers and the
+    // ancestry-matched reference baseline too, prune nothing on the study side, and still find every
+    // planted defect.
+    test("-profile test --sample_qc_marker_set shared") {
+
+        when {
+            params {
+                outdir               = "$outputDir"
+                sample_qc_marker_set = 'shared'
+            }
+        }
+
+        then {
+            def lines = { relative -> new File("${params.outdir}/${relative}").readLines() }
+            def large = ['study_eur', 'study_afr']
+            def strata = large + ['study_csa']
+            def prefix = { id -> id.replace('study_', '').toUpperCase() }
+            def summary_rows = lines('gwasqc_summary.tsv').collect { line -> line.split('\t', -1).toList() }
+            def summary = summary_rows.drop(1).collectEntries { fields -> [(fields[0]): [summary_rows[0], fields].transpose().collectEntries { column, value -> [(column): value] }] }
+            def relationships = { id ->
+                lines("qc/${id}/relatedness/${id}.relatedness_pairs.tsv").drop(1).collect { line -> line.split('\t') }.collectEntries { fields -> [([fields[1], fields[3]].sort().join('/')): fields[9]] }
+            }
+            def het_hist = { id -> lines("qc/${id}/heterozygosity/${id}.het_hist.tsv").drop(1).collect { line -> line.split('\t').toList() } }
+            assertAll(
+                { assert workflow.success },
+                { assert strata.every { id -> summary[id].subMap(['sample_qc_marker_set', 'variants_ld_pruned_in', 'variants_sample_checks', 'sample_qc_note']) == [sample_qc_marker_set: 'shared', variants_ld_pruned_in: 'NA', variants_sample_checks: 'NA', sample_qc_note: ''] } },
+                { assert strata.every { id -> summary[id].sample_qc_markers == lines("qc/${id}/ancestry/${id}.ancestry.prune.in").size().toString() } },
+                { assert strata.every { id -> !new File("${params.outdir}/qc/${id}/ld_pruning").exists() } },
+                { assert workflow.trace.tasks().findAll { task -> task.name.contains('PLINK2_INDEPPAIRWISE (') && !task.name.contains('REFERENCE') }.isEmpty() },
+                { assert workflow.trace.tasks().findAll { task -> task.name.contains('PLINK2_HET_REFERENCE (') }.size() == 3 },
+                // Each stratum's baseline is its own super-population's 50 reference samples.
+                { assert strata.every { id -> lines("qc/${id}/heterozygosity/${id}.reference_keep.txt").size() == 50 } },
+                { assert lines('qc/study_eur/heterozygosity/study_eur.reference_keep.txt').every { line -> line.split(' ')[1].startsWith('GBR_') || line.split(' ')[1].startsWith('TSI_') } },
+                { assert lines('qc/study_afr/heterozygosity/study_afr.reference_keep.txt').every { line -> line.split(' ')[1].startsWith('YRI_') || line.split(' ')[1].startsWith('ESN_') } },
+                { assert strata.every { id -> het_hist(id).collect { fields -> fields[0] }.unique() == ['study', 'reference'] } },
+                { assert large.every { id -> het_hist(id).findAll { fields -> fields[0] == 'study' }.sum { fields -> fields[3] as Integer } == 123 } },
+                // Every planted defect of the large strata is found on the shared markers and the unpruned sex
+                // chromosomes, exactly as on the study-pruned set.
+                { assert large.every { id -> lines("qc/${id}/sex_check/${id}.sex_mismatch_remove.txt") == ["${prefix(id)}_S010 ${prefix(id)}_S010", "${prefix(id)}_S011 ${prefix(id)}_S011"] } },
+                { assert large.every { id -> relationships(id).subMap(["${prefix(id)}_S020/${prefix(id)}_S021".toString(), "${prefix(id)}_S030/${prefix(id)}_S031".toString(), "${prefix(id)}_S032/${prefix(id)}_S033".toString()]) == [("${prefix(id)}_S020/${prefix(id)}_S021".toString()): 'duplicate_or_mz', ("${prefix(id)}_S030/${prefix(id)}_S031".toString()): 'parent_offspring', ("${prefix(id)}_S032/${prefix(id)}_S033".toString()): 'full_sibling'] } },
+                { assert large.every { id -> lines("qc/${id}/relatedness/${id}.relatedness_remove.txt").size() == 1 } },
+                { assert lines('qc/study_csa/sex_check/study_csa.sex_mismatch_remove.txt') == ['CSA_S010 CSA_S010'] },
+                { assert relationships('study_csa')['CSA_S005/CSA_S006'] == 'duplicate_or_mz' },
+                { assert snapshot(
+                    removeNextflowVersion("$outputDir/pipeline_info/nf_core_gwasqc_software_mqc_versions.yml"),
+                    path("${params.outdir}/gwasqc_summary.tsv")
+                ).match() }
+            )
+        }
+    }
+
+    // Without the ancestry route there is no shared marker set: a forced `shared` is rejected before anything
+    // runs, and so is `auto` when a stratum's input count alone decides it will need the shared set.
+    test("-profile test --skip_ancestry --sample_qc_marker_set shared") {
+
+        when {
+            params {
+                outdir               = "$outputDir"
+                skip_ancestry        = true
+                sample_qc_marker_set = 'shared'
+            }
+        }
+
+        then {
+            assertAll(
+                { assert workflow.failed },
+                { assert workflow.stdout.join('\n').contains('--sample_qc_marker_set shared takes the sample-check markers from the ancestry route') },
+                { assert workflow.trace.tasks().isEmpty() },
+            )
+        }
+    }
+
+    test("-profile test --skip_ancestry") {
+
+        when {
+            params {
+                outdir        = "$outputDir"
+                skip_ancestry = true
+            }
+        }
+
+        then {
+            assertAll(
+                { assert workflow.failed },
+                { assert workflow.stdout.join('\n').contains("stratum 'study_csa' has 12 samples, fewer than --small_n_threshold 100") },
+                { assert workflow.trace.tasks().isEmpty() },
+            )
+        }
+    }
+
+    // Without the ancestry route, `study` on every stratum is the legacy chain: the small stratum prunes its
+    // own variants, collapses, and is noted under the same raised floor as above; the summary carries no
+    // ancestry columns.
+    test("-profile test --skip_ancestry --sample_qc_marker_set study") {
+
+        when {
+            params {
+                outdir                   = "$outputDir"
+                skip_ancestry            = true
+                sample_qc_marker_set     = 'study'
+                ld_min_retained_fraction = 0.1
+            }
+        }
+
+        then {
+            def lines = { relative -> new File("${params.outdir}/${relative}").readLines() }
+            def strata = ['study_eur', 'study_afr', 'study_csa']
+            def summary_rows = lines('gwasqc_summary.tsv').collect { line -> line.split('\t', -1).toList() }
+            def summary = summary_rows.drop(1).collectEntries { fields -> [(fields[0]): [summary_rows[0], fields].transpose().collectEntries { column, value -> [(column): value] }] }
+            assertAll(
+                { assert workflow.success },
+                { assert !summary_rows[0].any { column -> column.startsWith('ancestry_') } },
+                { assert strata.every { id -> summary[id].sample_qc_marker_set == 'study' } },
+                { assert summary.study_csa.sample_qc_note.contains('consider --sample_qc_marker_set shared') },
+                { assert strata.every { id -> !new File("${params.outdir}/qc/${id}/ancestry").exists() } },
+                { assert lines('qc/study_csa/sex_check/study_csa.sex_mismatch_remove.txt').contains('CSA_S010 CSA_S010') },
+                { assert lines('qc/study_csa/relatedness/study_csa.relatedness_remove.txt').size() == 1 },
+                { assert workflow.trace.tasks().findAll { task -> task.name.contains('GWASQC:PLINK2_MAKEBED (') }.size() == 3 },
+                { assert snapshot(
+                    removeNextflowVersion("$outputDir/pipeline_info/nf_core_gwasqc_software_mqc_versions.yml"),
+                    path("${params.outdir}/gwasqc_summary.tsv")
+                ).match() }
+            )
+        }
+    }
+}

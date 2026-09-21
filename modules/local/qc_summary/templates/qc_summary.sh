@@ -9,6 +9,7 @@
 #   gwasqc_summary.tsv                       one row per stratum, in stratum id order, every column
 #   gwasqc_qc_summary_mqc.tsv                the same table as the first MultiQC section, the detail columns hidden
 #   gwasqc_variant_qc_filters_mqc.tsv        the input counts and what each filter removed, with its threshold
+#   gwasqc_sample_qc_markers_mqc.tsv         the marker set of each stratum's sample checks and the collapse note
 #   gwasqc_sex_check_summary_mqc.tsv         samples checked and mismatches per stratum
 #   gwasqc_heterozygosity_summary_mqc.tsv    the F distribution per stratum
 #   gwasqc_relatedness_summary_mqc.tsv       pairs per class, removals and outliers per stratum
@@ -61,10 +62,13 @@ samples_after_mind	After mind	Samples remaining after the mind removal	{:,.0f}
 hwe_threshold	HWE threshold	Hardy-Weinberg exact-test p-value below which a variant is dropped	{:g}
 variants_hwe_removed	HWE removed	Variants below the HWE threshold	{:,.0f}
 variants_after_hwe	Variants QC'd	Variants remaining after the HWE exclusion, the QC'd variant set	{:,.0f}
-variants_ld_pruned_in	LD pruned in	Variants retained by LD pruning of the QC'd set	{:,.0f}
-variants_ld_pruned_out	LD pruned out	Variants removed by LD pruning	{:,.0f}
-variants_highld_excluded	High-LD excluded	Pruned variants in a long-range LD region or off the autosomes	{:,.0f}
-variants_sample_checks	Autosomal check set	Pruned autosomal variants outside the long-range LD regions, the set of the heterozygosity and relatedness reports	{:,.0f}
+variants_ld_pruned_in	LD pruned in	Variants retained by LD pruning of the QC'd set in study mode; NA in shared mode	{:,.0f}
+variants_ld_pruned_out	LD pruned out	Variants removed by LD pruning in study mode; NA in shared mode	{:,.0f}
+variants_highld_excluded	High-LD excluded	Pruned variants in a long-range LD region or off the autosomes in study mode; NA in shared mode	{:,.0f}
+variants_sample_checks	Study check set	Pruned autosomal variants outside the long-range LD regions, the set of the heterozygosity and relatedness reports in study mode; NA in shared mode	{:,.0f}
+sample_qc_marker_set	Marker set	The marker set of the sample checks: study, the stratum's own LD-pruned QC'd variants, or shared, the reference-pruned markers of the ancestry route
+sample_qc_markers	Check markers	Autosomal markers the heterozygosity and relatedness reports ran on	{:,.0f}
+sample_qc_note	Marker-set note	A note when study-mode LD pruning retained fewer than the configured fraction of the QC'd variants; empty otherwise
 sex_check_problems	Sex mismatches	Samples the sex check flagged PROBLEM	{:,.0f}
 sex_removals	Sex list	Whether the sex-mismatch list was applied to the QC'd fileset
 het_samples	Het samples	Samples in the heterozygosity report	{:,.0f}
@@ -150,20 +154,23 @@ mqc_table() {
 all_columns=$(gawk -F'\t' 'NR == 1 { for (i = 2; i <= NF; i++) printf "%s%s", (i > 2 ? " " : ""), $i }' gwasqc_summary.tsv)
 ancestry_columns=$(gawk -F'\t' 'NR == 1 { for (i = 2; i <= NF; i++) if ($i ~ /^ancestry_(n_|unassigned|mismatches|removals)/) printf "%s%s", (n++ ? " " : ""), $i }' gwasqc_summary.tsv)
 
-summary_hidden='maf_threshold variants_after_maf geno_threshold variants_after_geno mind_threshold samples_after_mind hwe_threshold variants_ld_pruned_out variants_sample_checks sex_removals het_samples het_f_mean het_f_sd het_f_min het_f_max het_outside_3sd relatedness_pairs_reported relatedness_parent_offspring relatedness_full_sibling relatedness_second_degree relatedness_third_degree relatedness_removals relatedness_outliers ancestry_removals samples_removed_under_gate'
+summary_hidden='maf_threshold variants_after_maf geno_threshold variants_after_geno mind_threshold samples_after_mind hwe_threshold variants_ld_pruned_out variants_sample_checks sample_qc_note sex_removals het_samples het_f_mean het_f_sd het_f_min het_f_max het_outside_3sd relatedness_pairs_reported relatedness_parent_offspring relatedness_full_sibling relatedness_second_degree relatedness_third_degree relatedness_removals relatedness_outliers ancestry_removals samples_removed_under_gate'
 mqc_table gwasqc_qc_summary_mqc.tsv gwasqc_qc_summary gwasqc_qc_summary 'QC summary' 'One row per stratum: the samples and variants that entered, what each stage removed or listed, and what left. The hidden columns hold the thresholds and the per-stage detail; the sections below repeat them by stage.' 'QC summary' '' --hidden "$summary_hidden" $all_columns
 
-variant_qc_description='Per stratum: the input fileset, what each filter of the MAF, missingness and Hardy-Weinberg chain removes at its threshold, the call-rate ladder, the LD-pruned set the sample checks run on, and the review histograms.'
-mqc_table gwasqc_variant_qc_filters_mqc.tsv gwasqc_variant_qc_filters gwasqc_variant_qc 'Variant and sample filters' "$variant_qc_description" 'Filters' 'Variants and samples removed by each filter at its threshold, applied in this order from the input fileset; every comparison is strict, as in plink2.' \
+variant_qc_description='Per stratum: the input fileset, what each filter of the MAF, missingness and Hardy-Weinberg chain removes at its threshold, the call-rate ladder, the LD-pruned set the sample checks run on in study mode, and the review histograms.'
+mqc_table gwasqc_variant_qc_filters_mqc.tsv gwasqc_variant_qc_filters gwasqc_variant_qc 'Variant and sample filters' "$variant_qc_description" 'Filters' 'Variants and samples removed by each filter at its threshold, applied in this order from the input fileset; every comparison is strict, as in plink2. The pruning columns read NA for a stratum in the shared marker-set mode, which prunes nothing on the study side.' \
     samples_input variants_input maf_threshold variants_maf_removed variants_after_maf geno_threshold variants_geno_removed variants_after_geno mind_threshold samples_mind_removed samples_after_mind hwe_threshold variants_hwe_removed variants_after_hwe variants_ld_pruned_in variants_ld_pruned_out variants_highld_excluded variants_sample_checks
 
-mqc_table gwasqc_sex_check_summary_mqc.tsv gwasqc_sex_check_summary gwasqc_sex_check 'Sex check' 'plink2 --check-sex on the pruned set after the pseudo-autosomal split. Its PROBLEM calls are the mismatches, tabled and listed for removal.' 'Summary' 'Samples checked, the mismatches plink2 called, and whether the list reached the QC fileset.' \
+mqc_table gwasqc_sample_qc_markers_mqc.tsv gwasqc_sample_qc_markers gwasqc_sample_qc_markers 'Sample QC marker set' 'The variant set the sex check, heterozygosity and relatedness reports of each stratum ran on, chosen per stratum by --sample_qc_marker_set: study, the stratum'"'"'s own LD-pruned QC'"'"'d variants, or shared, the harmonised reference-pruned markers of the ancestry route with the ancestry-matched reference frequencies as the heterozygosity baseline; under auto a stratum with fewer than --small_n_threshold samples after the mind filter takes shared. The note flags study-mode pruning that retained fewer than the --ld_min_retained_fraction floor of the QC'"'"'d variants, the signature of pruning collapse on a small stratum.' 'Marker set' 'The mode of each stratum, the markers its autosomal checks ran on, and the pruning-collapse note.' \
+    samples_after_mind sample_qc_marker_set sample_qc_markers variants_after_hwe variants_ld_pruned_in sample_qc_note
+
+mqc_table gwasqc_sex_check_summary_mqc.tsv gwasqc_sex_check_summary gwasqc_sex_check 'Sex check' 'plink2 --check-sex after the pseudo-autosomal split, over the pruned set in study mode and over every QC-passing variant in shared mode. Its PROBLEM calls are the mismatches, tabled and listed for removal.' 'Summary' 'Samples checked, the mismatches plink2 called, and whether the list reached the QC fileset.' \
     samples_after_mind sex_check_problems sex_removals
 
-mqc_table gwasqc_heterozygosity_summary_mqc.tsv gwasqc_heterozygosity_summary gwasqc_heterozygosity 'Heterozygosity' 'Report only: the plink2 --het inbreeding coefficient F over the pruned autosomal set outside the long-range LD regions. No threshold is applied and no sample is listed.' 'Summary' 'The distribution of F per stratum.' \
-    het_samples het_f_mean het_f_sd het_f_min het_f_max het_outside_3sd
+mqc_table gwasqc_heterozygosity_summary_mqc.tsv gwasqc_heterozygosity_summary gwasqc_heterozygosity 'Heterozygosity' 'Report only: the plink2 --het inbreeding coefficient F over the autosomal marker set of each stratum, the pruned set outside the long-range LD regions in study mode and the shared reference-pruned markers against the matched reference frequencies in shared mode. No threshold is applied and no sample is listed.' 'Summary' 'The distribution of F per stratum, with the marker set it was computed on.' \
+    sample_qc_marker_set sample_qc_markers het_samples het_f_mean het_f_sd het_f_min het_f_max het_outside_3sd
 
-mqc_table gwasqc_relatedness_summary_mqc.tsv gwasqc_relatedness_summary gwasqc_relatedness 'Relatedness' 'KING-robust kinship over the same set, pairs at or above the table filter classified on KING boundaries. One member of each duplicate/MZ pair is listed for removal; the mean-kinship outliers are listed and never applied.' 'Summary' 'Reported pairs per relationship class, the duplicate members listed and the mean-kinship outliers.' \
+mqc_table gwasqc_relatedness_summary_mqc.tsv gwasqc_relatedness_summary gwasqc_relatedness 'Relatedness' 'KING-robust kinship over the same autosomal marker set, pairs at or above the table filter classified on KING boundaries. One member of each duplicate/MZ pair is listed for removal; the mean-kinship outliers are listed and never applied.' 'Summary' 'Reported pairs per relationship class, the duplicate members listed and the mean-kinship outliers.' \
     relatedness_pairs_reported relatedness_duplicate_or_mz relatedness_parent_offspring relatedness_full_sibling relatedness_second_degree relatedness_third_degree relatedness_removed relatedness_removals relatedness_outliers
 
 if [ -n "$ancestry_columns" ]; then

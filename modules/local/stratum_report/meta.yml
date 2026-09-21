@@ -1,5 +1,5 @@
 name: stratum_report
-description: Assemble the QC summary row of one stratum from its decision lists, statistics tables and QC'd fileset, and the MultiQC custom-content fragments that carry its call-rate ladder, sex mismatches, duplicate and first-degree pairs and review figures
+description: Assemble the QC summary row of one stratum from its decision lists, statistics tables and QC'd fileset, with the marker set of its sample checks and a note when study-mode LD pruning collapsed, and the MultiQC custom-content fragments that carry its call-rate ladder, sex mismatches, duplicate and first-degree pairs and review figures
 keywords:
   - quality control
   - report
@@ -24,6 +24,7 @@ input:
           Expected keys:
             - id (string): Stratum identifier, used as the output prefix and as the row name.
             - ancestry (string): The stratum's ancestry label, recorded in the row.
+            - sample_qc_marker_set (string): The marker set of the stratum's sample checks, `study` or `shared`, recorded in the row and deciding which marker list the row counts.
     - fam:
         type: file
         description: PLINK 1 sample file of the input fileset; its line count is the samples in
@@ -66,14 +67,20 @@ input:
           - edam: "http://edamontology.org/format_3475" # TSV
     - prune_in:
         type: file
-        description: Variants retained by LD pruning of the QC'd set, one ID per line
+        description: Variants retained by LD pruning of the QC'd set, one ID per line; present for a stratum in study mode and an empty list in shared mode
         pattern: "*.prune.in"
         ontologies:
           - edam: "http://edamontology.org/format_2330" # Text
     - highld_exclude:
         type: file
-        description: Pruned variants inside a long-range LD region or off the autosomes, one ID per line
+        description: Pruned variants inside a long-range LD region or off the autosomes, one ID per line; present for a stratum in study mode and an empty list in shared mode
         pattern: "*.highld_exclude.txt"
+        ontologies:
+          - edam: "http://edamontology.org/format_2330" # Text
+    - shared_markers:
+        type: file
+        description: The reference-pruned shared marker list of the ancestry route, one ID per line, the set of the heterozygosity and relatedness reports of a stratum in shared mode; an empty list in study mode
+        pattern: "*.prune.in"
         ontologies:
           - edam: "http://edamontology.org/format_2330" # Text
     - sex_mismatch:
@@ -170,6 +177,9 @@ input:
   - hwe:
       type: float
       description: Hardy-Weinberg p-value threshold, recorded in the row
+  - ld_min_retained_fraction:
+      type: float
+      description: Fraction of the QC'd variants below which study-mode LD pruning is noted as collapsed in the row; strict less-than
   - apply_sample_removals:
       type: boolean
       description: Whether the sex-mismatch, duplicate and ancestry-mismatch lists were applied to the QC'd fileset
@@ -183,7 +193,7 @@ output:
           description: Metadata map propagated from input
       - "${prefix}.qc_summary.tsv":
           type: file
-          description: One header row and one row for the stratum, stratum and ancestry first, then the input counts, every filter's threshold and removals, the pruned set, the sex, heterozygosity, relatedness and ancestry summaries, the removal gate and the final counts; the ancestry columns are present only when ancestry inference ran
+          description: One header row and one row for the stratum, stratum and ancestry first, then the input counts, every filter's threshold and removals, the pruned set (NA in shared mode), the marker set of the sample checks with its marker count and the pruning-collapse note, the sex, heterozygosity, relatedness and ancestry summaries, the removal gate and the final counts; the ancestry columns are present only when ancestry inference ran
           pattern: "*.qc_summary.tsv"
           ontologies:
             - edam: "http://edamontology.org/format_3475" # TSV

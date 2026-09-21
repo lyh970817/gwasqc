@@ -1,0 +1,54 @@
+{
+    "study_eur - EUR - stub": {
+        "content": [
+            {
+                "sample_keep": [
+                    [
+                        {
+                            "ancestry": "EUR",
+                            "id": "study_eur"
+                        },
+                        "study_eur.reference_keep.txt:md5,d41d8cd98f00b204e9800998ecf8427e"
+                    ]
+                ],
+                "versions_gawk": [
+                    [
+                        "ANCESTRY_REFERENCE_KEEP",
+                        "gawk",
+                        "5.3.1"
+                    ]
+                ]
+            }
+        ],
+        "timestamp": "2026-09-21T16:39:33.426048874",
+        "meta": {
+            "nf-test": "0.9.5",
+            "nextflow": "26.04.4"
+        }
+    },
+    "study_eur - EUR": {
+        "content": [
+            [
+                [
+                    {
+                        "id": "study_eur",
+                        "ancestry": "EUR"
+                    },
+                    "study_eur.reference_keep.txt:md5,238900596b50317af8931eaf7e755ca6"
+                ]
+            ],
+            [
+                [
+                    "ANCESTRY_REFERENCE_KEEP",
+                    "gawk",
+                    "5.3.1"
+                ]
+            ]
+        ],
+        "timestamp": "2026-09-21T16:39:16.255921348",
+        "meta": {
+            "nf-test": "0.9.5",
+            "nextflow": "26.04.4"
+        }
+    }
+}

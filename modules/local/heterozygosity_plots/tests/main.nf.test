@@ -10,7 +10,8 @@ nextflow_process {
     tag "heterozygosity_plots"
 
     // Both reports come from the gwasqc fixture stratum: --het over its autosomes and --check-sex with the PAR
-    // split and the pipeline's thresholds, so that the join has 125 samples on each side.
+    // split and the pipeline's thresholds, so that the join has 125 samples on each side. The reference report
+    // is --het over the fixture's 250-sample reference panel.
     setup {
         run("PLINK2_HET") {
             script "../../plink2/het/main.nf"
@@ -21,6 +22,25 @@ nextflow_process {
                     file(params.pipelines_testdata_base_path + 'data/gwasqc/genotypes/study_eur.bed', checkIfExists: true),
                     file(params.pipelines_testdata_base_path + 'data/gwasqc/genotypes/study_eur.bim', checkIfExists: true),
                     file(params.pipelines_testdata_base_path + 'data/gwasqc/genotypes/study_eur.fam', checkIfExists: true),
+                    [],
+                    [],
+                    [],
+                    [],
+                    [],
+                ]
+                """
+            }
+        }
+        run("PLINK2_HET", alias: "PLINK2_HET_REFERENCE") {
+            script "../../plink2/het/main.nf"
+            process {
+                """
+                input[0] = [
+                    [ id:'ref_panel' ],
+                    file(params.pipelines_testdata_base_path + 'data/gwasqc/reference/ref_panel.bed', checkIfExists: true),
+                    file(params.pipelines_testdata_base_path + 'data/gwasqc/reference/ref_panel.bim', checkIfExists: true),
+                    file(params.pipelines_testdata_base_path + 'data/gwasqc/reference/ref_panel.fam', checkIfExists: true),
+                    [],
                     [],
                     [],
                     [],
@@ -53,7 +73,7 @@ nextflow_process {
         when {
             process {
                 """
-                input[0] = PLINK2_HET.out.het.join(PLINK2_CHECKSEX.out.sexcheck)
+                input[0] = PLINK2_HET.out.het.join(PLINK2_CHECKSEX.out.sexcheck).map { meta, het, sexcheck -> [meta, het, sexcheck, []] }
                 """
             }
         }
@@ -64,9 +84,11 @@ nextflow_process {
             def mismatches = scatter.drop(1).findAll { fields -> fields[1] in ['EUR_S010', 'EUR_S011'] }.collectEntries { fields -> [(fields[1]): fields[4] as Double] }
             assertAll(
                 { assert process.success },
-                { assert hist[0] == ['bin_start', 'bin_end', 'count'] },
+                // Without a reference report the histogram carries the study rows alone.
+                { assert hist[0] == ['source', 'bin_start', 'bin_end', 'count'] },
                 { assert hist.size() == 101 },
-                { assert hist.drop(1).collect { fields -> fields[2] as Integer }.sum() == 125 },
+                { assert hist.drop(1).every { fields -> fields[0] == 'study' } },
+                { assert hist.drop(1).collect { fields -> fields[3] as Integer }.sum() == 125 },
                 // Every sample joins once on FID and IID, and the two F columns are told apart by name: the
                 // planted sex mismatches keep their chromosome X F, not their autosomal one.
                 { assert scatter[0] == ['FID', 'IID', 'PEDSEX', 'F_HET', 'F_SEX'] },
@@ -80,6 +102,37 @@ nextflow_process {
         }
     }
 
+    test("study_eur - reference report") {
+
+        when {
+            process {
+                """
+                input[0] = PLINK2_HET.out.het.join(PLINK2_CHECKSEX.out.sexcheck).combine(PLINK2_HET_REFERENCE.out.het.map { _meta, reference_het -> reference_het })
+                """
+            }
+        }
+
+        then {
+            def hist = path(process.out.hist_data.get(0).get(1)).readLines().collect { line -> line.split('\t').toList() }
+            def rows_of = { source -> hist.drop(1).findAll { fields -> fields[0] == source } }
+            assertAll(
+                { assert process.success },
+                // The study rows come first, then the reference rows, over one set of bins: the two sources
+                // share every bin boundary, and each counts its own samples in full.
+                { assert hist[0] == ['source', 'bin_start', 'bin_end', 'count'] },
+                { assert hist.size() == 201 },
+                { assert hist.drop(1).take(100).every { fields -> fields[0] == 'study' } },
+                { assert rows_of('reference').size() == 100 },
+                { assert rows_of('study').collect { fields -> fields[1..2] } == rows_of('reference').collect { fields -> fields[1..2] } },
+                { assert rows_of('study').collect { fields -> fields[3] as Integer }.sum() == 125 },
+                { assert rows_of('reference').collect { fields -> fields[3] as Integer }.sum() == 250 },
+                { assert path(process.out.scatter_data.get(0).get(1)).readLines().size() == 126 },
+                { assert path(process.out.hist_plot.get(0).get(2)).size() > 0 },
+                { assert snapshot(process.out.hist_data, process.out.scatter_data, process.out.versions).match() },
+            )
+        }
+    }
+
     test("study_eur - stub") {
 
         options "-stub"
@@ -87,7 +140,7 @@ nextflow_process {
         when {
             process {
                 """
-                input[0] = PLINK2_HET.out.het.join(PLINK2_CHECKSEX.out.sexcheck)
+                input[0] = PLINK2_HET.out.het.join(PLINK2_CHECKSEX.out.sexcheck).map { meta, het, sexcheck -> [meta, het, sexcheck, []] }
                 """
             }
         }

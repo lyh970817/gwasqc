@@ -9,12 +9,15 @@ process STRATUM_REPORT {
 
     input:
     // The original and the QC'd fileset members are staged apart because a stratum's input fileset may carry
-    // any basename; the figures are staged by the report section they belong to.
-    tuple val(meta), path(fam, stageAs: 'input/*'), path(bim, stageAs: 'input/*'), path(maf_snplist), path(geno_exclude), path(mind_remove), path(hwe_exclude), path(ladder), path(prune_in), path(highld_exclude), path(sex_mismatch), path(het), path(relatedness_pairs), path(relatedness_remove), path(relatedness_outliers), path(ancestry_summary), path(ancestry_mismatch_remove), path(qc_bim, stageAs: 'qc/*'), path(qc_fam, stageAs: 'qc/*'), path(variant_qc_images, stageAs: 'images/variant_qc/*'), path(sex_check_images, stageAs: 'images/sex_check/*'), path(heterozygosity_images, stageAs: 'images/heterozygosity/*'), path(relatedness_images, stageAs: 'images/relatedness/*'), path(ancestry_images, stageAs: 'images/ancestry/*')
+    // any basename; the figures are staged by the report section they belong to. The study-side pruning lists
+    // are present for a stratum in study mode and the shared marker list for one in shared mode; the other
+    // slot is an empty list.
+    tuple val(meta), path(fam, stageAs: 'input/*'), path(bim, stageAs: 'input/*'), path(maf_snplist), path(geno_exclude), path(mind_remove), path(hwe_exclude), path(ladder), path(prune_in), path(highld_exclude), path(shared_markers), path(sex_mismatch), path(het), path(relatedness_pairs), path(relatedness_remove), path(relatedness_outliers), path(ancestry_summary), path(ancestry_mismatch_remove), path(qc_bim, stageAs: 'qc/*'), path(qc_fam, stageAs: 'qc/*'), path(variant_qc_images, stageAs: 'images/variant_qc/*'), path(sex_check_images, stageAs: 'images/sex_check/*'), path(heterozygosity_images, stageAs: 'images/heterozygosity/*'), path(relatedness_images, stageAs: 'images/relatedness/*'), path(ancestry_images, stageAs: 'images/ancestry/*')
     val maf
     val geno
     val mind
     val hwe
+    val ld_min_retained_fraction
     val apply_sample_removals
     val ancestry_remove_mismatched
 
@@ -31,6 +34,9 @@ process STRATUM_REPORT {
     // The template reads these; an absent optional input is an empty string and an image list a blank-separated
     // list of staged paths.
     prefix = task.ext.prefix ?: "${meta.id}"
+    prune_in_file = prune_in ? prune_in.toString() : ''
+    highld_exclude_file = highld_exclude ? highld_exclude.toString() : ''
+    shared_markers_file = shared_markers ? shared_markers.toString() : ''
     ancestry_summary_file = ancestry_summary ? ancestry_summary.toString() : ''
     ancestry_mismatch_remove_file = ancestry_mismatch_remove ? ancestry_mismatch_remove.toString() : ''
     variant_qc_image_list = [variant_qc_images].flatten().collect { image -> image.toString() }.join(' ')
@@ -43,7 +49,7 @@ process STRATUM_REPORT {
     stub:
     prefix = task.ext.prefix ?: "${meta.id}"
     """
-    printf 'stratum\\tancestry\\tsamples_input\\tvariants_input\\tsamples_final\\tvariants_final\\n' > ${prefix}.qc_summary.tsv
+    printf 'stratum\\tancestry\\tsamples_input\\tvariants_input\\tsample_qc_marker_set\\tsamples_final\\tvariants_final\\n' > ${prefix}.qc_summary.tsv
     printf '# id: gwasqc_variant_qc_ladder\\n# plot_type: table\\nrow\\tstratum\\tcall_rate\\n' > ${prefix}.variant_qc_ladder_mqc.tsv
     printf 'id: gwasqc_variant_qc_plots_${meta.id}\\nplot_type: image\\ndata: ""\\n' > ${prefix}.variant_qc_plots_mqc.yaml
     """

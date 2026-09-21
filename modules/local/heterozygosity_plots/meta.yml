@@ -1,5 +1,5 @@
 name: heterozygosity_plots
-description: Draw the heterozygosity report of one stratum, a histogram of the plink2 --het inbreeding coefficient and its scatter against the --check-sex chromosome X F, joined explicitly on the sample IDs
+description: Draw the heterozygosity report of one stratum, a histogram of the plink2 --het inbreeding coefficient, beneath which an optional reference --het report is drawn on the same axis, and its scatter against the --check-sex chromosome X F, joined explicitly on the sample IDs
 keywords:
   - heterozygosity
   - inbreeding coefficient
@@ -38,6 +38,12 @@ input:
         pattern: "*.sexcheck"
         ontologies:
           - edam: "http://edamontology.org/format_3475" # TSV
+    - reference_het:
+        type: file
+        description: Optional plink2 --het report of a reference sample set with an F column, drawn beneath the study histogram over the same bins and reported as the `reference` rows of the histogram data; use `[]` when absent
+        pattern: "*.het"
+        ontologies:
+          - edam: "http://edamontology.org/format_3475" # TSV
 output:
   hist_data:
     - - meta:
@@ -45,7 +51,7 @@ output:
           description: Metadata map propagated from input
       - "${prefix}.het_hist.tsv":
           type: file
-          description: Counts of samples in 100 bins of the heterozygosity F spanning the observed range; the data the histogram is drawn from
+          description: Counts of samples per `source` in 100 bins of the heterozygosity F spanning the observed range of every source, the `study` rows first and the `reference` rows after them when a reference report is given; the data the histogram is drawn from
           pattern: "*.het_hist.tsv"
           ontologies:
             - edam: "http://edamontology.org/format_3475" # TSV
@@ -55,7 +61,7 @@ output:
           description: Metadata map propagated from input
       - "${prefix}.het_hist.pdf":
           type: file
-          description: Histogram of the heterozygosity F
+          description: Histogram of the heterozygosity F, the study in orange with a dark outline drawn above the reference in grey when a reference report is given
           pattern: "*.het_hist.pdf"
           ontologies:
             - edam: "http://edamontology.org/format_3508" # PDF

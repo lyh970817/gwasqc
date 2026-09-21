@@ -1,0 +1,100 @@
+nextflow_process {
+
+    name "Test Process ANCESTRY_REFERENCE_KEEP"
+    script "../main.nf"
+    process "ANCESTRY_REFERENCE_KEEP"
+    config "./nextflow.config"
+
+    tag "modules"
+    tag "modules_local"
+    tag "ancestry_reference_keep"
+
+    // The gwasqc fixture population table labels 50 reference samples per super-population, the EUR ones
+    // drawn from the GBR and TSI sub-populations.
+    test("study_eur - EUR") {
+
+        when {
+            process {
+                """
+                input[0] = [ id:'study_eur', ancestry:'EUR' ]
+                input[1] = file(params.pipelines_testdata_base_path + 'data/gwasqc/reference/ref_pop.tsv', checkIfExists: true)
+                """
+            }
+        }
+
+        then {
+            def keep = path(process.out.sample_keep.get(0).get(1)).readLines()
+            assertAll(
+                { assert process.success },
+                { assert keep.size() == 50 },
+                { assert keep.every { line -> line.split(' ').size() == 2 && line.split(' ')[0] == line.split(' ')[1] } },
+                { assert keep.every { line -> line.split(' ')[1].startsWith('GBR_') || line.split(' ')[1].startsWith('TSI_') } },
+                { assert snapshot(process.out.sample_keep, process.out.versions_gawk).match() },
+            )
+        }
+    }
+
+    test("study_mid - label absent from the table") {
+
+        when {
+            process {
+                """
+                input[0] = [ id:'study_mid', ancestry:'MID' ]
+                input[1] = file(params.pipelines_testdata_base_path + 'data/gwasqc/reference/ref_pop.tsv', checkIfExists: true)
+                """
+            }
+        }
+
+        then {
+            assertAll(
+                { assert process.failed },
+                { assert process.errorReport.contains('the ancestry label MID of stratum study_mid matches no reference sample') },
+                { assert process.errorReport.contains('AFR, AMR, CSA, EAS, EUR') },
+            )
+        }
+    }
+
+    test("study_eur - no super_pop column") {
+
+        when {
+            process {
+                """
+                def dir = file('ancestry_reference_keep_inputs')
+                dir.mkdirs()
+                def table = dir.resolve('ref_pop_no_super_pop.tsv')
+                table.text = 'FID\\tIID\\tpop\\nGBR_001\\tGBR_001\\tGBR\\n'
+                input[0] = [ id:'study_eur', ancestry:'EUR' ]
+                input[1] = table
+                """
+            }
+        }
+
+        then {
+            assertAll(
+                { assert process.failed },
+                { assert process.errorReport.contains('must carry FID, IID and super_pop columns') },
+            )
+        }
+    }
+
+    test("study_eur - EUR - stub") {
+
+        options "-stub"
+
+        when {
+            process {
+                """
+                input[0] = [ id:'study_eur', ancestry:'EUR' ]
+                input[1] = file(params.pipelines_testdata_base_path + 'data/gwasqc/reference/ref_pop.tsv', checkIfExists: true)
+                """
+            }
+        }
+
+        then {
+            assertAll(
+                { assert process.success },
+                { assert snapshot(sanitizeOutput(process.out)).match() },
+            )
+        }
+    }
+}

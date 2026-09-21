@@ -8,7 +8,7 @@ process HETEROZYGOSITY_PLOTS {
         : 'community.wave.seqera.io/library/r-base_r-ggplot2_r-data.table:785e51271c23bbdc'}"
 
     input:
-    tuple val(meta), path(het), path(sexcheck)
+    tuple val(meta), path(het), path(sexcheck), path(reference_het)
 
     output:
     tuple val(meta), path("${prefix}.het_hist.tsv"), emit: hist_data
@@ -23,14 +23,16 @@ process HETEROZYGOSITY_PLOTS {
     task.ext.when == null || task.ext.when
 
     script:
-    // `prefix` must remain visible to the output declarations above; the template reads it too.
+    // `prefix` must remain visible to the output declarations above; the template reads it and
+    // `reference_het_file`, an empty string when no reference report is given.
     prefix = task.ext.prefix ?: "${meta.id}"
+    reference_het_file = reference_het ? reference_het.toString() : ''
     template('heterozygosity_plots.R')
 
     stub:
     prefix = task.ext.prefix ?: "${meta.id}"
     """
-    printf 'bin_start\\tbin_end\\tcount\\n' > ${prefix}.het_hist.tsv
+    printf 'source\\tbin_start\\tbin_end\\tcount\\n' > ${prefix}.het_hist.tsv
     touch ${prefix}.het_hist.pdf
     touch ${prefix}.het_hist.png
     printf 'FID\\tIID\\tPEDSEX\\tF_HET\\tF_SEX\\n' > ${prefix}.het_sex_scatter.tsv
