@@ -29,8 +29,14 @@ process SEX_CHECK_DECISIONS {
 
     stub:
     prefix = task.ext.prefix ?: "${meta.id}"
+    // The mismatch table carries the report's own columns, so its header is the report's header; when the
+    // report is itself a stub's empty file, the header is the one the pinned plink2 writes with `cols=+ycount`.
     """
-    printf 'FID\\tIID\\tPEDSEX\\tSNPSEX\\tSTATUS\\tF\\tYCOUNT\\tYRATE\\n' > ${prefix}.sex_mismatch.tsv
+    if [ -s ${sexcheck} ]; then
+        head -n 1 ${sexcheck} | sed 's/^#//' > ${prefix}.sex_mismatch.tsv
+    else
+        printf 'FID\\tIID\\tPEDSEX\\tSNPSEX\\tSTATUS\\tF\\tYCOUNT\\tYRATE\\n' > ${prefix}.sex_mismatch.tsv
+    fi
     touch ${prefix}.sex_mismatch_remove.txt
     printf 'recorded_sex\\tbin_start\\tbin_end\\tcount\\n' > ${prefix}.sex_check_hist.tsv
     touch ${prefix}.sex_check_hist.pdf

@@ -44,10 +44,10 @@
                 ]
             }
         ],
-        "timestamp": "2026-09-20T15:12:28.38363735",
+        "timestamp": "2026-09-21T11:13:48.573744294",
         "meta": {
             "nf-test": "0.9.5",
-            "nextflow": "26.04.4"
+            "nextflow": "26.04.6"
         }
     },
     "study_eur - two mismatches": {

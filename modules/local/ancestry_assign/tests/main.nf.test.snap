@@ -131,7 +131,7 @@
                             "ancestry": "A",
                             "id": "synthetic"
                         },
-                        "synthetic.ancestry_assignment.tsv:md5,6afa188feffd4d3ea0b0ef6bc692d06b"
+                        "synthetic.ancestry_assignment.tsv:md5,eca7736bb49048ddeaedca3ffd68b993"
                     ]
                 ],
                 "keep_lists": [
@@ -140,7 +140,10 @@
                             "ancestry": "A",
                             "id": "synthetic"
                         },
-                        "synthetic.ancestry_A.keep:md5,d41d8cd98f00b204e9800998ecf8427e"
+                        [
+                            "synthetic.ancestry_A.keep:md5,d41d8cd98f00b204e9800998ecf8427e",
+                            "synthetic.ancestry_B.keep:md5,d41d8cd98f00b204e9800998ecf8427e"
+                        ]
                     ]
                 ],
                 "model": [
@@ -178,7 +181,7 @@
                             "ancestry": "A",
                             "id": "synthetic"
                         },
-                        "synthetic.ancestry_pca.tsv:md5,94490ff822e78dbc2b548bd36d1529b5"
+                        "synthetic.ancestry_pca.tsv:md5,d9313af748d69aec36d4baf0db193c3e"
                     ]
                 ],
                 "sample_remove": [
@@ -196,7 +199,7 @@
                             "ancestry": "A",
                             "id": "synthetic"
                         },
-                        "synthetic.ancestry_summary.tsv:md5,696f413f11a666f72b6b5cc8f905f0f2"
+                        "synthetic.ancestry_summary.tsv:md5,7985a7e668e90e6a58f4775fd1b3fcd7"
                     ]
                 ],
                 "versions": [
@@ -204,10 +207,10 @@
                 ]
             }
         ],
-        "timestamp": "2026-09-20T20:24:23.445760888",
+        "timestamp": "2026-09-21T11:06:18.253629103",
         "meta": {
             "nf-test": "0.9.5",
-            "nextflow": "26.04.4"
+            "nextflow": "26.04.6"
         }
     }
 }

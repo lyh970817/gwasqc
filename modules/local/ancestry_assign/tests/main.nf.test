@@ -163,10 +163,12 @@ nextflow_process {
         when {
             process {
                 """
+                // The stub derives its headers and keep-list set from the score header and the population
+                // table, so both carry a representative shape: four components and two groups.
                 def header = ['#FID', 'IID', 'ALLELE_CT', 'NAMED_ALLELE_DOSAGE_SUM', 'PC1_AVG', 'PC2_AVG', 'PC3_AVG', 'PC4_AVG'].join('\\t')
                 file("${workDir}/reference.sscore").text = header + '\\n'
                 file("${workDir}/study.sscore").text = header + '\\n'
-                file("${workDir}/ref_pop.tsv").text = 'FID\\tIID\\tpop\\tsuper_pop\\n'
+                file("${workDir}/ref_pop.tsv").text = 'FID\\tIID\\tpop\\tsuper_pop\\nA_001\\tA_001\\tA1\\tA\\nB_001\\tB_001\\tB1\\tB\\n'
                 input[0] = [ [ id:'synthetic', ancestry:'A' ], file("${workDir}/reference.sscore"), file("${workDir}/study.sscore") ]
                 input[1] = file("${workDir}/ref_pop.tsv")
                 input[2] = 0.5
@@ -176,8 +178,14 @@ nextflow_process {
         }
 
         then {
+            def keep = process.out.keep_lists.get(0).get(1).collect { file -> new File(file.toString()).name }.sort()
             assertAll(
                 { assert process.success },
+                // The same headers the template writes for these inputs.
+                { assert path(process.out.assignment.get(0).get(1)).readLines() == ['FID\tIID\tASSIGNED\tSTATUS\tMAX_PROB\tMAX_ABS_Z\tPROB_A\tPROB_B'] },
+                { assert path(process.out.summary.get(0).get(1)).readLines() == ['GROUP\tSTATUS\tN_REFERENCE\tN_STUDY\tRULE'] },
+                { assert path(process.out.pca_data.get(0).get(1)).readLines() == ['FID\tIID\tSOURCE\tPOP\tSUPER_POP\tASSIGNED\tPC1\tPC2\tPC3\tPC4'] },
+                { assert keep == ['synthetic.ancestry_A.keep', 'synthetic.ancestry_B.keep'] },
                 { assert snapshot(sanitizeOutput(process.out)).match() },
             )
         }

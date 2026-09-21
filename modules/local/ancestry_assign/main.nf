@@ -17,7 +17,7 @@ process ANCESTRY_ASSIGN {
     tuple val(meta), path("${prefix}.ancestry_assignment.tsv"), emit: assignment
     tuple val(meta), path("${prefix}.ancestry_summary.tsv"), emit: summary
     tuple val(meta), path("${prefix}.ancestry_model.tsv"), emit: model
-    tuple val(meta), path("${prefix}.ancestry_*.keep"), emit: keep_lists
+    tuple val(meta), path("${prefix}.ancestry_*.keep"), emit: keep_lists, optional: true
     tuple val(meta), path("${prefix}.ancestry_mismatch_remove.txt"), emit: sample_remove
     tuple val(meta), path("${prefix}.ancestry_pca.tsv"), emit: pca_data
     tuple val(meta), path("${prefix}.ancestry_pc1_pc2.pdf"), path("${prefix}.ancestry_pc1_pc2.png"), emit: pc1_pc2_plot
@@ -38,17 +38,26 @@ process ANCESTRY_ASSIGN {
 
     stub:
     prefix = task.ext.prefix ?: "${meta.id}"
+    // The headers and the keep-list set are derived from the inputs as the template derives them: the ID
+    // and PC columns from the reference score table, the groups from the population table. When an input is
+    // itself a stub's empty file, the score header falls back to the one the pipeline's --score run writes
+    // with four components and the population table to its four columns.
     """
-    printf 'FID\\tIID\\tASSIGNED\\tSTATUS\\tMAX_PROB\\tMAX_ABS_Z\\n' > ${prefix}.ancestry_assignment.tsv
-    printf 'GROUP\\tN_REFERENCE\\tN_STUDY\\tRULE\\n' > ${prefix}.ancestry_summary.tsv
-    printf 'OBSERVED\\tPREDICTED\\tN\\n' > ${prefix}.ancestry_model.tsv
-    touch ${prefix}.ancestry_${meta.ancestry}.keep
-    touch ${prefix}.ancestry_mismatch_remove.txt
-    printf 'FID\\tIID\\tSOURCE\\tPOP\\tSUPER_POP\\tASSIGNED\\n' > ${prefix}.ancestry_pca.tsv
-    touch ${prefix}.ancestry_pc1_pc2.pdf
-    touch ${prefix}.ancestry_pc1_pc2.png
-    touch ${prefix}.ancestry_pc3_pc4.pdf
-    touch ${prefix}.ancestry_pc3_pc4.png
-    Rscript -e 'writeLines(c("\\"${task.process}\\":", paste0("    r-base: ", paste(R.version[["major"]], R.version[["minor"]], sep = ".")), paste0("    r-ggplot2: ", packageVersion("ggplot2")), paste0("    r-data.table: ", packageVersion("data.table")), paste0("    r-mass: ", packageVersion("MASS"))), "versions.yml")'
+    Rscript -e '
+        scores <- if (file.size("${reference_scores}") > 0) sub("^#", "", strsplit(readLines("${reference_scores}", n = 1), "\\t")[[1]]) else c("FID", "IID", "ALLELE_CT", "NAMED_ALLELE_DOSAGE_SUM", paste0("PC", 1:4, "_AVG"))
+        pop <- if (file.size("${pop_data}") > 0) read.table("${pop_data}", header = TRUE, sep = "\\t", colClasses = "character") else data.frame(FID = character(0), IID = character(0), pop = character(0), super_pop = character(0))
+        ids <- intersect(intersect(c("FID", "IID"), scores), names(pop))
+        pcs <- sub("_.*\$", "", grep("^PC[0-9]+(_AVG|_SUM)?\$", scores, value = TRUE))
+        groups <- sort(unique(pop[["super_pop"]]))
+        header <- function(columns, file) writeLines(paste(columns, collapse = "\\t"), file)
+        header(c(ids, "ASSIGNED", "STATUS", "MAX_PROB", "MAX_ABS_Z", paste0("PROB_", groups)), "${prefix}.ancestry_assignment.tsv")
+        header(c("GROUP", "STATUS", "N_REFERENCE", "N_STUDY", "RULE"), "${prefix}.ancestry_summary.tsv")
+        header(c("OBSERVED", "PREDICTED", "N"), "${prefix}.ancestry_model.tsv")
+        for (group in groups) file.create(paste0("${prefix}.ancestry_", group, ".keep"))
+        file.create("${prefix}.ancestry_mismatch_remove.txt")
+        header(c(ids, "SOURCE", "POP", "SUPER_POP", "ASSIGNED", pcs), "${prefix}.ancestry_pca.tsv")
+        for (stem in c("${prefix}.ancestry_pc1_pc2", "${prefix}.ancestry_pc3_pc4")) file.create(paste0(stem, c(".pdf", ".png")))
+        writeLines(c("\\"${task.process}\\":", paste0("    r-base: ", paste(R.version[["major"]], R.version[["minor"]], sep = ".")), paste0("    r-ggplot2: ", packageVersion("ggplot2")), paste0("    r-data.table: ", packageVersion("data.table")), paste0("    r-mass: ", packageVersion("MASS"))), "versions.yml")
+    '
     """
 }

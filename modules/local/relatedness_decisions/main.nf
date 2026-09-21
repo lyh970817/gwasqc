@@ -34,9 +34,20 @@ process RELATEDNESS_DECISIONS {
 
     stub:
     prefix = task.ext.prefix ?: "${meta.id}"
+    // The pair table carries the kinship report's own columns and the individual table the ID columns of
+    // the missingness report, so both headers are derived from the reports; when a report is itself a stub's
+    // empty file, the header is the one the pinned plink2 writes for a fileset with family IDs.
     """
-    printf 'FID1\\tIID1\\tFID2\\tIID2\\tNSNP\\tHETHET\\tIBS0\\tKINSHIP\\tDEGREE\\tRELATIONSHIP\\n' > ${prefix}.relatedness_pairs.tsv
-    printf 'FID\\tIID\\tN_PAIRS_REPORTED\\tMEAN_KINSHIP\\tOUTLIER\\n' > ${prefix}.relatedness_indiv.tsv
+    if [ -s ${kin0} ]; then
+        printf '%s\\tDEGREE\\tRELATIONSHIP\\n' "\$(head -n 1 ${kin0} | sed 's/^#//')" > ${prefix}.relatedness_pairs.tsv
+    else
+        printf 'FID1\\tIID1\\tFID2\\tIID2\\tNSNP\\tHETHET\\tIBS0\\tKINSHIP\\tDEGREE\\tRELATIONSHIP\\n' > ${prefix}.relatedness_pairs.tsv
+    fi
+    if [ -s ${smiss} ]; then
+        printf '%sN_PAIRS_REPORTED\\tMEAN_KINSHIP\\tOUTLIER\\n' "\$(head -n 1 ${smiss} | sed 's/^#//' | tr '\\t' '\\n' | grep -x -e FID -e IID | tr '\\n' '\\t')" > ${prefix}.relatedness_indiv.tsv
+    else
+        printf 'FID\\tIID\\tN_PAIRS_REPORTED\\tMEAN_KINSHIP\\tOUTLIER\\n' > ${prefix}.relatedness_indiv.tsv
+    fi
     touch ${prefix}.relatedness_remove.txt
     touch ${prefix}.relatedness_outliers.txt
     printf 'bin_start\\tbin_end\\tcount\\n' > ${prefix}.relatedness_hist.tsv
