@@ -1,0 +1,4 @@
+interface:
+  display_name: "gwasqc pipeline test"
+  short_description: "Run the local fixture-backed gwasqc nf-test suite"
+  default_prompt: "Use $gwasqc-pipeline-test to validate the requested gwasqc pipeline scenario or suite."

@@ -7,8 +7,8 @@ description: Create, maintain, or transfer an nf-core subworkflow, including an 
 
 Read the canonical contracts in
 [`nf-core-subworkflows.md`](../../../docs/coding-standards/nf-core-subworkflows.md) and
-[`contribution-boundaries.md`](../../../docs/coding-standards/contribution-boundaries.md). Also read the GWAS and
-fixture/testing topics indexed by `CODING_STANDARDS.md` when those surfaces apply.
+[`contribution-boundaries.md`](../../../docs/coding-standards/contribution-boundaries.md). Also read the
+genotype-QC and fixture/testing topics indexed by `CODING_STANDARDS.md` when those surfaces apply.
 
 For unresolved upstream detail, inspect the fetch date and relevant topic under `docs/nf-core-standards/`; use
 `nf-core-standards-refresh` only when staleness affects the decision. Current upstream standards beat nearby
@@ -25,7 +25,7 @@ examples, but a conflict with a canonical repository contract must be surfaced a
    snapshots against every applicable canonical contract.
 5. Trace focal identity, optional-resource absence, scatter/gather cardinality, version flow, and every public
    take/emit across the whole dependency graph. Record unresolved interface questions as blockers.
-6. Resolve fixtures with `nf-core-fixtures`. Use `gwas-pipeline-test` for candidate integration and regression in
+6. Resolve fixtures with `nf-core-fixtures`. Use `gwasqc-pipeline-test` for candidate integration and regression in
    this checkout. Use `nf-core-submission-test` only for the portable copy in its actual writable submission
    worktree; pipeline evidence is not component-submission evidence.
 

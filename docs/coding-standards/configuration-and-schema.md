@@ -178,8 +178,8 @@ arm64, emulate_amd64, singularity, podman, shifter, charliecloud, apptainer, wav
 - **[MUST]** Keep `params { }` minimal: `config_profile_name`, `config_profile_description`, test-data
   paths, and only the feature flags that specific scenario needs. Never redefine unrelated defaults.
   _(all three)_
-- **[MUST]** 1:1 naming between profile name and config filename (`test_gwas_binary` ↔
-  `conf/test_gwas_binary.config`). _(all three)_
+- **[MUST]** 1:1 naming between profile name and config filename (`test_full` ↔
+  `conf/test_full.config`). _(all three)_
 - **[SHOULD]** Pin test-data paths to a specific `nf-core/test-datasets` commit rather than a branch, so CI
   is reproducible. _(rnaseq)_
 - **[SHOULD]** A small `process { withName: X { ext.args = ... } }` block inside a test config is acceptable

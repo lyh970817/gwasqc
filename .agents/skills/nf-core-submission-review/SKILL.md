@@ -10,7 +10,7 @@ procedures, gates, and evidence being audited.
 
 ## Review execution
 
-1. Build a checklist from the target: component boundary, module or subworkflow contract, GWAS conventions,
+1. Build a checklist from the target: component boundary, module or subworkflow contract, genotype-QC conventions,
    packages/containers, fixtures/tests, contribution boundary, and public PR procedure.
 2. Run an independent review subagent when available. Ask it to prioritize bugs, standard violations,
    cross-file contract mismatches, fixture risks, missing profiles, and public blockers.

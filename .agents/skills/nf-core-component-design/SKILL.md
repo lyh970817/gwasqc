@@ -19,8 +19,10 @@ read-only. Use the specialized skills at the appropriate lifecycle point:
 
 1. Extract every applicable stable constraint from the canonical topics. Consult only the cache topics needed
    for a specific unresolved upstream question.
-2. Check the relevant programme documentation cache or index under `docs/`, then use primary programme, API,
-   CLI, release, packaging, test, and container sources for unresolved details.
+2. Check the relevant topic of the ignored `docs/nf-core-standards/` cache when it exists, then use primary
+   programme, API, CLI, release, packaging, test, and container sources for unresolved details. This repository
+   keeps no tracked third-party programme documentation cache; `GLAD_EDGI_NBR_qc_workflows/` is the legacy port's
+   specification, not a tool reference.
 3. For each proposed component, record executable ownership, reproducible execution path, public name, atomic or
    reusable boundary, metadata/file/scalar roles, outputs and identity, package/container route, fixture decision,
    real/stub validation, and pipeline-local exclusions.

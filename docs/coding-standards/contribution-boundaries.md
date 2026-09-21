@@ -16,9 +16,10 @@ owner deliberately. A skill may not silently override a stable contract.
 
 ## Repository and workspace identity
 
-Pipeline development belongs in this `nf-core/gwasqc` checkout. Portable pipeline PRs normally branch from and
-target `nf-core/gwasqc:dev`; a critical released-version hotfix may branch from and target `master` when explicitly
-chosen.
+Pipeline development belongs in this `gwasqc` checkout. It uses the nf-core template and the `nf-core/` org
+prefix but is not a registered nf-core pipeline, so there is no public pipeline PR target and no `dev` or
+`master` base to branch from: local `personal` is the complete pipeline track, and a temporary branch is merged
+into it and then removed. The repository's upstream track is the component library, not the pipeline.
 
 An upstream module or subworkflow submission belongs in a dedicated branch and worktree of a separate writable
 `nf-core/modules` checkout based on its current upstream `master`. `.references/modules` is read-only reference
@@ -34,8 +35,9 @@ When a component needs new shared fixtures, prepare them in a separately resolve
 ## Personal and public tracks in this pipeline
 
 `personal` is the complete development track. It may contain both portable pipeline work and personal
-development infrastructure. The upstream pipeline PR track contains only the reviewer-facing portable delta
-from `upstream/dev`.
+development infrastructure. The upstream track is a focused `nf-core/modules` submission branch carrying only
+the portable atomic component contract of one PLINK 2 atom, in a separate writable checkout of that
+repository.
 
 Classify every changed hunk exactly once:
 
@@ -47,10 +49,12 @@ Classify every changed hunk exactly once:
   tests and CI using public or committed inputs, and reviewer-facing `README.md`, `CHANGELOG.md`,
   `CITATIONS.md`, and public documentation.
 
-Classify ambiguous paths by purpose and split mixed files by hunk. A portable pipeline change is complete only
-when equivalent behavior is present on both the upstream-PR and personal tracks. A personal-only change is
-complete when present on `personal` and absent from the public diff. The `dual-track-commit` skill owns branch
-discovery, transfer order, conflict gates, patch-equivalence evidence, and final verification.
+Classify ambiguous paths by purpose and split mixed files by hunk. A portable pipeline change is complete when
+it is present on `personal` and its reviewer-facing text carries nothing the public boundary excludes. A
+personal-only change is complete when present on `personal` and confined to the personal-only paths above. An
+upstream component submission is complete when the portable component contract is present in the
+`nf-core/modules` worktree. The `dual-track-commit` skill owns branch discovery, transfer order, conflict gates,
+the boundary scan, and final verification.
 
 This dual-track rule governs changes made in the pipeline repository. It does not require an upstream
 `nf-core/modules` submission to be copied into the pipeline's personal history.

@@ -1,6 +1,6 @@
 ---
 name: nf-core-fixtures
-description: Decide, prepare, or review nf-core/test-datasets fixtures for an upstream module or subworkflow submission. Do not use for this pipeline's private GWAS fixture resolver.
+description: Decide, prepare, or review nf-core/test-datasets fixtures for an upstream module or subworkflow submission. Do not use for this pipeline's private gwasqc fixture resolver.
 ---
 
 # Resolve component fixtures

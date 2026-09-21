@@ -7,8 +7,8 @@ description: Create, maintain, or transfer an nf-core module, including an upstr
 
 Read the canonical contracts in
 [`nf-core-modules.md`](../../../docs/coding-standards/nf-core-modules.md) and
-[`contribution-boundaries.md`](../../../docs/coding-standards/contribution-boundaries.md). Also read the GWAS,
-container, and fixture/testing topics indexed by `CODING_STANDARDS.md` when those surfaces apply.
+[`contribution-boundaries.md`](../../../docs/coding-standards/contribution-boundaries.md). Also read the
+genotype-QC, container, and fixture/testing topics indexed by `CODING_STANDARDS.md` when those surfaces apply.
 
 For unresolved upstream detail, inspect the fetch date and relevant topic under `docs/nf-core-standards/`; use
 `nf-core-standards-refresh` only when staleness affects the decision. Current upstream standards beat nearby
@@ -26,7 +26,7 @@ examples, but a conflict with a canonical repository contract must be surfaced a
 5. Generate or maintain the standard component surface, then reconcile `main.nf`, `meta.yml`, environment,
    tests, configuration, and snapshots against every applicable canonical contract.
 6. Resolve containers with `nf-core-containers` and fixtures with `nf-core-fixtures` when applicable.
-7. Validate at the level supported by the actual location. Use `gwas-pipeline-test` for candidate integration and
+7. Validate at the level supported by the actual location. Use `gwasqc-pipeline-test` for candidate integration and
    regression in this checkout. Use `nf-core-submission-test` only for the portable copy in its actual writable
    submission worktree, and require its full profile gate before declaring PR readiness. Pipeline evidence is not
    component-submission evidence.
