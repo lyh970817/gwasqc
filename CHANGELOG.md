@@ -43,8 +43,23 @@ Initial release of nf-core/gwasqc, created with the [nf-core](https://nf-co.re/)
   `ancestry_ld_step_size`, `ancestry_ld_r2`, `ancestry_n_pcs`, `ancestry_prob_threshold`, `ancestry_sd_filter`
   and `ancestry_remove_mismatched`; under `apply_sample_removals` the ancestry mismatch list joins the terminal
   `--remove` unless `ancestry_remove_mismatched` is off.
+- The remaining legacy review figures as pipeline-owned R modules with their plot-data tables: the per-variant
+  and per-sample missingness histograms with the `geno` and `mind` thresholds marked (`missingness_plots`, one
+  linear and one log-scale panel in place of the legacy fixed y-axis views), the call-rate ladder rendered as a
+  table image, and the Hardy-Weinberg p-value histograms over every variant and within the legacy
+  1e-20 < P < 0.01 window with the `hwe` threshold marked (`hwe_plots`).
+- Reporting: a per-stratum summary row and MultiQC custom-content fragments assembled from the published lists
+  and tables (`stratum_report`), the cross-stratum summary `gwasqc_summary.tsv` at the run root and the
+  per-stage MultiQC tables cut from it (`qc_summary`), and a MultiQC report with one section per QC stage,
+  strata as rows, the mismatch and duplicate-pair tables across strata, the removal-gate section stating what
+  `apply_sample_removals` did or would do, and the review figures of every stratum embedded as images.
 
 ### Changed
+
+- Publication policy: the published tree holds the QC'd fileset, the decision lists, the statistics tables,
+  the plot-data tables and figures, the ladder and summary tables, the MultiQC report and the pipeline
+  information. The pruned-out list, the raw KING `.kin0` table and the `--score` projections are no longer
+  published: the pruned-in list, the classified pairs table and the ancestry plot-data table carry them.
 
 - Missingness follows the legacy order exactly: the geno exclusion list is derived from one `--missing` run,
   the sample report and the mind removal list from a second run with that list excluded, and each rung of the
@@ -64,5 +79,7 @@ Initial release of nf-core/gwasqc, created with the [nf-core](https://nf-co.re/)
 | r-data.table |             | 1.17.8      |
 | r-mass       |             | 7.3-66      |
 | gawk         |             | 5.3.1       |
+| coreutils    |             | 9.4         |
+| MultiQC      |             | 1.34        |
 
 ### Deprecated

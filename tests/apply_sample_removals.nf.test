@@ -24,8 +24,15 @@ nextflow_pipeline {
                 (lines("qc/${id}/missingness/${id}.mind_remove.txt") + lines("qc/${id}/sex_check/${id}.sex_mismatch_remove.txt") + lines("qc/${id}/relatedness/${id}.relatedness_remove.txt") + lines("qc/${id}/ancestry/${id}.ancestry_mismatch_remove.txt")).unique()
             }
             def fam_ids = { id -> lines("genotypes/${id}/${id}.qc.fam").collect { line -> line.split(/\s+/)[1] } }
+            def summary_rows = lines('gwasqc_summary.tsv').collect { line -> line.split('\t', -1).toList() }
+            def summary = summary_rows.drop(1).collectEntries { fields -> [(fields[0]): [summary_rows[0], fields].transpose().collectEntries { column, value -> [(column): value] }] }
+            def report = new File("${params.outdir}/multiqc/multiqc_report.html").text
             assertAll(
                 { assert workflow.success },
+                // The summary and the removal-gate section state that every list was applied and that the gate
+                // removed exactly the union it lists.
+                { assert strata.every { id -> summary[id].subMap(['sex_removals', 'relatedness_removals', 'ancestry_removals', 'samples_removed_under_gate', 'samples_removed', 'samples_final']) == [sex_removals: 'applied', relatedness_removals: 'applied', ancestry_removals: 'applied', samples_removed_under_gate: '8', samples_removed: '8', samples_final: '117'] } },
+                { assert report.contains('id="gwasqc_sample_removals"') },
                 // Eight removals per stratum: two mind, two sex, one duplicate member, three ancestry outliers;
                 // none of them is in the fam.
                 { assert strata.every { id -> removed(id).size() == 8 } },

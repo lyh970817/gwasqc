@@ -55,12 +55,12 @@ chr1,/path/to/reference/1KG_Phase3.chr1.bed,/path/to/reference/1KG_Phase3.chr1.b
 chr2,/path/to/reference/1KG_Phase3.chr2.bed,/path/to/reference/1KG_Phase3.chr2.bim,/path/to/reference/1KG_Phase3.chr2.fam
 ```
 
-| Column | Description                                                                                                    |
-| ------ | -------------------------------------------------------------------------------------------------------------- |
+| Column | Description                                                                                                     |
+| ------ | --------------------------------------------------------------------------------------------------------------- |
 | `id`   | Unique identifier of the fileset without spaces, such as a chromosome or `all`; the filesets merge in id order. |
-| `bed`  | Full path to the PLINK 1 binary genotype file of the fileset.                                                  |
-| `bim`  | Full path to the PLINK 1 variant file. It must share its basename with the `bed` and `fam` files.              |
-| `fam`  | Full path to the PLINK 1 sample file. It must share its basename with the `bed` and `bim` files.               |
+| `bed`  | Full path to the PLINK 1 binary genotype file of the fileset.                                                   |
+| `bim`  | Full path to the PLINK 1 variant file. It must share its basename with the `bed` and `fam` files.               |
+| `fam`  | Full path to the PLINK 1 sample file. It must share its basename with the `bed` and `bim` files.                |
 
 `--reference_pop_data` is a tab-separated table with a header row and the columns `FID`, `IID`, `pop` and `super_pop`, one row per reference sample; every sample of the panel must be listed. The `super_pop` labels are the groups the classifier learns, and the `ancestry` column of the samplesheet is matched against them: a stratum whose label is not one of them has every sample listed as an ancestry mismatch, which is a warning when the list is only published and an error when `--apply_sample_removals` would apply it.
 
@@ -74,6 +74,10 @@ The reference is restricted to each stratum's QC'd variants with the pipeline's 
 
 > [!NOTE]
 > plink2 refuses `--pca` on fewer than 50 reference samples and recommends its `approx` modifier on panels far beyond 5000 samples; the modifier reaches the decomposition through `ext.args` of `PLINK2_PCAWTS` in a custom config.
+
+### Report
+
+The run root holds `gwasqc_summary.tsv`, one row per stratum with the samples and variants that entered, what every stage removed or listed at its threshold, the sex, heterozygosity, relatedness and ancestry counts, what `--apply_sample_removals` did or would do, and what left. The MultiQC report under `multiqc/` opens with the same table and continues with one section per QC stage: a table across strata, then the review figures of each stratum. Every number in both is read from a published list or table, so a count in the report can be traced to the file it was counted from; no threshold has to be re-entered to read it, because the thresholds are recorded in the summary. The report takes no parameters of its own beyond the MultiQC options (`--multiqc_title`, `--multiqc_config`, `--multiqc_logo`, `--multiqc_methods_description`); a custom MultiQC config extends the pipeline's `assets/multiqc_config.yml`, which orders the sections.
 
 ## Running the pipeline
 
