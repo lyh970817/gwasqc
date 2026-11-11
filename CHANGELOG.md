@@ -141,6 +141,11 @@ The VCZ format route is deferred to its own issue, and pre-QC batch merging is o
 
 ### Fixed
 
+- Sample and variant IDs are read as text in every R step that reads a plink or population table
+  (`geno_decisions`, `mind_decisions`, `hwe_decisions`, `hwe_plots`, `missingness_ladder`, `missingness_plots`,
+  `sex_check_decisions`, `heterozygosity_plots`, `relatedness_decisions` and `ancestry_assign`), so an
+  all-numeric ID with leading zeros, such as `007`, is written back to the decision lists byte for byte instead
+  of being coerced to a number that no longer matches the fileset.
 - The stubs of `ancestry_assign`, `sex_check_decisions` and `relatedness_decisions` now write the same file set
   and the same headers as their real templates, derived from their inputs, so a `-stub` run exercises the
   published layout rather than a narrower one.
