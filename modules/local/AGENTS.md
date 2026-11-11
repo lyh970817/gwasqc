@@ -7,7 +7,7 @@ publication, and reuse identity: a threshold reaches a plink2 atom only as nativ
 `ext.args` (or `ext.args2` where plink2 reads modifiers that must follow the command flag, as `plink2/checksex`
 does), never as a module input.
 
-`geno_decisions`, `mind_decisions`, `missingness_ladder`, `missingness_plots`, `hwe_decisions`, `hwe_plots`,
+`contig_exclude`, `geno_decisions`, `mind_decisions`, `missingness_ladder`, `missingness_plots`, `hwe_decisions`, `hwe_plots`,
 `highld_exclude`, `sex_check_decisions`, `heterozygosity_plots`, `relatedness_decisions`, `ancestry_harmonise`,
 `ancestry_assign`, `ancestry_reference_keep`, `stratum_report` and `qc_summary` are pipeline-owned. They carry the
 pipeline's decision policy (thresholds are explicit inputs; `ancestry_assign` reads the stratum's `meta.ancestry`

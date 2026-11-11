@@ -208,7 +208,7 @@ header. Never merge the two roles into one file.
   (`modules/local/geno_decisions/templates/geno_decisions.R:33`,
   `modules/local/hwe_decisions/templates/hwe_decisions.R`,
   `modules/local/ancestry_harmonise/templates/ancestry_harmonise.R:218-219`,
-  `modules/local/highld_exclude/main.nf:51`). This is also what plink2 itself writes for `--write-snplist` and
+  `modules/local/highld_exclude/main.nf:51`, `modules/local/contig_exclude/main.nf`). This is also what plink2 itself writes for `--write-snplist` and
   `--indep-pairwise`, so a pipeline-owned list and a plink2-produced list are interchangeable in one filter slot.
 - **[MUST]** A sample list is one `FID IID` pair per line, **blank-separated**, no header, with a documented
   fallback to a bare `IID` when the source report carries no `FID` column
@@ -374,7 +374,8 @@ header. Never merge the two roles into one file.
 - **[MUST]** A variant file read by a pipeline-owned module is parsed by its extension, and each branch's column
   mapping is explicit: a `.pvar` is re-parsed from its own `#CHROM` header line, a `.bim` positionally
   (`modules/local/ancestry_harmonise/templates/ancestry_harmonise.R`, `read_variants`;
-  `modules/local/highld_exclude/main.nf:39-40`). The two formats order the allele columns oppositely, so a module
+  `modules/local/highld_exclude/main.nf:39-40`; `modules/local/contig_exclude/main.nf`, which takes the ID
+  column's position from the `#CHROM` line). The two formats order the allele columns oppositely, so a module
   that compares alleles across two variant files maps them onto one pair of slots the way plink2 itself does when
   it converts between the formats: bim column 5 and pvar `ALT` are A1, bim column 6 and pvar `REF` are A2. A
   bim and a pvar of one fileset then classify alike, and a test holds a bim target against the same reference
@@ -486,7 +487,8 @@ header. Never merge the two roles into one file.
 - **[MUST]** A stratum's products are published under `${params.outdir}/qc/${meta.id}/<stage>` and the terminal
   fileset under `${params.outdir}/genotypes/${meta.id}` (`conf/modules/plink2.config`,
   `conf/modules/qc_decisions.config`). The stage directory is the scientific stage, not the process name, and a
-  decision list is published beside the statistic it was derived from.
+  decision list is published beside the statistic it was derived from; a list derived from the variant table
+  alone, the contig exclusion, has a stage directory of its own (`contigs`).
 - **[MUST]** The process-wide default publishes nothing (`nextflow.config:301-311`), and every per-family selector
   opts its own processes in. An enabled `publishDir` in `conf/modules/plink2.config` or
   `conf/modules/qc_decisions.config` declares an explicit `pattern`, which is how a run log is never published:
