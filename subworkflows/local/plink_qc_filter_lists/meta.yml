@@ -1,6 +1,6 @@
 # yaml-language-server: $schema=https://raw.githubusercontent.com/nf-core/modules/master/subworkflows/yaml-schema.json
 name: plink_qc_filter_lists
-description: Derive the MAF keep-list, the geno and mind missingness decision lists in the legacy order with the call-rate ladder, and the Hardy-Weinberg exclusion list of one PLINK fileset per stratum from stats-only plink2 runs
+description: Derive the exclusion list of the variants on non-standard contigs, the MAF keep-list over the standard chromosomes, the geno and mind missingness decision lists in the legacy order with the call-rate ladder, and the Hardy-Weinberg exclusion list of one PLINK fileset per stratum from stats-only plink2 runs
 keywords:
   - plink
   - quality control
@@ -8,6 +8,7 @@ keywords:
   - hardy-weinberg
   - minor allele frequency
 components:
+  - contig_exclude
   - plink2/writesnplist
   - plink2/missing
   - geno_decisions
@@ -33,9 +34,15 @@ input:
       description: Variants whose Hardy-Weinberg exact-test p-value is below this value are listed for exclusion
       structure: number hwe
 output:
+  - contig_exclude:
+      type: file
+      description: Variants whose chromosome code is not one of 1-22, X, Y, XY and MT, such as alt and random contigs, one ID per line; applied under --exclude to the MAF run, so that the MAF keep-list and everything extracted from it carry the standard chromosomes only
+      structure: [map meta, path contig_exclude]
+      pattern: "*.contig_exclude.txt"
+      ontologies: []
   - maf_snplist:
       type: file
-      description: Variants passing the MAF threshold configured on PLINK2_WRITESNPLIST through ext.args, one ID per line
+      description: Variants on the standard chromosomes passing the MAF threshold configured on PLINK2_WRITESNPLIST through ext.args, one ID per line
       structure: [map meta, path snplist]
       pattern: "*.snplist"
       ontologies: []

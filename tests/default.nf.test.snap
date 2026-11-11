@@ -14,6 +14,9 @@
                 "ANCESTRY_REFERENCE_KEEP": {
                     "gawk": "5.3.1"
                 },
+                "CONTIG_EXCLUDE": {
+                    "gawk": "5.3.1"
+                },
                 "GENO_DECISIONS": {
                     "r-base": "4.3.1"
                 },
@@ -174,6 +177,8 @@
                 "qc/study_afr/ancestry/study_afr.ancestry_pca.tsv",
                 "qc/study_afr/ancestry/study_afr.ancestry_reference_extract.snplist",
                 "qc/study_afr/ancestry/study_afr.ancestry_summary.tsv",
+                "qc/study_afr/contigs",
+                "qc/study_afr/contigs/study_afr.contig_exclude.txt",
                 "qc/study_afr/heterozygosity",
                 "qc/study_afr/heterozygosity/study_afr.het",
                 "qc/study_afr/heterozygosity/study_afr.het_hist.pdf",
@@ -251,6 +256,8 @@
                 "qc/study_csa/ancestry/study_csa.ancestry_pca.tsv",
                 "qc/study_csa/ancestry/study_csa.ancestry_reference_extract.snplist",
                 "qc/study_csa/ancestry/study_csa.ancestry_summary.tsv",
+                "qc/study_csa/contigs",
+                "qc/study_csa/contigs/study_csa.contig_exclude.txt",
                 "qc/study_csa/heterozygosity",
                 "qc/study_csa/heterozygosity/study_csa.het",
                 "qc/study_csa/heterozygosity/study_csa.het_hist.pdf",
@@ -328,6 +335,8 @@
                 "qc/study_eur/ancestry/study_eur.ancestry_pca.tsv",
                 "qc/study_eur/ancestry/study_eur.ancestry_reference_extract.snplist",
                 "qc/study_eur/ancestry/study_eur.ancestry_summary.tsv",
+                "qc/study_eur/contigs",
+                "qc/study_eur/contigs/study_eur.contig_exclude.txt",
                 "qc/study_eur/heterozygosity",
                 "qc/study_eur/heterozygosity/study_eur.het",
                 "qc/study_eur/heterozygosity/study_eur.het_hist.pdf",
@@ -382,7 +391,7 @@
                 "qc/study_eur/sex_check/study_eur.sexcheck"
             ]
         ],
-        "timestamp": "2026-11-11T14:57:21.684453009",
+        "timestamp": "2026-11-11T17:16:27.985640102",
         "meta": {
             "nf-test": "0.9.5",
             "nextflow": "26.04.6"
@@ -401,6 +410,9 @@
                     "r-base": "4.3.1"
                 },
                 "ANCESTRY_REFERENCE_KEEP": {
+                    "gawk": "5.3.1"
+                },
+                "CONTIG_EXCLUDE": {
                     "gawk": "5.3.1"
                 },
                 "GENO_DECISIONS": {
@@ -615,6 +627,8 @@
                 "qc/study_afr/ancestry/study_afr.ancestry_pca.tsv",
                 "qc/study_afr/ancestry/study_afr.ancestry_reference_extract.snplist",
                 "qc/study_afr/ancestry/study_afr.ancestry_summary.tsv",
+                "qc/study_afr/contigs",
+                "qc/study_afr/contigs/study_afr.contig_exclude.txt",
                 "qc/study_afr/heterozygosity",
                 "qc/study_afr/heterozygosity/study_afr.het",
                 "qc/study_afr/heterozygosity/study_afr.het_hist.pdf",
@@ -692,6 +706,8 @@
                 "qc/study_csa/ancestry/study_csa.ancestry_pca.tsv",
                 "qc/study_csa/ancestry/study_csa.ancestry_reference_extract.snplist",
                 "qc/study_csa/ancestry/study_csa.ancestry_summary.tsv",
+                "qc/study_csa/contigs",
+                "qc/study_csa/contigs/study_csa.contig_exclude.txt",
                 "qc/study_csa/heterozygosity",
                 "qc/study_csa/heterozygosity/study_csa.het",
                 "qc/study_csa/heterozygosity/study_csa.het_hist.pdf",
@@ -769,6 +785,8 @@
                 "qc/study_eur/ancestry/study_eur.ancestry_pca.tsv",
                 "qc/study_eur/ancestry/study_eur.ancestry_reference_extract.snplist",
                 "qc/study_eur/ancestry/study_eur.ancestry_summary.tsv",
+                "qc/study_eur/contigs",
+                "qc/study_eur/contigs/study_eur.contig_exclude.txt",
                 "qc/study_eur/heterozygosity",
                 "qc/study_eur/heterozygosity/study_eur.het",
                 "qc/study_eur/heterozygosity/study_eur.het_hist.pdf",
@@ -832,18 +850,18 @@
                 "study_eur.qc.bed:md5,95a12cd08e057ec0406891ec2293e5f1",
                 "study_eur.qc.bim:md5,89df2f6732f81fc60ef43abc2be36355",
                 "study_eur.qc.fam:md5,222ef1adda2a6ad4f165129f9ba122c9",
-                "gwasqc_summary.tsv:md5,6b178196995449ad266287793f752690",
+                "gwasqc_summary.tsv:md5,187a70642bab0b8f7c497c74fc5f8c22",
                 "multiqc_citations.txt:md5,4c806e63a283ec1b7e78cdae3a923d4f",
                 "multiqc_gwasqc_ancestry_summary.txt:md5,384ad50edb3c1d5890eada906534f2ea",
                 "multiqc_gwasqc_heterozygosity_summary.txt:md5,9d04c2e88c3e839155a0819e3c3f780c",
-                "multiqc_gwasqc_qc_summary.txt:md5,cc1382948399304e9057d8e692cc31d6",
+                "multiqc_gwasqc_qc_summary.txt:md5,753b1a4cb442eca714bfdbe5b4467187",
                 "multiqc_gwasqc_relatedness_pairs.txt:md5,c9a07cd75f085eebe821490e00888cc1",
                 "multiqc_gwasqc_relatedness_summary.txt:md5,3cce6c851b034b5f8eed287ab6ed59ca",
                 "multiqc_gwasqc_sample_qc_markers.txt:md5,bfb9453a46908d94291e323e5b0f3d56",
                 "multiqc_gwasqc_sample_removals.txt:md5,0cd78e95173d5af8a0ec46aa0a99a963",
                 "multiqc_gwasqc_sex_check_mismatches.txt:md5,bee2a6c0436266c3b46ceb45d7eb1ad9",
                 "multiqc_gwasqc_sex_check_summary.txt:md5,af5d93b47f10e2438cd5bff168dfbb9a",
-                "multiqc_gwasqc_variant_qc_filters.txt:md5,da3cb51aecc789c8ee54905ab434269f",
+                "multiqc_gwasqc_variant_qc_filters.txt:md5,b1153b0c302c7be7df083196cc0c93ad",
                 "multiqc_gwasqc_variant_qc_ladder.txt:md5,59ad89bf3727185405d69678f56afd87",
                 "study_afr.ancestry.eigenval:md5,47b3461ebc5acb734bf81e5cc8670f1e",
                 "study_afr.ancestry.highld_exclude.txt:md5,fbb6734da1ab108f1ce9ab407a72afe0",
@@ -864,6 +882,7 @@
                 "study_afr.ancestry_pca.tsv:md5,39d9b477c6a7ca9c0be9e2c1565d00b5",
                 "study_afr.ancestry_reference_extract.snplist:md5,a5456224818be9cb274faa7ea2594405",
                 "study_afr.ancestry_summary.tsv:md5,ce1ba450be5d96b6b0ffbe4df0d127cd",
+                "study_afr.contig_exclude.txt:md5,d41d8cd98f00b204e9800998ecf8427e",
                 "study_afr.het:md5,9c5898bce987a6c34894cc79b1acb275",
                 "study_afr.het_hist.tsv:md5,7aa960033069e7bd02a9708df28632b2",
                 "study_afr.het_sex_scatter.tsv:md5,9d87eb44f863f2c781bca9b106872840",
@@ -910,6 +929,7 @@
                 "study_csa.ancestry_pca.tsv:md5,75c87a2e9572d677fc907a6d7a4a2319",
                 "study_csa.ancestry_reference_extract.snplist:md5,d11fe4a41a5618bf288f63dbf0929120",
                 "study_csa.ancestry_summary.tsv:md5,a8fa1ecbf5a72c53d551e07a4aed23ab",
+                "study_csa.contig_exclude.txt:md5,d41d8cd98f00b204e9800998ecf8427e",
                 "study_csa.het:md5,7b8820980ac20e12a592b7ba7c0d4278",
                 "study_csa.het_hist.tsv:md5,f3509915e84b6d52c5b7d807c1f55355",
                 "study_csa.het_sex_scatter.tsv:md5,36ac2f577d97219ffcd2f377cc4b64fa",
@@ -957,6 +977,7 @@
                 "study_eur.ancestry_pca.tsv:md5,707bfa5078bd51a8c9a8ffbf8afc5202",
                 "study_eur.ancestry_reference_extract.snplist:md5,89d1d9ef24e88fc73a20619d1e3fc404",
                 "study_eur.ancestry_summary.tsv:md5,37e04649229f6cd25e31120ff5bec038",
+                "study_eur.contig_exclude.txt:md5,d41d8cd98f00b204e9800998ecf8427e",
                 "study_eur.het:md5,25f9118b3c44b403e90faae1159f41d6",
                 "study_eur.het_hist.tsv:md5,1a00a3da251c510b0735a3362e613cdc",
                 "study_eur.het_sex_scatter.tsv:md5,3c638f966cf32af9ccabf7ee464bd58f",
@@ -986,7 +1007,7 @@
                 "study_eur.sexcheck:md5,138090ffc7008416cd84f53690124e0b"
             ]
         ],
-        "timestamp": "2026-11-11T14:55:49.819060978",
+        "timestamp": "2026-11-11T17:13:48.411351458",
         "meta": {
             "nf-test": "0.9.5",
             "nextflow": "26.04.6"

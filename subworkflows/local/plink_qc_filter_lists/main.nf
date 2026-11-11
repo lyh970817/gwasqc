@@ -1,8 +1,9 @@
-// Derive the variant and sample filter lists of the MAF, missingness and Hardy-Weinberg chain for one PLINK
-// fileset per stratum from stats-only plink2 runs, without materialising an intermediate fileset.
+// Derive the variant and sample filter lists of the contig, MAF, missingness and Hardy-Weinberg chain for one
+// PLINK fileset per stratum from stats-only plink2 runs, without materialising an intermediate fileset.
 // Pipeline-owned: the R decision modules carry the pipeline's thresholds, so this is not an upstream candidate.
 
 // MODULE: Local to the pipeline
+include { CONTIG_EXCLUDE                            } from '../../../modules/local/contig_exclude/main'
 include { PLINK2_WRITESNPLIST                       } from '../../../modules/local/plink2/writesnplist/main'
 include { PLINK2_MISSING as PLINK2_MISSING_VARIANTS } from '../../../modules/local/plink2/missing/main'
 include { GENO_DECISIONS                            } from '../../../modules/local/geno_decisions/main'
@@ -33,10 +34,25 @@ workflow PLINK_QC_FILTER_LISTS {
     // list excluded, as the legacy chain measured it.
 
     //
-    // MODULE: MAF keep-list; the threshold is native optional behaviour and reaches plink2 through ext.args
+    // MODULE: Exclusion list of the variants on alt, random and other contigs outside 1-22, X, Y, XY and MT
     //
+    CONTIG_EXCLUDE(
+        ch_genotypes.map { meta, _bed, bim, _fam -> [meta, bim] }
+    )
+
+    def ch_contig_genotypes_by_id = ch_genotypes
+        .map { meta, bed, bim, fam -> [meta.id, meta, bed, bim, fam] }
+        .join(CONTIG_EXCLUDE.out.variant_exclude.map { meta, contig_exclude -> [meta.id, contig_exclude] }, by: 0, failOnDuplicate: true, failOnMismatch: true)
+
+    //
+    // MODULE: MAF keep-list over the standard chromosomes; the threshold is native optional behaviour and
+    // reaches plink2 through ext.args
+    //
+    // The contig exclusion is applied here, at the first filter, and only here: every later run extracts this
+    // keep-list, so no variant on a non-standard contig reaches a statistic, a decision list, the ancestry
+    // route or the QC'd fileset.
     PLINK2_WRITESNPLIST(
-        ch_genotypes.map { meta, bed, bim, fam -> [meta, bed, bim, fam, [], [], [], []] }
+        ch_contig_genotypes_by_id.map { _id, meta, bed, bim, fam, contig_exclude -> [meta, bed, bim, fam, [], contig_exclude, [], []] }
     )
 
     def ch_maf_genotypes_by_id = ch_genotypes
@@ -151,7 +167,8 @@ workflow PLINK_QC_FILTER_LISTS {
     HWE_PLOTS(ch_hwe_inputs, hwe)
 
     emit:
-    maf_snplist        = PLINK2_WRITESNPLIST.out.snplist // channel: [ val(meta), path(snplist) ]
+    contig_exclude     = CONTIG_EXCLUDE.out.variant_exclude // channel: [ val(meta), path(contig_exclude) ]
+    maf_snplist        = PLINK2_WRITESNPLIST.out.snplist // channel: [ val(meta), path(snplist) ], over the standard chromosomes
     vmiss              = PLINK2_MISSING_VARIANTS.out.vmiss // channel: [ val(meta), path(vmiss) ], over the MAF-passing variants
     smiss              = PLINK2_MISSING_SAMPLES.out.smiss // channel: [ val(meta), path(smiss) ], over the geno-retained variants
     geno_exclude       = GENO_DECISIONS.out.variant_exclude // channel: [ val(meta), path(geno_exclude) ]

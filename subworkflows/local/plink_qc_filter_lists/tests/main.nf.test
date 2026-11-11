@@ -7,6 +7,7 @@ nextflow_workflow {
 
     tag "subworkflows"
     tag "subworkflows_local"
+    tag "contig_exclude"
     tag "plink2/writesnplist"
     tag "plink2/missing"
     tag "geno_decisions"
@@ -85,6 +86,53 @@ nextflow_workflow {
                 // so they are asserted for presence per stratum and left out of the content snapshot.
                 { assert [workflow.out.vmiss_hist_plot, workflow.out.smiss_hist_plot, workflow.out.ladder_plot, workflow.out.hwe_hist_plot, workflow.out.hwe_window_plot].every { emission -> emission.size() == 2 && emission.every { entry -> path(entry[1]).size() > 0 && path(entry[2]).size() > 0 } } },
                 { assert snapshot(sanitizeOutput(workflow.out).findAll { entry -> !entry.key.endsWith('_plot') }).match() },
+            )
+        }
+    }
+
+    // The EUR stratum beside its copy that also carries eight variants on alt and random contigs, each copied
+    // from a common, complete, Hardy-Weinberg-conforming variant so that no later filter would drop it: the
+    // copy's contig list names exactly those eight, and every other list and table equals the stratum's own.
+    test("gwasqc fixtures - EUR stratum and its alt-contig copy") {
+
+        when {
+            workflow {
+                """
+                input[0] = channel.of(
+                    [
+                        [ id:'study_eur', ancestry:'EUR' ],
+                        file(params.pipelines_testdata_base_path + 'data/gwasqc/genotypes/study_eur.bed', checkIfExists: true),
+                        file(params.pipelines_testdata_base_path + 'data/gwasqc/genotypes/study_eur.bim', checkIfExists: true),
+                        file(params.pipelines_testdata_base_path + 'data/gwasqc/genotypes/study_eur.fam', checkIfExists: true),
+                    ],
+                    [
+                        [ id:'study_eur_alt', ancestry:'EUR' ],
+                        file(params.pipelines_testdata_base_path + 'data/gwasqc/alt_contig/study_eur_alt.bed', checkIfExists: true),
+                        file(params.pipelines_testdata_base_path + 'data/gwasqc/alt_contig/study_eur_alt.bim', checkIfExists: true),
+                        file(params.pipelines_testdata_base_path + 'data/gwasqc/alt_contig/study_eur_alt.fam', checkIfExists: true),
+                    ]
+                )
+                input[1] = 0.05
+                input[2] = 0.05
+                input[3] = 1e-10
+                """
+            }
+        }
+
+        then {
+            def contig_variants = (1..8).collect { i -> "AX-90000000${i}".toString() }
+            def by_id = { emission -> emission.collectEntries { entry -> [(entry[0].id): path(entry[1])] } }
+            def contig_exclude = by_id(workflow.out.contig_exclude)
+            // Every single-file emission but the contig list and the figures, read per stratum.
+            def compared = ['maf_snplist', 'vmiss', 'smiss', 'geno_exclude', 'mind_remove', 'missingness_ladder', 'hardy', 'hardy_x', 'hwe_exclude', 'vmiss_hist_data', 'smiss_hist_data', 'hwe_hist_data', 'hwe_window_data']
+            def text = { name -> by_id(workflow.out[name]).collectEntries { id, file -> [(id): file.text] } }
+            assertAll(
+                { assert workflow.success },
+                { assert contig_exclude.study_eur_alt.readLines() == contig_variants },
+                { assert contig_exclude.study_eur.readLines().isEmpty() },
+                { assert compared.every { name -> text(name).size() == 2 && text(name).study_eur == text(name).study_eur_alt } },
+                { assert !by_id(workflow.out.vmiss).study_eur_alt.text.contains('AX-9') },
+                { assert snapshot(workflow.out.contig_exclude).match() },
             )
         }
     }

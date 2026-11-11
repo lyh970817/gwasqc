@@ -1,0 +1,111 @@
+nextflow_process {
+
+    name "Test Process CONTIG_EXCLUDE"
+    script "../main.nf"
+    process "CONTIG_EXCLUDE"
+    config "./nextflow.config"
+
+    tag "modules"
+    tag "modules_local"
+    tag "contig_exclude"
+
+    // The alt-contig copy of the fixture's EUR stratum carries its 3962 variants on 1-22, X and Y unchanged and
+    // eight more on seven GRCh38 alt and random contigs, appended in this order.
+    test("study_eur_alt - bim - alt and random contigs") {
+
+        when {
+            process {
+                """
+                input[0] = [
+                    [ id:'study_eur_alt', ancestry:'EUR' ],
+                    file(params.pipelines_testdata_base_path + 'data/gwasqc/alt_contig/study_eur_alt.bim', checkIfExists: true),
+                ]
+                """
+            }
+        }
+
+        then {
+            assertAll(
+                { assert process.success },
+                { assert path(process.out.variant_exclude.get(0).get(1)).readLines() == (1..8).collect { i -> "AX-90000000${i}".toString() } },
+                { assert snapshot(process.out.variant_exclude, process.out.versions_gawk).match() },
+            )
+        }
+    }
+
+    // Standard codes only, the pseudo-autosomal region left on X: the list is written, empty.
+    test("study_eur - bim - standard chromosomes only") {
+
+        when {
+            process {
+                """
+                input[0] = [
+                    [ id:'study_eur', ancestry:'EUR' ],
+                    file(params.pipelines_testdata_base_path + 'data/gwasqc/genotypes/study_eur.bim', checkIfExists: true),
+                ]
+                """
+            }
+        }
+
+        then {
+            assertAll(
+                { assert process.success },
+                { assert path(process.out.variant_exclude.get(0).get(1)).readLines().isEmpty() },
+                { assert snapshot(process.out.variant_exclude).match() },
+            )
+        }
+    }
+
+    // Every spelling plink2 2.0.0a.6.9 reads as a standard chromosome, numeric, lettered, zero-padded, in
+    // either case, with or without a chr prefix, and the PAR1 and PAR2 names of its own --split-par, against
+    // the codes it reads as the unknown chromosome or as contigs of their own. A .pvar names its ID column on
+    // its #CHROM line, which here follows a ## header line and puts INFO-free columns in plink2's order.
+    test("synthetic - pvar - chromosome spellings") {
+
+        when {
+            process {
+                """
+                def standard = ['1', '01', 'chr2', 'CHR22', '23', 'chr23', '24', '25', '26', 'X', 'x', 'chrX', 'Y', 'chrY', 'XY', 'chrXY', 'MT', 'M', 'chrM', 'chrMT', 'PAR1', 'par2']
+                def other = ['0', 'chr0', '1_KI270706v1_random', 'chr1_KI270706v1_random', 'chrUn_KI270742v1', 'chrEBV']
+                def pvar = file("\${workDir}/spellings.pvar")
+                pvar.text = (['##fileformat=PVARv1.0', '#CHROM\\tPOS\\tID\\tREF\\tALT'] + (standard + other).withIndex().collect { chrom, i -> "\${chrom}\\t\${(i + 1) * 100}\\tid_\${chrom}\\tA\\tG" }).join('\\n') + '\\n'
+                input[0] = [
+                    [ id:'spellings' ],
+                    pvar,
+                ]
+                """
+            }
+        }
+
+        then {
+            assertAll(
+                { assert process.success },
+                { assert path(process.out.variant_exclude.get(0).get(1)).readLines() == ['id_0', 'id_chr0', 'id_1_KI270706v1_random', 'id_chr1_KI270706v1_random', 'id_chrUn_KI270742v1', 'id_chrEBV'] },
+                { assert snapshot(process.out.variant_exclude).match() },
+            )
+        }
+    }
+
+    test("study_eur_alt - bim - stub") {
+
+        options "-stub"
+
+        when {
+            process {
+                """
+                input[0] = [
+                    [ id:'study_eur_alt', ancestry:'EUR' ],
+                    file(params.pipelines_testdata_base_path + 'data/gwasqc/alt_contig/study_eur_alt.bim', checkIfExists: true),
+                ]
+                """
+            }
+        }
+
+        then {
+            assertAll(
+                { assert process.success },
+                { assert snapshot(sanitizeOutput(process.out)).match() },
+            )
+        }
+    }
+}

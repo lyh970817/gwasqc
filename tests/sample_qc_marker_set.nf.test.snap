@@ -2,6 +2,9 @@
     "-profile test --skip_ancestry --sample_qc_marker_set study": {
         "content": [
             {
+                "CONTIG_EXCLUDE": {
+                    "gawk": "5.3.1"
+                },
                 "GENO_DECISIONS": {
                     "r-base": "4.3.1"
                 },
@@ -86,9 +89,9 @@
                     "nf-core/gwasqc": "v1.0.0dev"
                 }
             },
-            "gwasqc_summary.tsv:md5,b411e6d4ae05347ed1b69356cd630fe1"
+            "gwasqc_summary.tsv:md5,9727f9a39424d81a20d6bb035039ea9e"
         ],
-        "timestamp": "2026-11-11T15:04:39.495974415",
+        "timestamp": "2026-11-11T17:21:24.454964531",
         "meta": {
             "nf-test": "0.9.5",
             "nextflow": "26.04.6"
@@ -107,6 +110,9 @@
                     "r-base": "4.3.1"
                 },
                 "ANCESTRY_REFERENCE_KEEP": {
+                    "gawk": "5.3.1"
+                },
+                "CONTIG_EXCLUDE": {
                     "gawk": "5.3.1"
                 },
                 "GENO_DECISIONS": {
@@ -214,9 +220,9 @@
                     "nf-core/gwasqc": "v1.0.0dev"
                 }
             },
-            "gwasqc_summary.tsv:md5,b1c27cf1fec62b30221ce176de9706e5"
+            "gwasqc_summary.tsv:md5,957b5ffaf85e2bf789a871128d531eb3"
         ],
-        "timestamp": "2026-11-11T15:00:36.031685611",
+        "timestamp": "2026-11-11T17:17:00.734314243",
         "meta": {
             "nf-test": "0.9.5",
             "nextflow": "26.04.6"
@@ -235,6 +241,9 @@
                     "r-base": "4.3.1"
                 },
                 "ANCESTRY_REFERENCE_KEEP": {
+                    "gawk": "5.3.1"
+                },
+                "CONTIG_EXCLUDE": {
                     "gawk": "5.3.1"
                 },
                 "GENO_DECISIONS": {
@@ -345,9 +354,9 @@
                     "nf-core/gwasqc": "v1.0.0dev"
                 }
             },
-            "gwasqc_summary.tsv:md5,c3a1f88b729d0b1bbb0fce12d674182c"
+            "gwasqc_summary.tsv:md5,417d94580efbf125771fe794424d0f0c"
         ],
-        "timestamp": "2026-11-11T14:25:33.982554121",
+        "timestamp": "2026-11-11T17:19:05.904144316",
         "meta": {
             "nf-test": "0.9.5",
             "nextflow": "26.04.6"
@@ -364,6 +373,9 @@
                 },
                 "ANCESTRY_HARMONISE": {
                     "r-base": "4.3.1"
+                },
+                "CONTIG_EXCLUDE": {
+                    "gawk": "5.3.1"
                 },
                 "GENO_DECISIONS": {
                     "r-base": "4.3.1"
@@ -470,9 +482,9 @@
                     "nf-core/gwasqc": "v1.0.0dev"
                 }
             },
-            "gwasqc_summary.tsv:md5,92842d59e944768ca28266e34a2ac416"
+            "gwasqc_summary.tsv:md5,ec244cbcb180fad590d9f80ca8809586"
         ],
-        "timestamp": "2026-11-11T14:59:25.88764445",
+        "timestamp": "2026-11-11T17:13:47.500804009",
         "meta": {
             "nf-test": "0.9.5",
             "nextflow": "26.04.6"

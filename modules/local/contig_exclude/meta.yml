@@ -1,0 +1,80 @@
+name: contig_exclude
+description: List the variants of a PLINK variant file whose chromosome code is not one of the human chromosomes 1-22, X, Y, XY and MT, such as alt, random and unplaced contigs, for exclusion
+keywords:
+  - contig
+  - chromosome
+  - genotype
+  - quality control
+tools:
+  - gawk:
+      description: GNU awk, the text-processing language used to classify the chromosome codes
+      homepage: https://www.gnu.org/software/gawk/
+      documentation: https://www.gnu.org/software/gawk/manual/
+      licence: ["GPL-3.0-or-later"]
+input:
+  - - meta:
+        type: map
+        description: |
+          Groovy map describing the stratum.
+          Expected keys:
+            - id (string): Stratum identifier, used as the output prefix.
+    - plink_variant_file:
+        type: file
+        description: PLINK 1 extended MAP file or uncompressed PLINK 2 variant information file; a .pvar is read by the column names of its #CHROM line
+        pattern: "*.{bim,pvar}"
+        ontologies: []
+output:
+  variant_exclude:
+    - - meta:
+          type: map
+          description: Metadata map propagated from input
+      - "${prefix}.contig_exclude.txt":
+          type: file
+          description: |
+            The variants whose chromosome code is not standard, one ID per line in variant-file order for plink2
+            --exclude; empty when every code is standard. Standard, in any case and with an optional chr prefix,
+            are the numbers 1 to 26 (zero-padded or not), X, Y, XY, MT, M, and PAR1 and PAR2, the names plink2
+            --split-par gives the pseudo-autosomal regions; every other code, the unknown chromosome 0 included,
+            is listed.
+          pattern: "*.contig_exclude.txt"
+          ontologies:
+            - edam: "http://edamontology.org/format_2330" # Text
+  versions_gawk:
+    - - "${task.process}":
+          type: string
+          description: The process the version was collected from
+      - "gawk":
+          type: string
+          description: The tool name
+      - "gawk --version | head -n 1 | sed 's/^GNU Awk //; s/,.*\\$//'":
+          type: eval
+          description: The command used to retrieve the gawk version
+topics:
+  versions:
+    - - ${task.process}:
+          type: string
+          description: The process the version was collected from
+      - gawk:
+          type: string
+          description: The tool name
+      - "gawk --version | head -n 1 | sed 's/^GNU Awk //; s/,.*\\$//'":
+          type: eval
+          description: The command used to retrieve the gawk version
+authors:
+  - "@lyh970817"
+maintainers:
+  - "@lyh970817"
+containers:
+  conda:
+    linux/amd64:
+      lock_file: "modules/local/contig_exclude/.conda-lock/linux_amd64-bd-d5d074ad9f29be71_1.txt"
+  docker:
+    linux/amd64:
+      build_id: "bd-d5d074ad9f29be71_1"
+      name: "community.wave.seqera.io/library/gawk:5.3.1--d5d074ad9f29be71"
+      scan_id: "sc-872432f3c6e6b071_1"
+  singularity:
+    linux/amd64:
+      build_id: "bd-55cafbff4f74c897_1"
+      name: "oras://community.wave.seqera.io/library/gawk:5.3.1--55cafbff4f74c897"
+      https: "https://community-cr-prod.seqera.io/docker/registry/v2/blobs/sha256/0c/0c4365ad2ac928e4b018455102731c78cfcf43ecd4cb8178c12cd00c02f6ee29/data"

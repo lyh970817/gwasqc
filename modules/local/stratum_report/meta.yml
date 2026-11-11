@@ -35,9 +35,15 @@ input:
         description: PLINK 1 variant file of the input fileset; its line count is the variants in
         pattern: "*.bim"
         ontologies: []
+    - contig_exclude:
+        type: file
+        description: Variants on contigs outside 1-22, X, Y, XY and MT, one ID per line; its line count is the variants excluded before the MAF filter
+        pattern: "*.contig_exclude.txt"
+        ontologies:
+          - edam: "http://edamontology.org/format_2330" # Text
     - maf_snplist:
         type: file
-        description: Variants passing the MAF threshold, one ID per line
+        description: Variants on the standard chromosomes passing the MAF threshold, one ID per line
         pattern: "*.snplist"
         ontologies:
           - edam: "http://edamontology.org/format_2330" # Text
