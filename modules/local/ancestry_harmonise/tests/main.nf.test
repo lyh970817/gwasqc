@@ -9,8 +9,9 @@ nextflow_process {
     tag "modules_local"
     tag "ancestry_harmonise"
 
-    // The gwasqc fixture reference shares every autosomal variant with the study strata except 54 that the
-    // study carries on the other strand and 40 A/T or C/G pairs that no strand check can resolve.
+    // The gwasqc fixture reference shares every autosomal variant with the study strata, by ID and position,
+    // except 54 that the study carries on the other strand and 40 A/T or C/G pairs that no strand check can
+    // resolve; the 330 chromosome X and Y variants of the study have no reference counterpart.
     test("study_eur - fixture reference bim") {
 
         when {
@@ -19,8 +20,11 @@ nextflow_process {
                 input[0] = [
                     [ id:'study_eur', ancestry:'EUR' ],
                     file(params.pipelines_testdata_base_path + 'data/gwasqc/genotypes/study_eur.bim', checkIfExists: true),
+                    [],
+                    [],
                     file(params.pipelines_testdata_base_path + 'data/gwasqc/reference/ref_panel.bim', checkIfExists: true),
                 ]
+                input[1] = 'b38'
                 """
             }
         }
@@ -29,42 +33,52 @@ nextflow_process {
             def flipped = ['rs1019157', 'rs1084781', 'rs1090252', 'rs1097655', 'rs1145782', 'rs1159607', 'rs1163718', 'rs1273151', 'rs1360139', 'rs1389123', 'rs1436911', 'rs1452101', 'rs1467337', 'rs1549826', 'rs1578801', 'rs1677459', 'rs1680161', 'rs1722029', 'rs1723746', 'rs1762883', 'rs1776206', 'rs1803389', 'rs1862912', 'rs1916892', 'rs1941077', 'rs1988230', 'rs1996775', 'rs2027882', 'rs2109777', 'rs2130274', 'rs2144516', 'rs2150265', 'rs2164106', 'rs2169905', 'rs2281679', 'rs2294093', 'rs2309898', 'rs2314061', 'rs2347169', 'rs2362593', 'rs2389678', 'rs2439958', 'rs2469140', 'rs2504154', 'rs2515327', 'rs2516136', 'rs2517896', 'rs2524188', 'rs2526561', 'rs2637925', 'rs2675388', 'rs2729284', 'rs2781271', 'rs2789194']
             def ambiguous = ['rs1008974', 'rs1111502', 'rs1117409', 'rs1212885', 'rs1239733', 'rs1301534', 'rs1323806', 'rs1325713', 'rs1462042', 'rs1515061', 'rs1532976', 'rs1540256', 'rs1617881', 'rs1630597', 'rs1648278', 'rs1658669', 'rs1676231', 'rs1678804', 'rs1685698', 'rs1719304', 'rs1801805', 'rs1810040', 'rs1880092', 'rs2032830', 'rs2036157', 'rs2115243', 'rs2140434', 'rs2173298', 'rs2239178', 'rs2293247', 'rs2339427', 'rs2417072', 'rs2489817', 'rs2586694', 'rs2670145', 'rs2679890', 'rs2693456', 'rs2696100', 'rs2779816', 'rs2814949']
             def table = path(process.out.table.get(0).get(1)).readLines().collect { line -> line.split('\t', -1).toList() }
-            def by_class = table.drop(1).groupBy { fields -> fields[7] }.collectEntries { name, rows -> [(name): rows.collect { fields -> fields[0] }.sort()] }
+            def by_class = table.drop(1).groupBy { fields -> fields[10] }.collectEntries { name, rows -> [(name): rows.collect { fields -> fields[0] }.sort()] }
+            def snplist = path(process.out.snplist.get(0).get(1)).readLines()
             def flip_update = path(process.out.flip_update.get(0).get(1)).readLines().collect { line -> line.split('\t').toList() }
             def complement = [A: 'T', C: 'G', G: 'C', T: 'A']
             def summary = path(process.out.summary.get(0).get(1)).readLines().collect { line -> line.split('\t').toList() }
             assertAll(
                 { assert process.success },
-                { assert table[0] == ['ID', 'CHROM', 'POS', 'REF_A1', 'REF_A2', 'TARGET_A1', 'TARGET_A2', 'CLASS'] },
-                { assert table.size() == 1 + 3632 },
-                // Exactly the documented flips and ambiguous pairs, and nothing else falls out.
+                { assert table[0] == ['ID', 'CHROM', 'POS', 'TARGET_A1', 'TARGET_A2', 'REF_ID', 'REF_CHROM', 'REF_POS', 'REF_A1', 'REF_A2', 'CLASS', 'BASIS'] },
+                // One row per study variant: no QC list was given, so every study variant is a QC'd one.
+                { assert table.size() == 1 + 3962 },
+                // Exactly the documented flips and ambiguous pairs, the sex chromosomes absent, nothing else.
                 { assert by_class.flip == flipped.sort() },
                 { assert by_class.ambiguous == ambiguous.sort() },
-                { assert by_class.keySet().sort() == ['ambiguous', 'flip', 'match'] },
-                { assert path(process.out.snplist.get(0).get(1)).readLines().size() == 3632 - 40 },
-                { assert path(process.out.snplist.get(0).get(1)).readLines().containsAll(flipped) },
-                { assert path(process.out.snplist.get(0).get(1)).readLines().intersect(ambiguous).isEmpty() },
+                { assert by_class.keySet().sort() == ['absent_from_reference', 'ambiguous', 'flip', 'match'] },
+                { assert table.drop(1).findAll { fields -> fields[10] == 'absent_from_reference' }.every { fields -> fields[1] in ['X', 'Y'] && fields[5..9] == ['', '', '', '', ''] && fields[11] == '' } },
+                { assert table.drop(1).findAll { fields -> fields[10] in ['match', 'flip', 'ambiguous'] }.every { fields -> fields[11] == 'id_and_position' && fields[5] == fields[0] } },
+                { assert snplist.size() == 3632 - 40 },
+                { assert snplist.containsAll(flipped) },
+                { assert snplist.intersect(ambiguous).isEmpty() },
+                // Every match is by ID too, so the reference IDs are the study IDs and nothing is renamed.
+                { assert path(process.out.reference_extract.get(0).get(1)).readLines() == snplist },
+                { assert path(process.out.name_update.get(0).get(1)).size() == 0 },
                 // The update names the reference alleles and their complements, one line per flip.
                 { assert flip_update.collect { fields -> fields[0] }.sort() == flipped.sort() },
                 { assert flip_update.every { fields -> fields.size() == 5 && fields[3] == complement[fields[1]] && fields[4] == complement[fields[2]] } },
-                { assert summary[0] == ['CLASS', 'N', 'RETAINED'] },
-                { assert summary.find { fields -> fields[0] == 'flip' }[1..2] == ['54', 'TRUE'] },
+                { assert summary[0] == ['CLASS', 'N', 'RETAINED', 'ID_AND_POSITION', 'POSITION_ONLY'] },
+                { assert summary.find { fields -> fields[0] == 'flip' }[1..4] == ['54', 'TRUE', '54', '0'] },
                 { assert summary.find { fields -> fields[0] == 'ambiguous' }[1..2] == ['40', 'FALSE'] },
-                { assert summary.find { fields -> fields[0] == 'match' }[1] == '3538' },
-                { assert snapshot(process.out.snplist, process.out.flip_update, process.out.table, process.out.summary, process.out.versions).match() },
+                { assert summary.find { fields -> fields[0] == 'match' }[1..4] == ['3538', 'TRUE', '3538', '0'] },
+                { assert summary.find { fields -> fields[0] == 'absent_from_reference' }[1] == '330' },
+                { assert snapshot(process.out.snplist, process.out.reference_extract, process.out.name_update, process.out.flip_update, process.out.table, process.out.summary, process.out.versions).match() },
             )
         }
     }
 
-    test("synthetic - every class - pvar route with two reference files") {
+    test("synthetic - every class - alias IDs - duplicate positions - QC lists - two reference files") {
 
         when {
             process {
                 """
-                // A target bim and two reference pvars covering every class once; rs_dup occurs in both
-                // reference files, rs_absent only in the reference, and rs_pos moved on the target. The pvars
-                // are written as plink2 writes them from a bim, REF from column 6 and ALT from column 5, so the
-                // reference pair (A1, A2) of every row is (ALT, REF).
+                // A study bim and two reference files, a pvar and a bim, covering every class. Chromosome 1
+                // repeats the classes of ID-and-position matching; chromosome 3 holds study variants under
+                // array aliases that the reference names otherwise, several reference candidates at one
+                // position, two study variants at one position and a reference ID listed twice; chromosome 4
+                // a study ID listed twice; chromosome 5 the QC lists. The pvar is written as plink2 writes
+                // one from a bim, REF from column 6 and ALT from column 5, so its pair (A1, A2) is (ALT, REF).
                 def target = file("${workDir}/target.bim")
                 target.text = [
                     '1\\trs_match\\t0\\t100\\tA\\tG',
@@ -77,7 +91,20 @@ nextflow_process {
                     '1\\trs_indel\\t0\\t700\\tA\\tAT',
                     '1\\trs_pos\\t0\\t801\\tA\\tG',
                     'chr2\\trs_chr\\t0\\t900\\tA\\tG',
-                    '2\\trs_dup\\t0\\t1000\\tA\\tG',
+                    '2\\trs_twice\\t0\\t1000\\tA\\tG',
+                    '3\\tAX-1\\t0\\t100\\tA\\tG',
+                    '3\\tAX-2\\t0\\t200\\tT\\tC',
+                    '3\\trs_multi_one\\t0\\t300\\tA\\tG',
+                    '3\\trs_multi_none\\t0\\t400\\tA\\tG',
+                    '3\\trs_multi_two\\t0\\t500\\tA\\tG',
+                    '3\\trs_shared_a\\t0\\t600\\tA\\tG',
+                    '3\\tAX-shared_b\\t0\\t600\\tA\\tG',
+                    '3\\trs_refdup\\t0\\t700\\tA\\tG',
+                    '4\\trs_study_dup\\t0\\t100\\tA\\tG',
+                    '4\\trs_study_dup\\t0\\t200\\tA\\tG',
+                    '5\\trs_absent\\t0\\t100\\tA\\tG',
+                    '5\\trs_failqc\\t0\\t200\\tA\\tG',
+                    '5\\trs_notkept\\t0\\t300\\tA\\tG',
                 ].join('\\n') + '\\n'
                 def first = file("${workDir}/first.pvar")
                 first.text = [
@@ -93,30 +120,104 @@ nextflow_process {
                     '1\\t700\\trs_indel\\tAT\\tA',
                     '1\\t800\\trs_pos\\tG\\tA',
                 ].join('\\n') + '\\n'
-                def second = file("${workDir}/second.pvar")
+                def second = file("${workDir}/second.bim")
                 second.text = [
-                    '#CHROM\\tPOS\\tID\\tREF\\tALT',
-                    '2\\t900\\trs_chr\\tG\\tA',
-                    '2\\t1000\\trs_dup\\tG\\tA',
-                    '2\\t1000\\trs_dup\\tC\\tA',
-                    '2\\t1100\\trs_absent\\tG\\tA',
+                    '2\\trs_chr\\t0\\t900\\tA\\tG',
+                    '2\\trs_twice\\t0\\t1000\\tA\\tG',
+                    '2\\trs_twice_b\\t0\\t1000\\tA\\tG',
+                    '3\\trs100\\t0\\t100\\tA\\tG',
+                    '3\\trs200\\t0\\t200\\tA\\tG',
+                    '3\\trs300a\\t0\\t300\\tA\\tG',
+                    '3\\trs300b\\t0\\t300\\tA\\tC',
+                    '3\\trs400a\\t0\\t400\\tA\\tC',
+                    '3\\trs400b\\t0\\t400\\tA\\tT',
+                    '3\\trs500a\\t0\\t500\\tA\\tG',
+                    '3\\trs500b\\t0\\t500\\tG\\tA',
+                    '3\\trs600\\t0\\t600\\tA\\tG',
+                    '3\\trs700\\t0\\t700\\tA\\tG',
+                    '9\\trs700\\t0\\t999\\tA\\tG',
+                    '4\\trs4a\\t0\\t100\\tA\\tG',
+                    '5\\trs5\\t0\\t200\\tA\\tG',
+                    '5\\trs6\\t0\\t300\\tA\\tG',
                 ].join('\\n') + '\\n'
-                input[0] = [ [ id:'synthetic' ], target, [first, second] ]
+                // rs_notkept fails the keep-list and rs_failqc sits in one of the two exclusion lists, so
+                // neither is a QC'd variant and neither reaches the table, although the reference has both
+                // positions.
+                def keep_list = file("${workDir}/target.maf.snplist")
+                keep_list.text = target.readLines().collect { line -> line.split('\\t')[1] }.findAll { id -> id != 'rs_notkept' }.join('\\n') + '\\n'
+                def geno_exclude = file("${workDir}/target.geno_exclude.txt")
+                geno_exclude.text = 'rs_failqc\\n'
+                def hwe_exclude = file("${workDir}/target.hwe_exclude.txt")
+                hwe_exclude.text = ''
+                input[0] = [ [ id:'synthetic' ], target, keep_list, [geno_exclude, hwe_exclude], [first, second] ]
+                input[1] = 'b38'
                 """
             }
         }
 
         then {
             def table = path(process.out.table.get(0).get(1)).readLines().drop(1).collect { line -> line.split('\t', -1).toList() }
-            def classes = table.collectEntries { fields -> [(fields[0]): fields[7]] }
+            def rows = table.groupBy { fields -> fields[0] }
+            def classes = table.collect { fields -> [fields[0], fields[10]] }
+            def basis = table.findAll { fields -> fields[11] != '' }.collectEntries { fields -> [(fields[0]): fields[11]] }
             assertAll(
                 { assert process.success },
-                { assert classes == [rs_match: 'match', rs_swap: 'swap', rs_flip: 'flip', rs_flip_swap: 'flip', rs_ambig: 'ambiguous', rs_ambig_flip: 'ambiguous', rs_mismatch: 'allele_mismatch', rs_indel: 'non_snp', rs_pos: 'position_mismatch', rs_chr: 'match', rs_dup: 'duplicate_id', rs_absent: 'absent_from_target'] },
-                { assert table.size() == 13 },
-                { assert table.find { fields -> fields[0] == 'rs_absent' }[5..6] == ['', ''] },
-                { assert path(process.out.snplist.get(0).get(1)).readLines() == ['rs_match', 'rs_swap', 'rs_flip', 'rs_flip_swap', 'rs_chr'] },
-                { assert path(process.out.flip_update.get(0).get(1)).readLines() == ['rs_flip\tA\tG\tT\tC', 'rs_flip_swap\tA\tG\tT\tC'] },
-                { assert snapshot(process.out.snplist, process.out.flip_update, process.out.table, process.out.summary).match() },
+                { assert classes == [
+                    ['rs_match', 'match'], ['rs_swap', 'swap'], ['rs_flip', 'flip'], ['rs_flip_swap', 'flip'],
+                    ['rs_ambig', 'ambiguous'], ['rs_ambig_flip', 'ambiguous'], ['rs_mismatch', 'allele_mismatch'], ['rs_indel', 'non_snp'],
+                    ['rs_pos', 'position_mismatch'], ['rs_chr', 'match'], ['rs_twice', 'duplicate_position'],
+                    ['AX-1', 'match'], ['AX-2', 'flip'], ['rs_multi_one', 'match'], ['rs_multi_none', 'duplicate_position'], ['rs_multi_two', 'duplicate_position'],
+                    ['rs_shared_a', 'duplicate_position'], ['AX-shared_b', 'duplicate_position'], ['rs_refdup', 'duplicate_id'],
+                    ['rs_study_dup', 'duplicate_id'], ['rs_study_dup', 'duplicate_id'], ['rs_absent', 'absent_from_reference'],
+                ] },
+                // Alias IDs are recovered by position and recorded as such; the ID-shared matches say so too.
+                { assert basis.subMap(['rs_match', 'rs_chr', 'AX-1', 'AX-2', 'rs_multi_one', 'rs_pos']) == [rs_match: 'id_and_position', rs_chr: 'id_and_position', 'AX-1': 'position_only', 'AX-2': 'position_only', rs_multi_one: 'position_only', rs_pos: 'id_only'] },
+                { assert rows['AX-2'][0][5..9] == ['rs200', '3', '200', 'A', 'G'] },
+                // A position mismatch reports where the reference carries the ID; several candidates are all
+                // reported, comma-joined; the second position of a duplicated study ID has none.
+                { assert rows['rs_pos'][0][5..7] == ['rs_pos', '1', '800'] },
+                { assert rows['rs_multi_two'][0][5..9] == ['rs500a,rs500b', '3,3', '500,500', 'A,G', 'G,A'] },
+                { assert rows['rs_study_dup'][1][5..9] == ['', '', '', '', ''] },
+                { assert path(process.out.snplist.get(0).get(1)).readLines() == ['rs_match', 'rs_swap', 'rs_flip', 'rs_flip_swap', 'rs_chr', 'AX-1', 'AX-2', 'rs_multi_one'] },
+                { assert path(process.out.reference_extract.get(0).get(1)).readLines() == ['rs_match', 'rs_swap', 'rs_flip', 'rs_flip_swap', 'rs_chr', 'rs100', 'rs200', 'rs300a'] },
+                { assert path(process.out.name_update.get(0).get(1)).readLines() == ['rs100\tAX-1', 'rs200\tAX-2', 'rs300a\trs_multi_one'] },
+                // The flips are keyed by the study ID, because plink2 renames before it updates alleles.
+                { assert path(process.out.flip_update.get(0).get(1)).readLines() == ['rs_flip\tA\tG\tT\tC', 'rs_flip_swap\tA\tG\tT\tC', 'AX-2\tA\tG\tT\tC'] },
+                { assert snapshot(process.out.snplist, process.out.reference_extract, process.out.name_update, process.out.flip_update, process.out.table, process.out.summary).match() },
+            )
+        }
+    }
+
+    test("study_eur - reference shifted to another build - the guard stops") {
+
+        when {
+            process {
+                """
+                // Nine in ten reference positions moved, as a panel on another build would carry them.
+                def shifted = file("${workDir}/ref_shifted.bim")
+                def lines = file(params.pipelines_testdata_base_path + 'data/gwasqc/reference/ref_panel.bim', checkIfExists: true).readLines()
+                shifted.text = lines.withIndex().collect { line, index ->
+                    def fields = line.split('\\t')
+                    if ((index + 1) % 10 != 0) fields[3] = ((fields[3] as long) + 1000).toString()
+                    fields.join('\\t')
+                }.join('\\n') + '\\n'
+                input[0] = [
+                    [ id:'study_eur', ancestry:'EUR' ],
+                    file(params.pipelines_testdata_base_path + 'data/gwasqc/genotypes/study_eur.bim', checkIfExists: true),
+                    [],
+                    [],
+                    shifted,
+                ]
+                input[1] = 'b38'
+                """
+            }
+        }
+
+        then {
+            assertAll(
+                { assert process.failed },
+                { assert process.errorReport.contains('3269 of the 3632 variant IDs that stratum study_eur shares with the reference panel sit at another chromosome or position (363 agree)') },
+                { assert process.errorReport.contains('--genome_build declares as b38') },
             )
         }
     }
@@ -140,6 +241,7 @@ nextflow_process {
                         [],
                         [],
                         [],
+                        [],
                     ]
                     """
                 }
@@ -153,9 +255,12 @@ nextflow_process {
                     [
                         [ id:'study_eur', ancestry:'EUR' ],
                         file(params.pipelines_testdata_base_path + 'data/gwasqc/genotypes/study_eur.bim', checkIfExists: true),
+                        [],
+                        [],
                         pvar,
                     ]
                 }
+                input[1] = 'b38'
                 """
             }
         }
@@ -163,19 +268,19 @@ nextflow_process {
         then {
             def flipped = ['rs1019157', 'rs1084781', 'rs1090252', 'rs1097655', 'rs1145782', 'rs1159607', 'rs1163718', 'rs1273151', 'rs1360139', 'rs1389123', 'rs1436911', 'rs1452101', 'rs1467337', 'rs1549826', 'rs1578801', 'rs1677459', 'rs1680161', 'rs1722029', 'rs1723746', 'rs1762883', 'rs1776206', 'rs1803389', 'rs1862912', 'rs1916892', 'rs1941077', 'rs1988230', 'rs1996775', 'rs2027882', 'rs2109777', 'rs2130274', 'rs2144516', 'rs2150265', 'rs2164106', 'rs2169905', 'rs2281679', 'rs2294093', 'rs2309898', 'rs2314061', 'rs2347169', 'rs2362593', 'rs2389678', 'rs2439958', 'rs2469140', 'rs2504154', 'rs2515327', 'rs2516136', 'rs2517896', 'rs2524188', 'rs2526561', 'rs2637925', 'rs2675388', 'rs2729284', 'rs2781271', 'rs2789194']
             def table = path(process.out.table.get(0).get(1)).readLines().collect { line -> line.split('\t', -1).toList() }
-            def by_class = table.drop(1).groupBy { fields -> fields[7] }.collectEntries { name, rows -> [(name): rows.collect { fields -> fields[0] }.sort()] }
+            def by_class = table.drop(1).groupBy { fields -> fields[10] }.collectEntries { name, rows -> [(name): rows.collect { fields -> fields[0] }.sort()] }
             def summary = path(process.out.summary.get(0).get(1)).readLines().collect { line -> line.split('\t').toList() }
             assertAll(
                 { assert process.success },
                 { assert path(process.out.table.get(0).get(1)).parent.resolve('reference/ref_panel.pvar').exists() },
-                { assert table.size() == 1 + 3632 },
+                { assert table.size() == 1 + 3962 },
                 // Identical classes to the bim reference: no row is relabelled a swap by the format change.
-                { assert by_class.keySet().sort() == ['ambiguous', 'flip', 'match'] },
+                { assert by_class.keySet().sort() == ['absent_from_reference', 'ambiguous', 'flip', 'match'] },
                 { assert by_class.flip == flipped.sort() },
                 { assert summary.find { fields -> fields[0] == 'match' }[1] == '3538' },
                 { assert summary.find { fields -> fields[0] == 'swap' }[1] == '0' },
                 { assert path(process.out.flip_update.get(0).get(1)).readLines().collect { line -> line.split('\t')[0] }.sort() == flipped.sort() },
-                { assert snapshot(process.out.snplist, process.out.flip_update, process.out.summary).match() },
+                { assert snapshot(process.out.snplist, process.out.reference_extract, process.out.name_update, process.out.flip_update, process.out.summary).match() },
             )
         }
     }
@@ -190,8 +295,11 @@ nextflow_process {
                 input[0] = [
                     [ id:'study_eur', ancestry:'EUR' ],
                     file(params.pipelines_testdata_base_path + 'data/gwasqc/genotypes/study_eur.bim', checkIfExists: true),
+                    [],
+                    [],
                     file(params.pipelines_testdata_base_path + 'data/gwasqc/reference/ref_panel.bim', checkIfExists: true),
                 ]
+                input[1] = 'b38'
                 """
             }
         }
