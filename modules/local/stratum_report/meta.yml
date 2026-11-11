@@ -180,6 +180,9 @@ input:
   - ld_min_retained_fraction:
       type: float
       description: Fraction of the QC'd variants below which study-mode LD pruning is noted as collapsed in the row; strict less-than
+  - sample_qc_shared_reference:
+      type: string
+      description: The reference samples the shared marker set was filtered and pruned on, `pooled` or `matched`; recorded in the row of a stratum in shared mode, and NA in the row of one in study mode
   - apply_sample_removals:
       type: boolean
       description: Whether the sex-mismatch, duplicate and ancestry-mismatch lists were applied to the QC'd fileset
@@ -193,7 +196,7 @@ output:
           description: Metadata map propagated from input
       - "${prefix}.qc_summary.tsv":
           type: file
-          description: One header row and one row for the stratum, stratum and ancestry first, then the input counts, every filter's threshold and removals, the pruned set (NA in shared mode), the marker set of the sample checks with its marker count and the pruning-collapse note, the sex, heterozygosity, relatedness and ancestry summaries, the removal gate and the final counts; the ancestry columns are present only when ancestry inference ran
+          description: One header row and one row for the stratum, stratum and ancestry first, then the input counts, every filter's threshold and removals, the pruned set (NA in shared mode), the marker set of the sample checks with the reference samples a shared set was chosen on, its marker count and the pruning-collapse note, the sex, heterozygosity, relatedness and ancestry summaries, the removal gate and the final counts; the ancestry columns are present only when ancestry inference ran
           pattern: "*.qc_summary.tsv"
           ontologies:
             - edam: "http://edamontology.org/format_3475" # TSV

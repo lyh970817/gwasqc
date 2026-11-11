@@ -70,7 +70,7 @@ deviation is flagged.
 - **[MUST]** `stageAs: 'input/*'` on the fileset members is reserved for a genuine work-directory collision, and
   the module states which one in a comment: an atom that writes the extensions it reads
   (`modules/local/plink2/makebed/main.nf:11-14`, `modules/local/plink2/pmergelist/main.nf:11-13`) or an atom whose
-  second input set may carry the first's basename (`modules/local/ancestry_harmonise/main.nf:11-13`). When the
+  second input set may carry the first's basename (`modules/local/ancestry_harmonise/main.nf:11-14`). When the
   members are staged into a subfolder the prefix becomes
   `plink_genotype_file.resolveSibling(plink_genotype_file.baseName)`
   (`modules/local/plink2/makebed/main.nf:27`), and the bare `baseName` otherwise.
@@ -121,8 +121,8 @@ deviation is flagged.
 - **[MUST]** A threshold is never a filter-list slot and a filter list is never a threshold. A variant-missingness
   or Hardy-Weinberg threshold reaches plink2 only after a pipeline-owned module has turned it into a list; the
   native `--geno`, `--mind`, `--maf`, and `--hwe` flags reach plink2 only through `ext.args`.
-- **[MUST]** A role-specific file follows the block rather than interrupting it: `path(update_alleles)`
-  (`modules/local/plink2/pmergelist/main.nf:13`), `path(score_file), path(read_freq)`
+- **[MUST]** A role-specific file follows the block rather than interrupting it: `path(update_name),
+path(update_alleles)` (`modules/local/plink2/pmergelist/main.nf:13`), in the order plink2 applies them, `path(score_file), path(read_freq)`
   (`modules/local/plink2/score/main.nf:11`) and `path(read_freq)` (`modules/local/plink2/het/main.nf`). Each
   gets its own presence-driven fragment, and a mandatory one, such as the score file, gets no presence check.
 - **[SHOULD]** The `keep` slot stays `[]` throughout this pipeline: every sample decision the QC chain makes is a
@@ -161,18 +161,25 @@ deviation is flagged.
 
 ## The shared-marker list
 
-The `shared` marker-set mode of the sample checks consumes three products of the ancestry route as inputs, and
-their shapes are part of that route's contract.
+The `shared` marker-set mode of the sample checks consumes four products of the ancestry route as inputs
+(`subworkflows/local/ancestry_inference/main.nf`, emits `shared_markers` and `reference_keep`), and their shapes
+are part of that route's contract.
 
-- **[MUST]** The shared-marker list is the ancestry route's post-high-LD `prune.in`
-  (`subworkflows/local/ancestry_inference/main.nf`, `PLINK2_INDEPPAIRWISE_REFERENCE`): study-side variant IDs,
-  the harmonised intersect of the stratum's QC'd variants with the reference after the reference-side `--maf`
-  and `--geno`, with the long-range LD regions and every non-autosomal variant excluded before pruning, pruned
-  on the merged reference. It is a variant list in the format above and reaches a sample-QC atom only through
-  `--extract`, so it is interchangeable with the study-side `prune.in` at that slot.
-- **[MUST]** The merged reference fileset that accompanies it is the one the list was pruned on, flipped onto the
-  stratum's strand by `--update-alleles`, so that its alleles agree with the study's and a frequency table
-  computed on it applies to the study fileset without further harmonisation.
+- **[MUST]** The shared-marker list is a `prune.in` over the harmonised merged reference, with the long-range LD
+  regions and every non-autosomal variant excluded before pruning and the reference-side `--maf` and `--geno`
+  applied in the pruning run itself, chosen by `sample_qc_shared_reference`: under `pooled`, the route's own
+  `PLINK2_INDEPPAIRWISE_REFERENCE` list over every reference sample; under `matched`,
+  `PLINK2_INDEPPAIRWISE_MATCHED` over the reference samples of the stratum's super-population (`--keep`). Its
+  IDs are the study's, because the merged reference was renamed to them. It is a variant list in the format
+  above and reaches a sample-QC atom only through `--extract`, so it is interchangeable with the study-side
+  `prune.in` at that slot.
+- **[MUST]** The merged reference fileset that accompanies it is the one the list was pruned on, renamed to the
+  study's IDs by `--update-name` and flipped onto the study's strand by `--update-alleles`, so that its IDs and
+  alleles agree with the study's and a frequency table computed on it applies to the study fileset without
+  further harmonisation. It is unfiltered: every filter is a run-time argument of a statistics run on it.
+- **[MUST]** The keep list of the stratum's super-population is built once by the ancestry route
+  (`ANCESTRY_REFERENCE_KEEP`) and serves the matched pruning, the frequency table and the reference report
+  alike, so the three cannot disagree on the samples.
 - **[MUST]** The frequency basis of the `shared`-mode heterozygosity report is one `--freq` table of the reference
   samples of the stratum's `ancestry` super-population over exactly the shared markers
   (`modules/local/ancestry_reference_keep/main.nf` selects the samples from the population table,
@@ -200,7 +207,7 @@ header. Never merge the two roles into one file.
 - **[MUST]** A variant list is one variant ID per line, no header, no quoting
   (`modules/local/geno_decisions/templates/geno_decisions.R:33`,
   `modules/local/hwe_decisions/templates/hwe_decisions.R`,
-  `modules/local/ancestry_harmonise/templates/ancestry_harmonise.R:106`,
+  `modules/local/ancestry_harmonise/templates/ancestry_harmonise.R:218-219`,
   `modules/local/highld_exclude/main.nf:51`). This is also what plink2 itself writes for `--write-snplist` and
   `--indep-pairwise`, so a pipeline-owned list and a plink2-produced list are interchangeable in one filter slot.
 - **[MUST]** A sample list is one `FID IID` pair per line, **blank-separated**, no header, with a documented
@@ -212,10 +219,12 @@ header. Never merge the two roles into one file.
   tab-separated and lists are blank-separated; state the separator in `meta.yml` rather than leaving it to be
   inferred from a table's.
 - **[MUST]** A list written for any other native flag follows that flag's own format verbatim rather than being
-  normalised. The allele-update list is the PLINK 1.x five-column `--update-alleles` form — ID, the two reference
-  alleles, then their complements in the same order, tab-separated, no header — and is consumed only through that
-  flag (`modules/local/ancestry_harmonise/templates/ancestry_harmonise.R:109-112`,
-  `modules/local/plink2/pmergelist/main.nf:43`).
+  normalised. The allele-update list is the PLINK 1.x five-column `--update-alleles` form — the study ID, the two
+  reference alleles, then their complements in the same order, tab-separated, no header — and the rename list the
+  default two-column `--update-name` form — old (reference) ID, new (study) ID, tab-separated, no header; each is
+  consumed only through its flag, in one run, with the allele update keyed by the new IDs because plink2 renames
+  first (`modules/local/ancestry_harmonise/templates/ancestry_harmonise.R:220-228`,
+  `modules/local/plink2/pmergelist/main.nf:43-46`).
 - **[MUST]** A list is always written, even when it selects nothing, so the channel carries one item per stratum
   and no downstream join needs `remainder`. An empty list is a zero-byte file, never a header-only file and never
   an absent output. Every list-writing template is arranged so the zero-selection case still produces the file
@@ -229,7 +238,8 @@ header. Never merge the two roles into one file.
   (`modules/local/sex_check_decisions/main.nf:14-15`), the relatedness pair and individual tables beside the
   duplicate removal list and the mean-kinship outlier list
   (`modules/local/relatedness_decisions/main.nf:16-19`), the harmonisation table and its class summary beside the
-  harmonised snplist and the allele-update list (`modules/local/ancestry_harmonise/main.nf:16-19`), and the
+  harmonised snplist, the reference extract list, the rename list and the allele-update list
+  (`modules/local/ancestry_harmonise/main.nf:18-23`), and the
   assignment, summary, and model tables beside the per-group keep lists and the mismatch removal list
   (`modules/local/ancestry_assign/main.nf:17-21`).
 - **[MUST]** A table that classifies a native report's rows passes the report's own columns through unchanged and
@@ -242,7 +252,7 @@ header. Never merge the two roles into one file.
 - **[MUST]** A table the pipeline defines itself has a fixed header declared identically in the template, the
   module's stub, and `meta.yml`. A summary table enumerates every category, including the ones with a zero count,
   in one documented order, so the table's shape does not depend on the data
-  (`modules/local/ancestry_harmonise/templates/ancestry_harmonise.R:103`, `:127-133`).
+  (`modules/local/ancestry_harmonise/templates/ancestry_harmonise.R:202`, `:247-255`).
 - **[MUST]** A per-group output file whose name contains a data value documents which value set generates it and
   in what order, because the caller's `path(...)` glob depends on it: the ancestry keep lists are one file per
   super-population observed among the scored, labelled reference samples, in sorted order, with an empty file for
@@ -451,14 +461,16 @@ header. Never merge the two roles into one file.
   not filesets, and are published beside the study's report (`conf/modules/plink2.config`, `PLINK2_FREQ` and
   `PLINK2_HET_REFERENCE`), because they are the basis a reviewer reads the study's `F` against.
 - **[MUST]** The only materialised intermediates are the reference filesets of the ancestry route, and they exist
-  because plink2 cannot produce them any other way: the per-fileset intersect because `--extract` is applied only
-  after `--pmerge-list` has concatenated its inputs in full, and the merged, harmonised reference because pruning,
-  the decomposition, and the reference projection all read one fileset
-  (`subworkflows/local/ancestry_inference/main.nf:35-40`). A new intermediate needs the same kind of justification,
+  because plink2 cannot produce them any other way: the per-fileset restriction to the matched reference IDs
+  because `--extract` is applied only after `--pmerge-list` has concatenated its inputs in full, and the merged,
+  renamed and harmonised reference because pruning, the decomposition, and the reference projection all read one
+  fileset (`subworkflows/local/ancestry_inference/main.nf:42-47`). Neither is filtered: the reference-side
+  `--maf` and `--geno` are arguments of the pruning runs, so that the pooled and the matched marker sets are each
+  filtered on their own samples. A new intermediate needs the same kind of justification,
   recorded at the call site.
 - **[MUST]** A reference intermediate is not published, and an intermediate produced by an alias of a published
   base process must disable publication explicitly, because the base selector's `publishDir` would otherwise reach
-  it (`conf/modules/plink2.config:113-128`).
+  it (`conf/modules/plink2.config:173-183`).
 - **[SHOULD]** A stage that only measures emits tables and lists, never a fileset. Ten stats-only runs of the
   call-rate ladder produce one table (`subworkflows/local/plink_qc_filter_lists/main.nf:82-108`).
 
@@ -481,7 +493,7 @@ header. Never merge the two roles into one file.
   every plink2 atom emits its `.log` on a channel and no pattern matches it.
 - **[SHOULD]** Express "deliberately unpublished" one way per repository. There are two mechanisms and they are
   not interchangeable: an alias of a published base process must carry
-  `publishDir = [enabled: false]` (`conf/modules/plink2.config:127`, `conf/modules/qc_decisions.config:31`),
+  `publishDir = [enabled: false]` (`conf/modules/plink2.config:177`, `conf/modules/qc_decisions.config:31`),
   because the base selector would otherwise reach it, while a process no selector publishes is already suppressed
   by the process-wide default and needs nothing. State which case applies in the selector's comment rather than
   leaving a reader to work out whether an omission is deliberate: "deliberately unpublished as an alias of the

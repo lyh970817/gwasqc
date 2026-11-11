@@ -1,4 +1,157 @@
 {
+    "gwasqc fixtures - two strata - alias-named reference in two filesets": {
+        "content": [
+            [
+                [
+                    {
+                        "id": "study_afr",
+                        "ancestry": "AFR"
+                    },
+                    "study_afr.ancestry_harmonised.snplist:md5,a5456224818be9cb274faa7ea2594405"
+                ],
+                [
+                    {
+                        "id": "study_eur",
+                        "ancestry": "EUR"
+                    },
+                    "study_eur.ancestry_harmonised.snplist:md5,89d1d9ef24e88fc73a20619d1e3fc404"
+                ]
+            ],
+            [
+                [
+                    {
+                        "id": "study_afr",
+                        "ancestry": "AFR"
+                    },
+                    "study_afr.ancestry_name_update.txt:md5,5ed880aa72f45ba90718768697c750a8"
+                ],
+                [
+                    {
+                        "id": "study_eur",
+                        "ancestry": "EUR"
+                    },
+                    "study_eur.ancestry_name_update.txt:md5,5ed880aa72f45ba90718768697c750a8"
+                ]
+            ],
+            [
+                [
+                    {
+                        "id": "study_afr",
+                        "ancestry": "AFR"
+                    },
+                    "study_afr.ancestry_flip_update.txt:md5,2ffcb0888e521c734c95f0730187cac2"
+                ],
+                [
+                    {
+                        "id": "study_eur",
+                        "ancestry": "EUR"
+                    },
+                    "study_eur.ancestry_flip_update.txt:md5,2ffcb0888e521c734c95f0730187cac2"
+                ]
+            ],
+            [
+                [
+                    {
+                        "id": "study_afr",
+                        "ancestry": "AFR"
+                    },
+                    "study_afr.ancestry_harmonisation_summary.tsv:md5,57d57c3a0671671b737b451f28688668"
+                ],
+                [
+                    {
+                        "id": "study_eur",
+                        "ancestry": "EUR"
+                    },
+                    "study_eur.ancestry_harmonisation_summary.tsv:md5,66519a2791f0ed62e9bc231929e29568"
+                ]
+            ],
+            [
+                [
+                    {
+                        "id": "study_afr",
+                        "ancestry": "AFR"
+                    },
+                    "study_afr.ancestry.prune.in:md5,25998a869cff8c96aa45d30c14901d7e"
+                ],
+                [
+                    {
+                        "id": "study_eur",
+                        "ancestry": "EUR"
+                    },
+                    "study_eur.ancestry.prune.in:md5,3b3dd4ab181286bad32a8cadc28f4b2d"
+                ]
+            ],
+            [
+                [
+                    {
+                        "id": "study_afr",
+                        "ancestry": "AFR"
+                    },
+                    "study_afr.ancestry.eigenval:md5,47b3461ebc5acb734bf81e5cc8670f1e"
+                ],
+                [
+                    {
+                        "id": "study_eur",
+                        "ancestry": "EUR"
+                    },
+                    "study_eur.ancestry.eigenval:md5,5eeaf0a1e357b1d270cdae83d43659c8"
+                ]
+            ],
+            [
+                [
+                    {
+                        "id": "study_afr",
+                        "ancestry": "AFR"
+                    },
+                    "study_afr.ancestry_reference.sscore:md5,141a3e9bc3b226540d3c5d7350e8140f"
+                ],
+                [
+                    {
+                        "id": "study_eur",
+                        "ancestry": "EUR"
+                    },
+                    "study_eur.ancestry_reference.sscore:md5,7dcec3e5fdf7cda8bc8c1014237d7bd0"
+                ]
+            ],
+            [
+                [
+                    {
+                        "id": "study_afr",
+                        "ancestry": "AFR"
+                    },
+                    "study_afr.ancestry_study.sscore:md5,0f7d99b28d0be963fab92af1d9208916"
+                ],
+                [
+                    {
+                        "id": "study_eur",
+                        "ancestry": "EUR"
+                    },
+                    "study_eur.ancestry_study.sscore:md5,d988b01474e2ad177e03c6d23953afd9"
+                ]
+            ],
+            [
+                [
+                    {
+                        "id": "study_afr",
+                        "ancestry": "AFR"
+                    },
+                    "study_afr.ancestry_assignment.tsv:md5,b2b1965b4e60719b4ba5540a21a70c7f"
+                ],
+                [
+                    {
+                        "id": "study_eur",
+                        "ancestry": "EUR"
+                    },
+                    "study_eur.ancestry_assignment.tsv:md5,de35d89839d411a33cb2ed98d73874a2"
+                ]
+            ]
+        ],
+        "timestamp": "2026-11-11T13:35:33.043779428",
+        "meta": {
+            "nf-test": "0.9.5",
+            "nextflow": "26.04.6"
+        }
+    },
     "gwasqc fixtures - two strata - one reference fileset": {
         "content": [
             {
@@ -72,14 +225,14 @@
                             "ancestry": "AFR",
                             "id": "study_afr"
                         },
-                        "study_afr.ancestry_harmonisation.tsv:md5,2dd9062e58fb76c8edcb2fa2d9b1d09c"
+                        "study_afr.ancestry_harmonisation.tsv:md5,5b89f4b50baefed609a719597352f817"
                     ],
                     [
                         {
                             "ancestry": "EUR",
                             "id": "study_eur"
                         },
-                        "study_eur.ancestry_harmonisation.tsv:md5,46e8b285ec135c6541a3090898f104fa"
+                        "study_eur.ancestry_harmonisation.tsv:md5,3b8ef1a5c38da386ccfebd257da252c5"
                     ]
                 ],
                 "harmonisation_summary": [
@@ -88,14 +241,14 @@
                             "ancestry": "AFR",
                             "id": "study_afr"
                         },
-                        "study_afr.ancestry_harmonisation_summary.tsv:md5,743e46f6159145508040b9278f86f721"
+                        "study_afr.ancestry_harmonisation_summary.tsv:md5,cb4203df7bf5f3e8229ac3b6eabf0875"
                     ],
                     [
                         {
                             "ancestry": "EUR",
                             "id": "study_eur"
                         },
-                        "study_eur.ancestry_harmonisation_summary.tsv:md5,82b4ecfca8638074f2a76774eab7bccf"
+                        "study_eur.ancestry_harmonisation_summary.tsv:md5,4683464b6fc34bd142b523cf874330f4"
                     ]
                 ],
                 "harmonised_snplist": [
@@ -190,6 +343,22 @@
                         "study_eur.ancestry_model.tsv:md5,2d61366fc4cf2212caefdbd9c993489e"
                     ]
                 ],
+                "name_update": [
+                    [
+                        {
+                            "ancestry": "AFR",
+                            "id": "study_afr"
+                        },
+                        "study_afr.ancestry_name_update.txt:md5,d41d8cd98f00b204e9800998ecf8427e"
+                    ],
+                    [
+                        {
+                            "ancestry": "EUR",
+                            "id": "study_eur"
+                        },
+                        "study_eur.ancestry_name_update.txt:md5,d41d8cd98f00b204e9800998ecf8427e"
+                    ]
+                ],
                 "pca_data": [
                     [
                         {
@@ -222,6 +391,22 @@
                         "study_eur.ancestry.prune.in:md5,3b3dd4ab181286bad32a8cadc28f4b2d"
                     ]
                 ],
+                "reference_extract": [
+                    [
+                        {
+                            "ancestry": "AFR",
+                            "id": "study_afr"
+                        },
+                        "study_afr.ancestry_reference_extract.snplist:md5,a5456224818be9cb274faa7ea2594405"
+                    ],
+                    [
+                        {
+                            "ancestry": "EUR",
+                            "id": "study_eur"
+                        },
+                        "study_eur.ancestry_reference_extract.snplist:md5,89d1d9ef24e88fc73a20619d1e3fc404"
+                    ]
+                ],
                 "reference_genotypes": [
                     [
                         {
@@ -241,6 +426,9 @@
                         "study_eur.ancestry_reference.pvar:md5,3580ec0a93287b62a9b169add4300dce",
                         "study_eur.ancestry_reference.psam:md5,3709d5c6a65ae85e01120f4bc6fa84ae"
                     ]
+                ],
+                "reference_keep": [
+
                 ],
                 "reference_scores": [
                     [
@@ -273,6 +461,9 @@
                         },
                         "study_eur.ancestry_reference.sscore.vars:md5,3b3dd4ab181286bad32a8cadc28f4b2d"
                     ]
+                ],
+                "shared_markers": [
+
                 ],
                 "study_scores": [
                     [
@@ -324,10 +515,10 @@
                 ]
             }
         ],
-        "timestamp": "2026-09-21T10:02:19.479655362",
+        "timestamp": "2026-11-11T13:55:52.737943124",
         "meta": {
             "nf-test": "0.9.5",
-            "nextflow": "26.04.4"
+            "nextflow": "26.04.6"
         }
     },
     "gwasqc fixtures - two strata - one reference fileset - stub": {
@@ -403,14 +594,14 @@
                             "ancestry": "AFR",
                             "id": "study_afr"
                         },
-                        "study_afr.ancestry_harmonisation.tsv:md5,28d68332c620df9929dc96540f9f0b06"
+                        "study_afr.ancestry_harmonisation.tsv:md5,ffe9ceb07e22c2efcc6fce8a8911f062"
                     ],
                     [
                         {
                             "ancestry": "EUR",
                             "id": "study_eur"
                         },
-                        "study_eur.ancestry_harmonisation.tsv:md5,28d68332c620df9929dc96540f9f0b06"
+                        "study_eur.ancestry_harmonisation.tsv:md5,ffe9ceb07e22c2efcc6fce8a8911f062"
                     ]
                 ],
                 "harmonisation_summary": [
@@ -419,14 +610,14 @@
                             "ancestry": "AFR",
                             "id": "study_afr"
                         },
-                        "study_afr.ancestry_harmonisation_summary.tsv:md5,2274e48a3efc8251df776a9268c225e4"
+                        "study_afr.ancestry_harmonisation_summary.tsv:md5,c2818f61a380572e1ef383c7a241ffb2"
                     ],
                     [
                         {
                             "ancestry": "EUR",
                             "id": "study_eur"
                         },
-                        "study_eur.ancestry_harmonisation_summary.tsv:md5,2274e48a3efc8251df776a9268c225e4"
+                        "study_eur.ancestry_harmonisation_summary.tsv:md5,c2818f61a380572e1ef383c7a241ffb2"
                     ]
                 ],
                 "harmonised_snplist": [
@@ -521,6 +712,22 @@
                         "study_eur.ancestry_model.tsv:md5,aaaa4cf39bcc5ac603f4a20a9d0a2e81"
                     ]
                 ],
+                "name_update": [
+                    [
+                        {
+                            "ancestry": "AFR",
+                            "id": "study_afr"
+                        },
+                        "study_afr.ancestry_name_update.txt:md5,d41d8cd98f00b204e9800998ecf8427e"
+                    ],
+                    [
+                        {
+                            "ancestry": "EUR",
+                            "id": "study_eur"
+                        },
+                        "study_eur.ancestry_name_update.txt:md5,d41d8cd98f00b204e9800998ecf8427e"
+                    ]
+                ],
                 "pc1_pc2_plot": [
                     [
                         {
@@ -589,6 +796,22 @@
                         "study_eur.ancestry.prune.in:md5,d41d8cd98f00b204e9800998ecf8427e"
                     ]
                 ],
+                "reference_extract": [
+                    [
+                        {
+                            "ancestry": "AFR",
+                            "id": "study_afr"
+                        },
+                        "study_afr.ancestry_reference_extract.snplist:md5,d41d8cd98f00b204e9800998ecf8427e"
+                    ],
+                    [
+                        {
+                            "ancestry": "EUR",
+                            "id": "study_eur"
+                        },
+                        "study_eur.ancestry_reference_extract.snplist:md5,d41d8cd98f00b204e9800998ecf8427e"
+                    ]
+                ],
                 "reference_genotypes": [
                     [
                         {
@@ -608,6 +831,9 @@
                         "study_eur.ancestry_reference.pvar:md5,d41d8cd98f00b204e9800998ecf8427e",
                         "study_eur.ancestry_reference.psam:md5,d41d8cd98f00b204e9800998ecf8427e"
                     ]
+                ],
+                "reference_keep": [
+
                 ],
                 "reference_scores": [
                     [
@@ -640,6 +866,9 @@
                         },
                         "study_eur.ancestry_reference.sscore.vars:md5,d41d8cd98f00b204e9800998ecf8427e"
                     ]
+                ],
+                "shared_markers": [
+
                 ],
                 "study_scores": [
                     [
@@ -691,7 +920,221 @@
                 ]
             }
         ],
-        "timestamp": "2026-09-21T11:34:20.772008966",
+        "timestamp": "2026-11-11T14:01:20.173960952",
+        "meta": {
+            "nf-test": "0.9.5",
+            "nextflow": "26.04.6"
+        }
+    },
+    "gwasqc fixtures - three strata - shared marker set on the pooled reference": {
+        "content": [
+            [
+                [
+                    {
+                        "id": "study_csa",
+                        "ancestry": "CSA",
+                        "sample_qc_marker_set": "shared"
+                    },
+                    "study_csa.ancestry.prune.in:md5,fa8d28d5ec8502ec1d218f87e1cb1b23"
+                ]
+            ],
+            [
+                [
+                    {
+                        "id": "study_csa",
+                        "ancestry": "CSA",
+                        "sample_qc_marker_set": "shared"
+                    },
+                    "study_csa.reference_keep.txt:md5,cb552c0acd7acb39acfb779103d34724"
+                ]
+            ],
+            [
+                [
+                    {
+                        "id": "study_afr",
+                        "ancestry": "AFR",
+                        "sample_qc_marker_set": "study"
+                    },
+                    "study_afr.ancestry.prune.in:md5,25998a869cff8c96aa45d30c14901d7e"
+                ],
+                [
+                    {
+                        "id": "study_csa",
+                        "ancestry": "CSA",
+                        "sample_qc_marker_set": "shared"
+                    },
+                    "study_csa.ancestry.prune.in:md5,fa8d28d5ec8502ec1d218f87e1cb1b23"
+                ],
+                [
+                    {
+                        "id": "study_eur",
+                        "ancestry": "EUR",
+                        "sample_qc_marker_set": "study"
+                    },
+                    "study_eur.ancestry.prune.in:md5,3b3dd4ab181286bad32a8cadc28f4b2d"
+                ]
+            ],
+            [
+                [
+                    {
+                        "id": "study_afr",
+                        "ancestry": "AFR",
+                        "sample_qc_marker_set": "study"
+                    },
+                    "study_afr.ancestry.eigenval:md5,47b3461ebc5acb734bf81e5cc8670f1e"
+                ],
+                [
+                    {
+                        "id": "study_csa",
+                        "ancestry": "CSA",
+                        "sample_qc_marker_set": "shared"
+                    },
+                    "study_csa.ancestry.eigenval:md5,4d99d0e13ed07d31f5a065981f1affb8"
+                ],
+                [
+                    {
+                        "id": "study_eur",
+                        "ancestry": "EUR",
+                        "sample_qc_marker_set": "study"
+                    },
+                    "study_eur.ancestry.eigenval:md5,5eeaf0a1e357b1d270cdae83d43659c8"
+                ]
+            ],
+            [
+                [
+                    {
+                        "id": "study_afr",
+                        "ancestry": "AFR",
+                        "sample_qc_marker_set": "study"
+                    },
+                    "study_afr.ancestry_assignment.tsv:md5,b2b1965b4e60719b4ba5540a21a70c7f"
+                ],
+                [
+                    {
+                        "id": "study_csa",
+                        "ancestry": "CSA",
+                        "sample_qc_marker_set": "shared"
+                    },
+                    "study_csa.ancestry_assignment.tsv:md5,c7d4382466a9b4fc373e8a8c59b73fe6"
+                ],
+                [
+                    {
+                        "id": "study_eur",
+                        "ancestry": "EUR",
+                        "sample_qc_marker_set": "study"
+                    },
+                    "study_eur.ancestry_assignment.tsv:md5,de35d89839d411a33cb2ed98d73874a2"
+                ]
+            ]
+        ],
+        "timestamp": "2026-11-11T13:36:53.044868714",
+        "meta": {
+            "nf-test": "0.9.5",
+            "nextflow": "26.04.6"
+        }
+    },
+    "gwasqc fixtures - three strata - shared marker set on the matched reference": {
+        "content": [
+            [
+                [
+                    {
+                        "id": "study_csa",
+                        "ancestry": "CSA",
+                        "sample_qc_marker_set": "shared"
+                    },
+                    "study_csa.ancestry_matched.prune.in:md5,cd22b8802d2ba6c3d01df443e70a2745"
+                ]
+            ],
+            [
+                [
+                    {
+                        "id": "study_csa",
+                        "ancestry": "CSA",
+                        "sample_qc_marker_set": "shared"
+                    },
+                    "study_csa.reference_keep.txt:md5,cb552c0acd7acb39acfb779103d34724"
+                ]
+            ],
+            [
+                [
+                    {
+                        "id": "study_afr",
+                        "ancestry": "AFR",
+                        "sample_qc_marker_set": "study"
+                    },
+                    "study_afr.ancestry.prune.in:md5,25998a869cff8c96aa45d30c14901d7e"
+                ],
+                [
+                    {
+                        "id": "study_csa",
+                        "ancestry": "CSA",
+                        "sample_qc_marker_set": "shared"
+                    },
+                    "study_csa.ancestry.prune.in:md5,fa8d28d5ec8502ec1d218f87e1cb1b23"
+                ],
+                [
+                    {
+                        "id": "study_eur",
+                        "ancestry": "EUR",
+                        "sample_qc_marker_set": "study"
+                    },
+                    "study_eur.ancestry.prune.in:md5,3b3dd4ab181286bad32a8cadc28f4b2d"
+                ]
+            ],
+            [
+                [
+                    {
+                        "id": "study_afr",
+                        "ancestry": "AFR",
+                        "sample_qc_marker_set": "study"
+                    },
+                    "study_afr.ancestry.eigenval:md5,47b3461ebc5acb734bf81e5cc8670f1e"
+                ],
+                [
+                    {
+                        "id": "study_csa",
+                        "ancestry": "CSA",
+                        "sample_qc_marker_set": "shared"
+                    },
+                    "study_csa.ancestry.eigenval:md5,4d99d0e13ed07d31f5a065981f1affb8"
+                ],
+                [
+                    {
+                        "id": "study_eur",
+                        "ancestry": "EUR",
+                        "sample_qc_marker_set": "study"
+                    },
+                    "study_eur.ancestry.eigenval:md5,5eeaf0a1e357b1d270cdae83d43659c8"
+                ]
+            ],
+            [
+                [
+                    {
+                        "id": "study_afr",
+                        "ancestry": "AFR",
+                        "sample_qc_marker_set": "study"
+                    },
+                    "study_afr.ancestry_assignment.tsv:md5,b2b1965b4e60719b4ba5540a21a70c7f"
+                ],
+                [
+                    {
+                        "id": "study_csa",
+                        "ancestry": "CSA",
+                        "sample_qc_marker_set": "shared"
+                    },
+                    "study_csa.ancestry_assignment.tsv:md5,c7d4382466a9b4fc373e8a8c59b73fe6"
+                ],
+                [
+                    {
+                        "id": "study_eur",
+                        "ancestry": "EUR",
+                        "sample_qc_marker_set": "study"
+                    },
+                    "study_eur.ancestry_assignment.tsv:md5,de35d89839d411a33cb2ed98d73874a2"
+                ]
+            ]
+        ],
+        "timestamp": "2026-11-11T13:38:21.445457556",
         "meta": {
             "nf-test": "0.9.5",
             "nextflow": "26.04.6"

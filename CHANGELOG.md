@@ -33,11 +33,14 @@ The VCZ format route is deferred to its own issue, and pre-QC batch merging is o
   a duplicate/MZ removal list and a mean-kinship outlier list.
 - Ancestry inference per stratum against a schema-declared reference panel (`reference_panel`, a samplesheet of
   PLINK 1 filesets, whole-genome or per chromosome, validated by `assets/schema_reference.json`) and its
-  population table (`reference_pop_data`, validated by `assets/schema_reference_pop.json`): every reference
-  fileset restricted to the stratum's QC'd variants, harmonisation by ID, position and alleles with the
-  strand-ambiguous pairs dropped and the flips applied to the reference through `--update-alleles`, one merged
-  reference per stratum (the route's only intermediate fileset, unpublished), long-range LD exclusion before
-  `--indep-pairwise`, `--freq counts` with `--pca allele-wts`, projection of reference and study samples with
+  population table (`reference_pop_data`, validated by `assets/schema_reference_pop.json`): harmonisation of
+  the reference variant tables with the stratum's QC'd variants by chromosome, position and alleles, whatever
+  the IDs, with the strand-ambiguous pairs dropped and a build guard that stops the run when most of the IDs
+  the two share sit at different positions; every reference fileset restricted to the matched variants by its
+  own IDs, one merged reference per stratum with the reference IDs renamed to the study's through
+  `--update-name` and the flips applied through `--update-alleles` (the restrictions and the merge are the
+  route's only intermediate filesets, unpublished), `--maf` and `--geno` on the reference, long-range LD
+  exclusion before `--indep-pairwise`, `--freq counts` with `--pca allele-wts`, projection of reference and study samples with
   plink2's documented `--score` recipe, and a linear discriminant classifier (MASS, equal priors) with a
   posterior threshold and an optional centroid rule. Publishes the harmonisation tables and lists, the pruned
   set, the eigenvalues, both projections, the assignment, summary and model tables, per-super-population
@@ -61,7 +64,7 @@ The VCZ format route is deferred to its own issue, and pre-QC batch merging is o
   `maf`, `geno`, `mind`, `hwe`; `ld_window_size`, `ld_step_size`, `ld_r2`; `sex_check_max_female_xf`,
   `sex_check_min_male_xf`, `sex_check_max_female_ycount`, `sex_check_min_male_ycount`, `king_table_filter`,
   `relatedness_indiv_sd`, `relatedness_po_ibs0_max`, `apply_sample_removals`, `sample_qc_marker_set`,
-  `small_n_threshold`, `ld_min_retained_fraction`; `skip_ancestry`,
+  `sample_qc_shared_reference`, `small_n_threshold`, `ld_min_retained_fraction`; `skip_ancestry`,
   `ancestry_ld_window_size`, `ancestry_ld_step_size`, `ancestry_ld_r2`, `ancestry_n_pcs`,
   `ancestry_prob_threshold`, `ancestry_sd_filter`, `ancestry_remove_mismatched`.
 - Synthetic three-stratum fixture on the `gwasqc` branch of `nf-core/test-datasets`: two 125-sample strata
@@ -79,12 +82,29 @@ The VCZ format route is deferred to its own issue, and pre-QC batch merging is o
   mode and the marker count are recorded per stratum in `gwasqc_summary.tsv`
   (`sample_qc_marker_set`, `sample_qc_markers`, `sample_qc_note`) and in a MultiQC section, and a `study`-mode
   stratum whose pruning kept fewer than `ld_min_retained_fraction` of its QC'd variants is noted.
+- Choice of the reference samples the `shared` marker set is filtered and pruned on
+  (`sample_qc_shared_reference`): `pooled`, the default, takes the ancestry route's pruned markers over the
+  whole panel; `matched` reruns `--maf`, `--geno` and `--indep-pairwise` outside the long-range LD regions on
+  the reference samples of the stratum's own super-population, published as `<id>.ancestry_matched.prune.in`.
+  The choice is recorded per stratum in `gwasqc_summary.tsv` (`sample_qc_shared_reference`) and in the MultiQC
+  marker-set section.
 - Upstream-bound `plink2/freq` atom (`--freq`, with the `counts` modifier through `ext.args2`) and an optional
   `--read-freq` table on `plink2/het`; pipeline-owned `ancestry_reference_keep`, which lists the reference
   samples of a stratum's super-population from the population table as a `--keep` list.
 
 ### Changed
 
+- The ancestry route matches reference variants by chromosome (a `chr` prefix ignored, `X`/`Y`/`XY`/`MT` read
+  as `23` to `26`), position and alleles instead of by ID, so a panel named by array probe or `chr:pos` IDs
+  meets the study at every shared site. The harmonisation table has one row per QC'd study variant, names the
+  reference variant matched and the basis of the match (`BASIS`), replaces the `absent_from_target` class with
+  `absent_from_reference` and adds `duplicate_position`; the summary counts each class by basis. The route
+  publishes the reference IDs of the matched variants (`<id>.ancestry_reference_extract.snplist`) and the
+  rename table (`<id>.ancestry_name_update.txt`), the flip table is keyed by the study ID, and the reference
+  `--maf` and `--geno` filters moved from the per-fileset restriction to the pruning run. The
+  `ancestry_reference_keep` list of a `shared` stratum is built by the ancestry route.
+- `plink2/pmergelist` takes an optional `--update-name` table, applied before `--update-alleles`, which is
+  then keyed by the new IDs.
 - The heterozygosity histogram data carries a `source` column (`study`, and `reference` in the shared marker-set
   mode) with both sources binned over one range; the `shared`-mode reference keep list, `.afreq` table and
   `.het` report are published beside the study's report under the stratum's `heterozygosity` stage. The

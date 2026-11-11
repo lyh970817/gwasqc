@@ -11,6 +11,24 @@
                         "study_eur.ancestry_flip_update.txt:md5,d41d8cd98f00b204e9800998ecf8427e"
                     ]
                 ],
+                "name_update": [
+                    [
+                        {
+                            "ancestry": "EUR",
+                            "id": "study_eur"
+                        },
+                        "study_eur.ancestry_name_update.txt:md5,d41d8cd98f00b204e9800998ecf8427e"
+                    ]
+                ],
+                "reference_extract": [
+                    [
+                        {
+                            "ancestry": "EUR",
+                            "id": "study_eur"
+                        },
+                        "study_eur.ancestry_reference_extract.snplist:md5,d41d8cd98f00b204e9800998ecf8427e"
+                    ]
+                ],
                 "snplist": [
                     [
                         {
@@ -26,7 +44,7 @@
                             "ancestry": "EUR",
                             "id": "study_eur"
                         },
-                        "study_eur.ancestry_harmonisation_summary.tsv:md5,2274e48a3efc8251df776a9268c225e4"
+                        "study_eur.ancestry_harmonisation_summary.tsv:md5,c2818f61a380572e1ef383c7a241ffb2"
                     ]
                 ],
                 "table": [
@@ -35,7 +53,7 @@
                             "ancestry": "EUR",
                             "id": "study_eur"
                         },
-                        "study_eur.ancestry_harmonisation.tsv:md5,28d68332c620df9929dc96540f9f0b06"
+                        "study_eur.ancestry_harmonisation.tsv:md5,ffe9ceb07e22c2efcc6fce8a8911f062"
                     ]
                 ],
                 "versions": [
@@ -43,10 +61,10 @@
                 ]
             }
         ],
-        "timestamp": "2026-09-20T20:16:03.564431835",
+        "timestamp": "2026-11-11T13:27:31.554028258",
         "meta": {
             "nf-test": "0.9.5",
-            "nextflow": "26.04.4"
+            "nextflow": "26.04.6"
         }
     },
     "study_eur - fixture reference bim": {
@@ -66,6 +84,24 @@
                         "id": "study_eur",
                         "ancestry": "EUR"
                     },
+                    "study_eur.ancestry_reference_extract.snplist:md5,70cf086358d48ff5de5e201ac0a84af3"
+                ]
+            ],
+            [
+                [
+                    {
+                        "id": "study_eur",
+                        "ancestry": "EUR"
+                    },
+                    "study_eur.ancestry_name_update.txt:md5,d41d8cd98f00b204e9800998ecf8427e"
+                ]
+            ],
+            [
+                [
+                    {
+                        "id": "study_eur",
+                        "ancestry": "EUR"
+                    },
                     "study_eur.ancestry_flip_update.txt:md5,2ffcb0888e521c734c95f0730187cac2"
                 ]
             ],
@@ -75,7 +111,7 @@
                         "id": "study_eur",
                         "ancestry": "EUR"
                     },
-                    "study_eur.ancestry_harmonisation.tsv:md5,19d1783cd4d8d7b76d4a18ed1799899f"
+                    "study_eur.ancestry_harmonisation.tsv:md5,27d3beb6eabb4f2f83a76bef53a6f3b7"
                 ]
             ],
             [
@@ -84,27 +120,27 @@
                         "id": "study_eur",
                         "ancestry": "EUR"
                     },
-                    "study_eur.ancestry_harmonisation_summary.tsv:md5,7f6ed94e1e2361503e457e2b2960b3b1"
+                    "study_eur.ancestry_harmonisation_summary.tsv:md5,caa51b476cb1f0e8c2ad82e562f89089"
                 ]
             ],
             [
                 "versions.yml:md5,27016de2334ca8d7afe178053eff8de8"
             ]
         ],
-        "timestamp": "2026-09-20T20:15:31.875308972",
+        "timestamp": "2026-11-11T13:27:06.458864117",
         "meta": {
             "nf-test": "0.9.5",
-            "nextflow": "26.04.4"
+            "nextflow": "26.04.6"
         }
     },
-    "synthetic - every class - pvar route with two reference files": {
+    "synthetic - every class - alias IDs - duplicate positions - QC lists - two reference files": {
         "content": [
             [
                 [
                     {
                         "id": "synthetic"
                     },
-                    "synthetic.ancestry_harmonised.snplist:md5,85755ad829aaa443a8f688c0f722d70d"
+                    "synthetic.ancestry_harmonised.snplist:md5,ece556ac13eaad88517d66677b6cb282"
                 ]
             ],
             [
@@ -112,7 +148,7 @@
                     {
                         "id": "synthetic"
                     },
-                    "synthetic.ancestry_flip_update.txt:md5,6707aa62715e45425340918097008d2a"
+                    "synthetic.ancestry_reference_extract.snplist:md5,83ee52ded4c24123e1b16791e2546891"
                 ]
             ],
             [
@@ -120,7 +156,7 @@
                     {
                         "id": "synthetic"
                     },
-                    "synthetic.ancestry_harmonisation.tsv:md5,b9716d501796e8685916c24332bd5b3d"
+                    "synthetic.ancestry_name_update.txt:md5,6b99740374448b3dd732c7ca13c7ca1d"
                 ]
             ],
             [
@@ -128,14 +164,30 @@
                     {
                         "id": "synthetic"
                     },
-                    "synthetic.ancestry_harmonisation_summary.tsv:md5,fdcdf4db40ba7618d7c0cb54348edb90"
+                    "synthetic.ancestry_flip_update.txt:md5,cccef37f6a117a464e164c2199c4a760"
+                ]
+            ],
+            [
+                [
+                    {
+                        "id": "synthetic"
+                    },
+                    "synthetic.ancestry_harmonisation.tsv:md5,348c6f352afcf45c70ef23ad114a9660"
+                ]
+            ],
+            [
+                [
+                    {
+                        "id": "synthetic"
+                    },
+                    "synthetic.ancestry_harmonisation_summary.tsv:md5,fad4f35a4580c08e9cb405178ed75968"
                 ]
             ]
         ],
-        "timestamp": "2026-09-20T20:15:50.12059008",
+        "timestamp": "2026-11-11T13:27:12.661704476",
         "meta": {
             "nf-test": "0.9.5",
-            "nextflow": "26.04.4"
+            "nextflow": "26.04.6"
         }
     },
     "study_eur - bim target against the same reference as a pvar": {
@@ -155,6 +207,24 @@
                         "id": "study_eur",
                         "ancestry": "EUR"
                     },
+                    "study_eur.ancestry_reference_extract.snplist:md5,70cf086358d48ff5de5e201ac0a84af3"
+                ]
+            ],
+            [
+                [
+                    {
+                        "id": "study_eur",
+                        "ancestry": "EUR"
+                    },
+                    "study_eur.ancestry_name_update.txt:md5,d41d8cd98f00b204e9800998ecf8427e"
+                ]
+            ],
+            [
+                [
+                    {
+                        "id": "study_eur",
+                        "ancestry": "EUR"
+                    },
                     "study_eur.ancestry_flip_update.txt:md5,2ffcb0888e521c734c95f0730187cac2"
                 ]
             ],
@@ -164,11 +234,11 @@
                         "id": "study_eur",
                         "ancestry": "EUR"
                     },
-                    "study_eur.ancestry_harmonisation_summary.tsv:md5,7f6ed94e1e2361503e457e2b2960b3b1"
+                    "study_eur.ancestry_harmonisation_summary.tsv:md5,caa51b476cb1f0e8c2ad82e562f89089"
                 ]
             ]
         ],
-        "timestamp": "2026-09-21T11:07:34.802918014",
+        "timestamp": "2026-11-11T13:27:25.881381828",
         "meta": {
             "nf-test": "0.9.5",
             "nextflow": "26.04.6"

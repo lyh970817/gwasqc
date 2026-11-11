@@ -11,7 +11,6 @@ keywords:
 components:
   - plink2/indeppairwise
   - highld_exclude
-  - ancestry_reference_keep
   - plink2/freq
   - plink2/het
   - plink2/checksex
@@ -26,13 +25,10 @@ input:
       pattern: "*.{bed,bim,fam,snplist,txt,smiss}"
       ontologies: []
   - ch_reference:
-      description: One item per stratum in shared mode; the reference-pruned marker list of the ancestry route (study-side IDs, harmonised, outside the long-range LD regions and off the sex chromosomes) and the merged reference fileset of the same route, flipped onto the stratum's strand; the join with the shared strata is strict
-      structure: [map meta, path shared_markers, path pgen, path pvar, path psam]
-      pattern: "*.{prune.in,pgen,pvar,psam}"
+      description: One item per stratum in shared mode; the shared marker list of the ancestry route (study-side IDs, harmonised, outside the long-range LD regions and off the sex chromosomes, filtered and pruned on the pooled or the ancestry-matched reference samples), the merged reference fileset of the same route, renamed to the stratum's IDs and flipped onto its strand, and the reference samples of the stratum's super-population as FID IID pairs for plink2 --keep; the join with the shared strata is strict
+      structure: [map meta, path shared_markers, path pgen, path pvar, path psam, path reference_keep]
+      pattern: "*.{prune.in,pgen,pvar,psam,txt}"
       ontologies: []
-  - reference_pop_data:
-      description: Tab-separated table with FID, IID, pop and super_pop for every reference sample, read for the strata in shared mode to select the reference samples of their own super-population; `[]` when no stratum is in shared mode
-      structure: path reference_pop_data
   - high_ld_regions:
       description: BED of long-range LD regions, 0-based half-open, bare chromosome codes
       structure: path high_ld_regions
@@ -69,12 +65,6 @@ output:
       description: Pruned variants inside a long-range LD region or off the autosomes, for plink2 --exclude; one item per stratum in study mode
       structure: [map meta, path highld_exclude]
       pattern: "*.highld_exclude.txt"
-      ontologies: []
-  - reference_keep:
-      type: file
-      description: The reference samples of the stratum's super-population as FID IID pairs for plink2 --keep; one item per stratum in shared mode
-      structure: [map meta, path reference_keep]
-      pattern: "*.reference_keep.txt"
       ontologies: []
   - reference_afreq:
       type: file

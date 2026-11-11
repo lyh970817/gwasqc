@@ -1,5 +1,5 @@
 name: ancestry_harmonise
-description: Match the variants of a reference panel against the variant file of one stratum by ID, position and alleles, classify each as matching, swapped, strand-flipped, strand-ambiguous or mismatched, and write the retained variant list and the allele update that flips the reference onto the stratum's strand
+description: Match the QC'd variants of one stratum to the variants of a reference panel by normalised chromosome, position and alleles, independent of ID, classify each as matching, swapped, strand-flipped, strand-ambiguous, mismatched or unresolvable, stop when most ID-shared variants disagree on position (a genome-build mismatch), and write the retained variant lists in both ID spaces, the rename of the reference to the stratum's IDs and the allele update that flips it onto the stratum's strand
 keywords:
   - ancestry
   - harmonisation
@@ -21,14 +21,27 @@ input:
             - id (string): Stratum identifier, used as the output prefix.
     - plink_variant_file:
         type: file
-        description: PLINK 1 extended MAP file or uncompressed PLINK 2 variant information file of the stratum; every variant the reference tables name is looked up here by ID
+        description: PLINK 1 extended MAP file or uncompressed PLINK 2 variant information file of the stratum; its variants that pass the two lists below are the QC'd variants matched against the reference
         pattern: "*.{bim,pvar}"
+        ontologies: []
+    - extract:
+        type: file
+        description: Optional keep-list file(s), one variant ID per line; a study variant is QC'd only when it is in their union, as plink2 --extract applies them; use `[]` to keep every study variant
+        pattern: "*"
+        ontologies: []
+    - exclude:
+        type: file
+        description: Optional exclusion list file(s), one variant ID per line; a study variant in their union is not QC'd, as plink2 --exclude applies them; use `[]` when absent
+        pattern: "*"
         ontologies: []
     - reference_variant_files:
         type: file
-        description: One or more PLINK 1 extended MAP files or uncompressed PLINK 2 variant information files of the reference filesets, typically already restricted to the stratum's variant IDs; the first listed allele of each is its A1 (bim column 5, or pvar ALT as plink2 maps it) and the second its A2 (bim column 6, or pvar REF), so a bim and a pvar of one fileset classify alike against either form of the stratum's file
+        description: One or more PLINK 1 extended MAP files or uncompressed PLINK 2 variant information files of the reference filesets, read in chunks so that a whole-genome panel fits in memory; the first listed allele of each is its A1 (bim column 5, or pvar ALT as plink2 maps it) and the second its A2 (bim column 6, or pvar REF), so a bim and a pvar of one fileset classify alike against either form of the stratum's file; chromosome codes are compared with any chr prefix removed and X, Y, XY and MT read as 23 to 26
         pattern: "*.{bim,pvar}"
         ontologies: []
+  - genome_build:
+      type: string
+      description: The genome build the study is declared on (`--genome_build`), named in the error the build guard raises when more than half of the variant IDs both sides carry sit at another chromosome or position
 output:
   snplist:
     - - meta:
@@ -36,8 +49,28 @@ output:
           description: Metadata map propagated from input
       - "${prefix}.ancestry_harmonised.snplist":
           type: file
-          description: IDs of the reference variants classified match, swap or flip, one per line, for plink2 --extract on the reference and the stratum alike
+          description: Study IDs of the variants classified match, swap or flip, one per line, in the order of the stratum's variant file; the variant IDs the merged reference carries after the rename, for plink2 --extract on the merged reference and the stratum alike
           pattern: "*.ancestry_harmonised.snplist"
+          ontologies:
+            - edam: "http://edamontology.org/format_2330" # Text
+  reference_extract:
+    - - meta:
+          type: map
+          description: Metadata map propagated from input
+      - "${prefix}.ancestry_reference_extract.snplist":
+          type: file
+          description: Reference IDs of the same variants in the same order, one per line, for plink2 --extract on each reference fileset; every listed ID occurs exactly once in the panel
+          pattern: "*.ancestry_reference_extract.snplist"
+          ontologies:
+            - edam: "http://edamontology.org/format_2330" # Text
+  name_update:
+    - - meta:
+          type: map
+          description: Metadata map propagated from input
+      - "${prefix}.ancestry_name_update.txt":
+          type: file
+          description: One tab-separated line per retained variant matched by position only, its reference ID then its study ID, in the two-column form of plink2 --update-name; empty when every retained variant also matched by ID
+          pattern: "*.ancestry_name_update.txt"
           ontologies:
             - edam: "http://edamontology.org/format_2330" # Text
   flip_update:
@@ -46,7 +79,7 @@ output:
           description: Metadata map propagated from input
       - "${prefix}.ancestry_flip_update.txt":
           type: file
-          description: One tab-separated line per strand-flipped variant with its ID, its two reference alleles and their complements, in the five-column form of plink2 --update-alleles, to be applied to the reference; empty when no variant flips
+          description: One tab-separated line per strand-flipped variant with its study ID, its two reference alleles and their complements, in the five-column form of plink2 --update-alleles, to be applied to the reference after the rename, which plink2 performs first; empty when no variant flips
           pattern: "*.ancestry_flip_update.txt"
           ontologies:
             - edam: "http://edamontology.org/format_2330" # Text
@@ -56,7 +89,7 @@ output:
           description: Metadata map propagated from input
       - "${prefix}.ancestry_harmonisation.tsv":
           type: file
-          description: One row per reference variant with its chromosome and position, the reference and stratum alleles and its CLASS (match, swap, flip, ambiguous, allele_mismatch, non_snp, position_mismatch, absent_from_target, duplicate_id); the stratum alleles are empty for an absent variant
+          description: One row per QC'd study variant, in the order of its variant file, with the columns ID, CHROM, POS, TARGET_A1, TARGET_A2, REF_ID, REF_CHROM, REF_POS, REF_A1, REF_A2, CLASS and BASIS. CLASS is match, swap, flip, ambiguous, allele_mismatch, non_snp, duplicate_position (several reference candidates and not exactly one allele-compatible, or one compatible reference variant claimed by several study variants), position_mismatch (none at the position, the ID elsewhere in the reference), absent_from_reference or duplicate_id (the study ID repeated among the QC'd variants, or the matched reference ID repeated in the panel). The REF columns name the deciding candidate, the ID's reference position for a position mismatch, or every candidate comma-joined when none decides, and are empty for an absent variant. BASIS is id_and_position, position_only, id_only (a position mismatch) or empty when no single reference variant is reported
           pattern: "*.ancestry_harmonisation.tsv"
           ontologies:
             - edam: "http://edamontology.org/format_3475" # TSV
@@ -66,7 +99,7 @@ output:
           description: Metadata map propagated from input
       - "${prefix}.ancestry_harmonisation_summary.tsv":
           type: file
-          description: Variant count per class, every class listed, with whether the class is retained
+          description: Variant count per class, every class listed in the order above, with whether the class is retained and how many of its variants matched by ID and position (ID_AND_POSITION) and by position only (POSITION_ONLY)
           pattern: "*.ancestry_harmonisation_summary.tsv"
           ontologies:
             - edam: "http://edamontology.org/format_3475" # TSV

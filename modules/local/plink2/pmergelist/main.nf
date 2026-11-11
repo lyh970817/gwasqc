@@ -10,7 +10,7 @@ process PLINK2_PMERGELIST {
     input:
     // The filesets are staged under `input/` because the merged fileset is written beside them with the
     // default prefix, and a fileset that already carries that basename would otherwise be overwritten.
-    tuple val(meta), path(plink_genotype_files, stageAs: 'input/*'), path(plink_variant_files, stageAs: 'input/*'), path(plink_sample_files, stageAs: 'input/*'), path(extract), path(exclude), path(keep), path(remove), path(update_alleles)
+    tuple val(meta), path(plink_genotype_files, stageAs: 'input/*'), path(plink_variant_files, stageAs: 'input/*'), path(plink_sample_files, stageAs: 'input/*'), path(extract), path(exclude), path(keep), path(remove), path(update_name), path(update_alleles)
 
     output:
     tuple val(meta), path("${prefix}.pgen"), path("${prefix}.pvar"), path("${prefix}.psam"), emit: pgen
@@ -25,7 +25,7 @@ process PLINK2_PMERGELIST {
     // The three members of every fileset share one basename; the merge list names them explicitly, one
     // fileset per line, so that PLINK 1 and PLINK 2 filesets are read alike. plink2 refuses `--pmerge-list`
     // with fewer than two filesets, so a single fileset is read through `--bfile`/`--pfile` instead and
-    // receives the same lists and allele update.
+    // receives the same lists and updates.
     def genotype_files = [plink_genotype_files].flatten().toSorted { file -> file.name }
     def variant_files = [plink_variant_files].flatten().collectEntries { file -> [(file.baseName): file] }
     def sample_files = [plink_sample_files].flatten().collectEntries { file -> [(file.baseName): file] }
@@ -40,6 +40,9 @@ process PLINK2_PMERGELIST {
     def exclude_fragment = exclude ? "--exclude ${exclude}" : ''
     def keep_fragment = keep ? "--keep ${keep}" : ''
     def remove_fragment = remove ? "--remove ${remove}" : ''
+    // plink2 renames before it updates alleles or applies the variant lists (verified on 2.0.0a.6.9, with and
+    // without --pmerge-list), so the allele update and the lists name the variants by their new IDs.
+    def update_name_fragment = update_name ? "--update-name ${update_name}" : ''
     def update_alleles_fragment = update_alleles ? "--update-alleles ${update_alleles}" : ''
     def mem_mb = task.memory.toMega()
     """
@@ -53,6 +56,7 @@ process PLINK2_PMERGELIST {
         ${exclude_fragment} \\
         ${keep_fragment} \\
         ${remove_fragment} \\
+        ${update_name_fragment} \\
         ${update_alleles_fragment} \\
         ${args} \\
         --make-pgen \\

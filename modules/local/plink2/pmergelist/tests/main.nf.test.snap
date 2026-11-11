@@ -1,4 +1,30 @@
 {
+    "ref_panel - two filesets - update-name before update-alleles and extract": {
+        "content": [
+            [
+                [
+                    {
+                        "id": "ref_renamed"
+                    },
+                    "ref_renamed.pgen:md5,62213933178558fbb8185f879cafbbc7",
+                    "ref_renamed.pvar:md5,13694d4a4db504677c5cd57c7deda077",
+                    "ref_renamed.psam:md5,d39c0902c907a2b402c7f20728a8d2f5"
+                ]
+            ],
+            [
+                [
+                    "PLINK2_PMERGELIST",
+                    "plink2",
+                    "2.0.0-a.6.9LM"
+                ]
+            ]
+        ],
+        "timestamp": "2026-11-11T13:27:52.817692536",
+        "meta": {
+            "nf-test": "0.9.5",
+            "nextflow": "26.04.6"
+        }
+    },
     "ref_panel - two filesets - stub": {
         "content": [
             {

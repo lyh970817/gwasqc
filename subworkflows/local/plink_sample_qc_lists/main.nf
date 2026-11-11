@@ -9,7 +9,6 @@
 // MODULE: Local to the pipeline
 include { PLINK2_INDEPPAIRWISE               } from '../../../modules/local/plink2/indeppairwise/main'
 include { HIGHLD_EXCLUDE                     } from '../../../modules/local/highld_exclude/main'
-include { ANCESTRY_REFERENCE_KEEP            } from '../../../modules/local/ancestry_reference_keep/main'
 include { PLINK2_FREQ                        } from '../../../modules/local/plink2/freq/main'
 include { PLINK2_HET as PLINK2_HET_REFERENCE } from '../../../modules/local/plink2/het/main'
 include { PLINK2_CHECKSEX                    } from '../../../modules/local/plink2/checksex/main'
@@ -22,8 +21,7 @@ include { RELATEDNESS_DECISIONS              } from '../../../modules/local/rela
 workflow PLINK_SAMPLE_QC_LISTS {
     take:
     ch_genotypes // channel: [ val(meta), path(bed), path(bim), path(fam), path(extract), [ path(exclude), ... ], path(remove), path(smiss) ]; meta.sample_qc_marker_set is `study` or `shared`
-    ch_reference // channel: [ val(meta), path(shared_markers), path(pgen), path(pvar), path(psam) ], one item per stratum in shared mode: the reference-pruned marker list and the merged reference fileset of the ancestry route
-    reference_pop_data // value: path to the TSV of FID, IID, pop and super_pop per reference sample, or [] when no stratum is in shared mode
+    ch_reference // channel: [ val(meta), path(shared_markers), path(pgen), path(pvar), path(psam), path(reference_keep) ], one item per stratum in shared mode: the shared marker list, the merged reference fileset and the reference samples of the stratum's super-population, all from the ancestry route
     high_ld_regions // value: path to the BED of long-range LD regions
     ld_window_size // value: --indep-pairwise window, in variants
     ld_step_size // value: --indep-pairwise step, in variants
@@ -79,36 +77,27 @@ workflow PLINK_SAMPLE_QC_LISTS {
 
     // SHARED MODE
     //
-    // The shared markers already carry the per-group MAF and missingness filters of both sides, the
-    // harmonisation, the long-range LD and non-autosomal exclusion and the reference-side pruning, so no
-    // study-side pruning runs. The heterozygosity baseline is the reference samples of the stratum's own
-    // super-population: their allele frequencies over the shared markers standardise the study's F through
-    // `--read-freq`, and their own report is drawn beneath the study's. The sex check takes every QC-passing
+    // The shared markers already carry the study's QC, the harmonisation, the reference-side MAF and
+    // missingness filters, the long-range LD and non-autosomal exclusion and the reference-side pruning, on
+    // the pooled or the ancestry-matched reference samples as the run chose, so no study-side pruning runs.
+    // The heterozygosity baseline is the reference samples of the stratum's own super-population, selected
+    // by the ancestry route: their allele frequencies over the shared markers standardise the study's F
+    // through `--read-freq`, and their own report is drawn beneath the study's. The sex check takes every QC-passing
     // chromosome X and Y variant unpruned, because the reference carries no chromosome X and pruning X over a
     // handful of samples is what starved the legacy check.
 
     def ch_shared_by_id = ch_by_mode.shared
         .map { meta, bed, bim, fam, extract, exclude, remove, _smiss -> [meta.id, meta, bed, bim, fam, extract, exclude, remove] }
-        .join(ch_reference.map { meta, shared_markers, pgen, pvar, psam -> [meta.id, shared_markers, pgen, pvar, psam] }, by: 0, failOnDuplicate: true, failOnMismatch: true)
-
-    //
-    // MODULE: The reference samples of the stratum's super-population, as a keep list
-    //
-    ANCESTRY_REFERENCE_KEEP(
-        ch_shared_by_id.map { _id, meta, _bed, _bim, _fam, _extract, _exclude, _remove, _shared_markers, _pgen, _pvar, _psam -> meta },
-        reference_pop_data,
-    )
-
-    def ch_shared_reference_by_id = ch_shared_by_id.join(ANCESTRY_REFERENCE_KEEP.out.sample_keep.map { meta, keep -> [meta.id, keep] }, by: 0, failOnDuplicate: true, failOnMismatch: true)
+        .join(ch_reference.map { meta, shared_markers, pgen, pvar, psam, keep -> [meta.id, shared_markers, pgen, pvar, psam, keep] }, by: 0, failOnDuplicate: true, failOnMismatch: true)
 
     //
     // MODULE: Allele frequencies of the matched reference samples over the shared markers
     //
     PLINK2_FREQ(
-        ch_shared_reference_by_id.map { _id, meta, _bed, _bim, _fam, _extract, _exclude, _remove, shared_markers, pgen, pvar, psam, keep -> [meta, pgen, pvar, psam, shared_markers, [], keep, []] }
+        ch_shared_by_id.map { _id, meta, _bed, _bim, _fam, _extract, _exclude, _remove, shared_markers, pgen, pvar, psam, keep -> [meta, pgen, pvar, psam, shared_markers, [], keep, []] }
     )
 
-    def ch_shared_freq_by_id = ch_shared_reference_by_id.join(PLINK2_FREQ.out.afreq.map { meta, afreq -> [meta.id, afreq] }, by: 0, failOnDuplicate: true, failOnMismatch: true)
+    def ch_shared_freq_by_id = ch_shared_by_id.join(PLINK2_FREQ.out.afreq.map { meta, afreq -> [meta.id, afreq] }, by: 0, failOnDuplicate: true, failOnMismatch: true)
 
     //
     // MODULE: Heterozygosity report of the matched reference samples over the same markers and frequencies
@@ -117,9 +106,9 @@ workflow PLINK_SAMPLE_QC_LISTS {
         ch_shared_freq_by_id.map { _id, meta, _bed, _bim, _fam, _extract, _exclude, _remove, shared_markers, pgen, pvar, psam, keep, afreq -> [meta, pgen, pvar, psam, shared_markers, [], keep, [], afreq] }
     )
 
-    def ch_shared_checksex_inputs = ch_shared_by_id.map { _id, meta, bed, bim, fam, extract, exclude, remove, _shared_markers, _pgen, _pvar, _psam -> [meta, bed, bim, fam, extract, exclude, [], remove] }
+    def ch_shared_checksex_inputs = ch_shared_by_id.map { _id, meta, bed, bim, fam, extract, exclude, remove, _shared_markers, _pgen, _pvar, _psam, _keep -> [meta, bed, bim, fam, extract, exclude, [], remove] }
     def ch_shared_het_inputs = ch_shared_freq_by_id.map { _id, meta, bed, bim, fam, _extract, _exclude, remove, shared_markers, _pgen, _pvar, _psam, _keep, afreq -> [meta, bed, bim, fam, shared_markers, [], [], remove, afreq] }
-    def ch_shared_king_inputs = ch_shared_by_id.map { _id, meta, bed, bim, fam, _extract, _exclude, remove, shared_markers, _pgen, _pvar, _psam -> [meta, bed, bim, fam, shared_markers, [], [], remove] }
+    def ch_shared_king_inputs = ch_shared_by_id.map { _id, meta, bed, bim, fam, _extract, _exclude, remove, shared_markers, _pgen, _pvar, _psam, _keep -> [meta, bed, bim, fam, shared_markers, [], [], remove] }
 
     // BOTH MODES
 
@@ -178,7 +167,6 @@ workflow PLINK_SAMPLE_QC_LISTS {
     prune_in              = PLINK2_INDEPPAIRWISE.out.prune_in // channel: [ val(meta), path(prune_in) ], the strata in study mode
     prune_out             = PLINK2_INDEPPAIRWISE.out.prune_out // channel: [ val(meta), path(prune_out) ], the strata in study mode
     highld_exclude        = HIGHLD_EXCLUDE.out.variant_exclude // channel: [ val(meta), path(highld_exclude) ], the strata in study mode
-    reference_keep        = ANCESTRY_REFERENCE_KEEP.out.sample_keep // channel: [ val(meta), path(reference_keep) ], the strata in shared mode
     reference_afreq       = PLINK2_FREQ.out.afreq // channel: [ val(meta), path(afreq) ], the strata in shared mode
     reference_het         = PLINK2_HET_REFERENCE.out.het // channel: [ val(meta), path(reference_het) ], the strata in shared mode
     sexcheck              = PLINK2_CHECKSEX.out.sexcheck // channel: [ val(meta), path(sexcheck) ]

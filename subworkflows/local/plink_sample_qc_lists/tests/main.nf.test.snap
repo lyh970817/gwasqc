@@ -180,16 +180,6 @@
                         "study_csa.reference.het:md5,1ae909070b202062b1ecdfe58a9033f4"
                     ]
                 ],
-                "reference_keep": [
-                    [
-                        {
-                            "ancestry": "CSA",
-                            "id": "study_csa",
-                            "sample_qc_marker_set": "shared"
-                        },
-                        "study_csa.reference_keep.txt:md5,cb552c0acd7acb39acfb779103d34724"
-                    ]
-                ],
                 "relatedness_indiv": [
                     [
                         {
@@ -374,10 +364,10 @@
                 ]
             }
         ],
-        "timestamp": "2026-09-21T16:57:09.41234221",
+        "timestamp": "2026-11-11T14:03:00.889506706",
         "meta": {
             "nf-test": "0.9.5",
-            "nextflow": "26.04.4"
+            "nextflow": "26.04.6"
         }
     },
     "gwasqc fixtures - two study strata and one shared stratum - stub": {
@@ -617,16 +607,6 @@
                             "sample_qc_marker_set": "shared"
                         },
                         "study_csa.reference.het:md5,d41d8cd98f00b204e9800998ecf8427e"
-                    ]
-                ],
-                "reference_keep": [
-                    [
-                        {
-                            "ancestry": "CSA",
-                            "id": "study_csa",
-                            "sample_qc_marker_set": "shared"
-                        },
-                        "study_csa.reference_keep.txt:md5,d41d8cd98f00b204e9800998ecf8427e"
                     ]
                 ],
                 "relatedness_hist_plot": [
@@ -871,10 +851,10 @@
                 ]
             }
         ],
-        "timestamp": "2026-09-21T16:57:55.817289328",
+        "timestamp": "2026-11-11T14:05:04.945902107",
         "meta": {
             "nf-test": "0.9.5",
-            "nextflow": "26.04.4"
+            "nextflow": "26.04.6"
         }
     }
 }
