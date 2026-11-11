@@ -90,6 +90,7 @@ nextflow_process {
                             [],
                             [],
                             [],
+                            [],
                             update,
                         ]
                     }
@@ -136,6 +137,7 @@ nextflow_process {
                         [],
                         [],
                         [],
+                        [],
                         update,
                     ]
                 }
@@ -160,6 +162,59 @@ nextflow_process {
         }
     }
 
+    test("ref_panel - two filesets - update-name before update-alleles and extract") {
+
+        when {
+            process {
+                """
+                // One variant of each half is renamed; the allele update and the keep-list name the renamed
+                // variants by their new IDs, because plink2 renames first.
+                def rename = file("${workDir}/ref_rename.txt")
+                rename.text = 'rs1000514\\tAX-1000514\\nrs2248694\\tAX-2248694\\n'
+                def update = file("${workDir}/ref_update_renamed.txt")
+                update.text = 'AX-1000514\\tT\\tC\\tA\\tG\\n'
+                def keep_list = file("${workDir}/ref_keep_renamed.txt")
+                keep_list.text = 'AX-1000514\\nrs1000639\\nAX-2248694\\n'
+                input[0] = PLINK2_MAKEBED_FIRST.out.bed
+                    .mix(PLINK2_MAKEBED_SECOND.out.bed)
+                    .map { _meta, bed, bim, fam -> [bed, bim, fam] }
+                    .collect(flat: false)
+                    .map { filesets ->
+                        [
+                            [ id:'ref_renamed' ],
+                            filesets.collect { fileset -> fileset[0] },
+                            filesets.collect { fileset -> fileset[1] },
+                            filesets.collect { fileset -> fileset[2] },
+                            keep_list,
+                            [],
+                            [],
+                            [],
+                            rename,
+                            update,
+                        ]
+                    }
+                """
+            }
+        }
+
+        then {
+            def command = path(process.out.log.get(0).get(1)).parent.resolve('.command.sh').text
+            def pvar = path(process.out.pgen.get(0).get(2)).readLines().findAll { line -> !line.startsWith('#') }.collect { line -> line.split('\t') }
+            def log = path(process.out.log.get(0).get(1)).text
+            assertAll(
+                { assert process.success },
+                { assert command.contains('--update-name ref_rename.txt') },
+                { assert pvar.collect { fields -> fields[0..2] } == [['1', '1034619', 'AX-1000514'], ['1', '2152812', 'rs1000639'], ['12', '2051199', 'AX-2248694']] },
+                // The bim's T/C read as ALT T, REF C; the update keyed by the new ID complements both.
+                { assert pvar.find { fields -> fields[2] == 'AX-1000514' }[3..4] == ['G', 'A'] },
+                { assert pvar.find { fields -> fields[2] == 'AX-2248694' }[3..4] == ['A', 'G'] },
+                { assert log.contains('--update-name: 2 values updated.') },
+                { assert log.contains('--update-alleles: 1 variant updated.') },
+                { assert snapshot(process.out.pgen, process.out.versions_plink2).match() },
+            )
+        }
+    }
+
     test("ref_panel - two filesets - stub") {
 
         options "-stub"
@@ -177,6 +232,7 @@ nextflow_process {
                             filesets.collect { fileset -> fileset[0] },
                             filesets.collect { fileset -> fileset[1] },
                             filesets.collect { fileset -> fileset[2] },
+                            [],
                             [],
                             [],
                             [],

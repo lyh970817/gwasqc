@@ -57,9 +57,15 @@ input:
         description: Optional sample ID list file(s) passed to `--remove`; plink2 drops the union of the listed samples; use `[]` when absent
         pattern: "*"
         ontologies: []
+    - update_name:
+        type: file
+        description: Optional variant ID update file passed to `--update-name`, two whitespace-separated columns per line (current ID, new ID); plink2 renames before it applies `--update-alleles`, `--extract` and `--exclude`, so those name the variants by their new IDs, and it stops when a current ID occurs more than once in the merged fileset; use `[]` when absent
+        pattern: "*"
+        ontologies:
+          - edam: "http://edamontology.org/format_2330" # Text
     - update_alleles:
         type: file
-        description: Optional allele-code update file passed to `--update-alleles`, five whitespace-separated columns per line (variant ID, the two current allele codes in either order, the two new codes in the same order); a row whose current codes do not match is skipped and logged; use `[]` when absent
+        description: Optional allele-code update file passed to `--update-alleles`, five whitespace-separated columns per line (variant ID, the two current allele codes in either order, the two new codes in the same order); the ID is the one after any `--update-name`; a row whose current codes do not match is skipped and logged; use `[]` when absent
         pattern: "*"
         ontologies:
           - edam: "http://edamontology.org/format_2330" # Text
