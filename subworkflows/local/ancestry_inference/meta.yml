@@ -1,6 +1,6 @@
 # yaml-language-server: $schema=https://raw.githubusercontent.com/nf-core/modules/master/subworkflows/yaml-schema.json
 name: ancestry_inference
-description: Infer the ancestry of every sample of one PLINK fileset per stratum against a labelled reference panel, from the intersect and strand harmonisation of the reference filesets through their merge, pruning and decomposition to the projection of reference and study samples and the assignment of each study sample to a super-population
+description: Infer the ancestry of every sample of one PLINK fileset per stratum against a labelled reference panel, from the harmonisation of the stratum's QC'd variants with the reference variant tables by position and alleles, through the intersect, merge, rename and strand flip of the reference filesets and their filtering, pruning and decomposition, to the projection of reference and study samples and the assignment of each study sample to a super-population; for a stratum in the shared marker-set mode it also selects the ancestry-matched reference samples and the shared markers, pruned on the pooled or the matched reference samples
 keywords:
   - plink
   - ancestry
@@ -9,17 +9,18 @@ keywords:
   - population structure
   - quality control
 components:
-  - plink2/makebed
   - ancestry_harmonise
+  - plink2/makebed
   - plink2/pmergelist
   - highld_exclude
   - plink2/indeppairwise
+  - ancestry_reference_keep
   - plink2/pcawts
   - plink2/score
   - ancestry_assign
 input:
   - ch_genotypes:
-      description: One PLINK 1 fileset per stratum with the filter chain's lists; extract is the keep-list, exclude the list of exclusion lists and remove the mind removal list; meta.id must be unique across strata and meta.ancestry names the stratum's own super-population
+      description: One PLINK 1 fileset per stratum with the filter chain's lists; extract is the keep-list, exclude the list of exclusion lists and remove the mind removal list; meta.id must be unique across strata, meta.ancestry names the stratum's own super-population, and a stratum whose meta.sample_qc_marker_set is `shared` also receives the reference keep list and the shared markers
       structure: [map meta, path bed, path bim, path fam, path extract, list exclude, path remove]
       pattern: "*.{bed,bim,fam,snplist,txt}"
       ontologies: []
@@ -34,6 +35,9 @@ input:
   - high_ld_regions:
       description: BED of long-range LD regions, 0-based half-open, bare chromosome codes
       structure: path high_ld_regions
+  - genome_build:
+      description: The study's genome build, which the reference panel must share; named in the error of the build guard, which stops when most variants whose ID both sides carry disagree on position
+      structure: string genome_build
   - ld_window_size:
       description: Window of --indep-pairwise on the merged reference, in variants
       structure: integer ld_window_size
@@ -52,34 +56,49 @@ input:
   - sd_filter:
       description: Standard deviations of the centroid rule that unassigns an assigned sample lying too far from its group on any component; 0 switches the rule off
       structure: number sd_filter
+  - shared_reference:
+      description: The reference samples the shared marker set is filtered and pruned on, `pooled` (every reference sample, the decomposition's own pruned list) or `matched` (the reference samples of the stratum's super-population)
+      structure: string shared_reference
 output:
   - harmonisation:
       type: file
-      description: One row per reference variant of the intersect with its class
+      description: One row per QC'd study variant with the reference variant it was matched to, its class and the basis of the match (ID and position, position only, or ID only for a position mismatch)
       structure: [map meta, path harmonisation]
       pattern: "*.ancestry_harmonisation.tsv"
       ontologies: []
   - harmonisation_summary:
       type: file
-      description: Variant counts per harmonisation class
+      description: Variant counts per harmonisation class and matching basis
       structure: [map meta, path harmonisation_summary]
       pattern: "*.ancestry_harmonisation_summary.tsv"
       ontologies: []
   - harmonised_snplist:
       type: file
-      description: The retained reference variants, for plink2 --extract
+      description: The study IDs of the retained variants, the variant IDs of the merged reference
       structure: [map meta, path snplist]
       pattern: "*.ancestry_harmonised.snplist"
       ontologies: []
+  - reference_extract:
+      type: file
+      description: The reference IDs of the retained variants, the plink2 --extract of each reference fileset
+      structure: [map meta, path reference_extract]
+      pattern: "*.ancestry_reference_extract.snplist"
+      ontologies: []
+  - name_update:
+      type: file
+      description: The rename of the retained reference variants to their study IDs, for plink2 --update-name on the merged reference
+      structure: [map meta, path name_update]
+      pattern: "*.ancestry_name_update.txt"
+      ontologies: []
   - flip_update:
       type: file
-      description: The allele update that flips the reference onto the stratum's strand, for plink2 --update-alleles
+      description: The allele update that flips the renamed reference onto the stratum's strand, keyed by study ID, for plink2 --update-alleles
       structure: [map meta, path flip_update]
       pattern: "*.ancestry_flip_update.txt"
       ontologies: []
   - reference_genotypes:
       type: file
-      description: The merged reference fileset restricted to the harmonised variants and flipped onto the stratum's strand, the one materialised intermediate of the route
+      description: The merged reference fileset of the harmonised variants, renamed to the stratum's IDs and flipped onto its strand, unfiltered; the materialised intermediate the decomposition, the projection and the shared-marker statistics read
       structure: [map meta, path pgen, path pvar, path psam]
       pattern: "*.{pgen,pvar,psam}"
       ontologies: []
@@ -91,8 +110,20 @@ output:
       ontologies: []
   - prune_in:
       type: file
-      description: Variants retained by LD pruning of the merged reference, the set the components are computed and projected on
+      description: Variants retained by the reference-side MAF and missingness filters and LD pruning of the merged reference over every reference sample, the set the components are computed and projected on
       structure: [map meta, path prune_in]
+      pattern: "*.prune.in"
+      ontologies: []
+  - reference_keep:
+      type: file
+      description: The reference samples of the stratum's super-population as a plink2 --keep list, for the strata in shared mode
+      structure: [map meta, path reference_keep]
+      pattern: "*.reference_keep.txt"
+      ontologies: []
+  - shared_markers:
+      type: file
+      description: The shared marker set of the strata in shared mode, the pruned list above under `pooled` or the same filters and pruning on the matched reference samples under `matched`
+      structure: [map meta, path shared_markers]
       pattern: "*.prune.in"
       ontologies: []
   - allele_weights:

@@ -18,6 +18,7 @@ process STRATUM_REPORT {
     val mind
     val hwe
     val ld_min_retained_fraction
+    val sample_qc_shared_reference
     val apply_sample_removals
     val ancestry_remove_mismatched
 

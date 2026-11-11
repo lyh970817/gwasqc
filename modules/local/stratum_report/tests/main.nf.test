@@ -59,8 +59,9 @@ nextflow_process {
                 input[3] = 0.05
                 input[4] = 1e-10
                 input[5] = 0.05
-                input[6] = false
-                input[7] = true
+                input[6] = 'pooled'
+                input[7] = false
+                input[8] = true
                 """
             }
         }
@@ -77,6 +78,7 @@ nextflow_process {
                 { assert summary.subMap(['geno_threshold', 'variants_geno_removed', 'variants_after_geno', 'mind_threshold', 'samples_mind_removed', 'samples_after_mind']) == [geno_threshold: '0.05', variants_geno_removed: '1', variants_after_geno: '8', mind_threshold: '0.05', samples_mind_removed: '1', samples_after_mind: '5'] },
                 { assert summary.subMap(['hwe_threshold', 'variants_hwe_removed', 'variants_after_hwe', 'variants_ld_pruned_in', 'variants_ld_pruned_out', 'variants_highld_excluded', 'variants_sample_checks']) == [hwe_threshold: '1e-10', variants_hwe_removed: '1', variants_after_hwe: '7', variants_ld_pruned_in: '6', variants_ld_pruned_out: '1', variants_highld_excluded: '1', variants_sample_checks: '5'] },
                 // Study mode: the check markers are the pruned autosomal set, and pruning that kept 6 of 7 is not noted.
+                { assert summary.sample_qc_shared_reference == 'NA' },
                 { assert summary.subMap(['sample_qc_marker_set', 'sample_qc_markers', 'sample_qc_note']) == [sample_qc_marker_set: 'study', sample_qc_markers: '5', sample_qc_note: ''] },
                 { assert summary.subMap(['sex_check_problems', 'sex_removals']) == [sex_check_problems: '1', sex_removals: 'listed only'] },
                 { assert summary.subMap(['het_samples', 'het_f_mean', 'het_f_sd', 'het_f_min', 'het_f_max', 'het_outside_3sd']) == [het_samples: '5', het_f_mean: '0.104000', het_f_sd: '0.222104', het_f_min: '-0.020000', het_f_max: '0.500000', het_outside_3sd: '0'] },
@@ -144,8 +146,9 @@ nextflow_process {
                 input[3] = 0.05
                 input[4] = 1e-10
                 input[5] = 0.05
-                input[6] = false
-                input[7] = true
+                input[6] = 'pooled'
+                input[7] = false
+                input[8] = true
                 """
             }
         }
@@ -157,7 +160,7 @@ nextflow_process {
             assertAll(
                 { assert process.success },
                 { assert summary.subMap(['variants_after_hwe', 'variants_ld_pruned_in', 'variants_ld_pruned_out', 'variants_highld_excluded', 'variants_sample_checks']) == [variants_after_hwe: '7', variants_ld_pruned_in: 'NA', variants_ld_pruned_out: 'NA', variants_highld_excluded: 'NA', variants_sample_checks: 'NA'] },
-                { assert summary.subMap(['sample_qc_marker_set', 'sample_qc_markers', 'sample_qc_note']) == [sample_qc_marker_set: 'shared', sample_qc_markers: '4', sample_qc_note: ''] },
+                { assert summary.subMap(['sample_qc_marker_set', 'sample_qc_shared_reference', 'sample_qc_markers', 'sample_qc_note']) == [sample_qc_marker_set: 'shared', sample_qc_shared_reference: 'pooled', sample_qc_markers: '4', sample_qc_note: ''] },
                 // The header is the same as in study mode, so the rows of a mixed run share one table.
                 { assert summary_lines[0].indexOf('sample_qc_marker_set') == summary_lines[0].indexOf('variants_sample_checks') + 1 },
                 { assert fragments.keySet().sort() == ['test.heterozygosity_plots_mqc.yaml', 'test.variant_qc_ladder_mqc.tsv'] },
@@ -209,8 +212,9 @@ nextflow_process {
                 input[3] = 0.05
                 input[4] = 1e-10
                 input[5] = 0.2
-                input[6] = false
-                input[7] = true
+                input[6] = 'pooled'
+                input[7] = false
+                input[8] = true
                 """
             }
         }
@@ -267,8 +271,9 @@ nextflow_process {
                 input[3] = 0.05
                 input[4] = 1e-10
                 input[5] = 0.05
-                input[6] = true
+                input[6] = 'pooled'
                 input[7] = true
+                input[8] = true
                 """
             }
         }
@@ -332,8 +337,9 @@ nextflow_process {
                 input[3] = 0.05
                 input[4] = 1e-10
                 input[5] = 0.05
-                input[6] = false
-                input[7] = true
+                input[6] = 'pooled'
+                input[7] = false
+                input[8] = true
                 """
             }
         }

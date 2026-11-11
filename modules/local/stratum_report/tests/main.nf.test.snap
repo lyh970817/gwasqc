@@ -56,14 +56,14 @@
                         "ancestry": "EUR",
                         "sample_qc_marker_set": "study"
                     },
-                    "test.qc_summary.tsv:md5,309ec599767f24894c38403ac5fba6c5"
+                    "test.qc_summary.tsv:md5,b9ae660124d665eaa2e3a2b4de3d4282"
                 ]
             ]
         ],
-        "timestamp": "2026-09-21T16:54:38.011350469",
+        "timestamp": "2026-11-11T13:45:58.15760115",
         "meta": {
             "nf-test": "0.9.5",
-            "nextflow": "26.04.4"
+            "nextflow": "26.04.6"
         }
     },
     "six samples - shared marker set": {
@@ -75,7 +75,7 @@
                         "ancestry": "EUR",
                         "sample_qc_marker_set": "shared"
                     },
-                    "test.qc_summary.tsv:md5,381e17dace42365d65071586cfd0cd0d"
+                    "test.qc_summary.tsv:md5,e3f7a19f328e6fb3cbdf0a834e1b7d26"
                 ]
             ],
             [
@@ -92,10 +92,10 @@
                 ]
             ]
         ],
-        "timestamp": "2026-09-21T16:54:32.322724797",
+        "timestamp": "2026-11-11T13:45:45.547961009",
         "meta": {
             "nf-test": "0.9.5",
-            "nextflow": "26.04.4"
+            "nextflow": "26.04.6"
         }
     },
     "six samples - gate off": {
@@ -107,7 +107,7 @@
                         "ancestry": "EUR",
                         "sample_qc_marker_set": "study"
                     },
-                    "test.qc_summary.tsv:md5,f6d47fbbf1253f87a01fea4d492a2de2"
+                    "test.qc_summary.tsv:md5,827f4fcabe94a11f2fcbe1a582ce97cf"
                 ]
             ],
             [
@@ -144,10 +144,10 @@
                 ]
             ]
         ],
-        "timestamp": "2026-09-21T16:54:26.089905732",
+        "timestamp": "2026-11-11T13:45:32.255446449",
         "meta": {
             "nf-test": "0.9.5",
-            "nextflow": "26.04.4"
+            "nextflow": "26.04.6"
         }
     },
     "six samples - gate on - no ancestry": {
@@ -159,7 +159,7 @@
                         "ancestry": "EUR",
                         "sample_qc_marker_set": "study"
                     },
-                    "test.qc_summary.tsv:md5,afdde05e41241a8b0f6822c9dfd513c8"
+                    "test.qc_summary.tsv:md5,1c3483cbdc854a192b4d36a5bf4b915e"
                 ]
             ],
             [
@@ -176,10 +176,10 @@
                 ]
             ]
         ],
-        "timestamp": "2026-09-21T16:54:43.687633777",
+        "timestamp": "2026-11-11T13:46:10.586726958",
         "meta": {
             "nf-test": "0.9.5",
-            "nextflow": "26.04.4"
+            "nextflow": "26.04.6"
         }
     }
 }

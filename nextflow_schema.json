@@ -53,8 +53,8 @@
                     "type": "string",
                     "default": "b38",
                     "enum": ["b36", "hg18", "b37", "hg19", "b38", "hg38", "chm13"],
-                    "description": "Genome build code passed to plink2 `--split-par`, which moves the chromosome X pseudo-autosomal regions to their own codes before the sex check.",
-                    "help_text": "The pseudo-autosomal boundaries differ between builds, and the default long-range LD asset is GRCh38; a different build needs a matching `--high_ld_regions` file.",
+                    "description": "Genome build of the study filesets, passed to plink2 `--split-par`, which moves the chromosome X pseudo-autosomal regions to their own codes before the sex check; the reference panel must be on the same build.",
+                    "help_text": "The pseudo-autosomal boundaries differ between builds, and the default long-range LD asset is GRCh38; a different build needs a matching `--high_ld_regions` file. The ancestry route matches study and reference variants by chromosome, position and alleles, and stops, naming this parameter, when most of the variants whose ID both sides carry sit at different positions, the signature of a reference panel on another build. Lift the panel over to the study's build before the run; see the usage documentation on preparing the reference panel.",
                     "fa_icon": "fas fa-dna"
                 },
                 "high_ld_regions": {
@@ -76,7 +76,7 @@
                     "mimetype": "text/csv",
                     "pattern": "^\\S+\\.(csv|tsv)$",
                     "description": "Path to the samplesheet declaring the PLINK 1 filesets of the ancestry reference panel, one row per fileset; required unless `--skip_ancestry` is set.",
-                    "help_text": "A comma- or tab-separated file with the columns `id,bed,bim,fam` and a header row. A whole-genome panel is one row; the legacy per-chromosome 1000 Genomes layout is one row per chromosome. Every fileset is intersected with each stratum's QC'd variants and the intersects are merged, so the rows must share their samples and carry disjoint variants. See [usage docs](https://nf-co.re/gwasqc/usage#reference-panel).",
+                    "help_text": "A comma- or tab-separated file with the columns `id,bed,bim,fam` and a header row. A whole-genome panel is one row; the legacy per-chromosome 1000 Genomes layout is one row per chromosome. Every fileset is restricted to the variants it shares with each stratum, matched by position and alleles, and the restrictions are merged, so the rows must share their samples and carry disjoint variants; the panel must be on the build of `--genome_build` and carry unique variant IDs. See [usage docs](https://nf-co.re/gwasqc/usage#reference-panel).",
                     "fa_icon": "fas fa-file-csv"
                 },
                 "reference_pop_data": {
@@ -184,6 +184,14 @@
                     "description": "Which variant set the sex check, heterozygosity and relatedness reports of each stratum run on: `study`, the stratum's own LD-pruned QC'd variants; `shared`, the harmonised, reference-pruned autosomal markers of the ancestry route, with ancestry-matched reference allele frequencies as the heterozygosity baseline; or `auto`, which chooses `shared` for a stratum with fewer than `--small_n_threshold` samples after the mind filter and `study` otherwise.",
                     "help_text": "In `shared` mode no study-side `--indep-pairwise` runs: the heterozygosity report is computed on the study and on the ancestry-matched reference samples over the shared markers with `--read-freq` of the matched reference frequencies, KING relatedness runs on the shared markers, and the sex check runs on every QC-passing chromosome X and Y variant without pruning, because the reference carries no chromosome X. `shared` needs `--reference_panel` and `--reference_pop_data`; with `--skip_ancestry` it is an error, as is a stratum that `auto` would send to `shared`. The mode chosen for each stratum is recorded in `gwasqc_summary.tsv` and the MultiQC report.",
                     "fa_icon": "fas fa-project-diagram"
+                },
+                "sample_qc_shared_reference": {
+                    "type": "string",
+                    "default": "pooled",
+                    "enum": ["pooled", "matched"],
+                    "description": "Which reference samples choose the `shared` marker set: `pooled`, every reference sample, so that the shared markers are the ancestry decomposition's own filtered, pruned list; or `matched`, the reference samples of the stratum's super-population, on which the reference-side `--maf` and `--geno` filters, the long-range LD exclusion and `--indep-pairwise` are applied instead.",
+                    "help_text": "Only strata in the `shared` mode read this. Under `matched` the filters and pruning run on the reference samples whose `super_pop` in `--reference_pop_data` is the stratum's `ancestry`, over the merged, harmonised reference; plink2 refuses to prune fewer than 50 samples, so the matched group must have at least 50 reference samples. The ancestry decomposition and projection use the pooled panel either way, and the heterozygosity baseline is the matched samples either way. The choice and the marker count of each stratum are recorded in `gwasqc_summary.tsv` and the MultiQC report.",
+                    "fa_icon": "fas fa-layer-group"
                 },
                 "small_n_threshold": {
                     "type": "integer",

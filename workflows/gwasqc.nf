@@ -40,6 +40,7 @@ workflow GWASQC {
     mind // value: maximum per-sample missing-call rate
     hwe // value: Hardy-Weinberg exact-test p-value floor
     high_ld_regions // value: path to the BED of long-range LD regions
+    genome_build // value: genome build of the study, which the reference panel must share
     reference_pop_data // value: path to the TSV of FID, IID, pop and super_pop per reference sample, or null when ancestry is skipped
     ld_window_size // value: --indep-pairwise window, in variants
     ld_step_size // value: --indep-pairwise step, in variants
@@ -56,6 +57,7 @@ workflow GWASQC {
     apply_sample_removals // boolean: apply the sex, relatedness and ancestry removal lists to the QC'd fileset
     ancestry_remove_mismatched // boolean: under apply_sample_removals, also remove the samples not assigned to the stratum's ancestry
     sample_qc_marker_set // value: marker set of the sample checks, auto, study or shared
+    sample_qc_shared_reference // value: reference samples the shared marker set is filtered and pruned on, pooled or matched
     small_n_threshold // value: under auto, the post-mind sample count below which a stratum uses the shared marker set
     ld_min_retained_fraction // value: fraction of the QC'd variants below which study-mode pruning is reported as collapsed
     multiqc_config
@@ -108,13 +110,13 @@ workflow GWASQC {
     //
     // The stratum reaches the reference as its QC'd variant set, the filter chain's lists, and its samples
     // are projected with the mind removals applied; the mismatch removal list is the one product the
-    // terminal materialisation may consume, and the reference-pruned marker list with the merged reference
-    // fileset are what the shared marker set of the sample checks is built on. When the stage is skipped
-    // every stratum carries an empty slot and no stratum is in shared mode.
+    // terminal materialisation may consume, and the shared marker list, the merged reference fileset and the
+    // ancestry-matched reference samples are what the shared marker set of the sample checks is built on.
+    // When the stage is skipped every stratum carries an empty slot and no stratum is in shared mode.
     def ch_ancestry_remove_by_id = ch_samplesheet.map { meta, _bed, _bim, _fam -> [meta.id, []] }
     // [ id, summary, mismatch_remove, [ png, ... ] ] for the report; every slot empty when the stage is skipped
     def ch_ancestry_report_by_id = ch_samplesheet.map { meta, _bed, _bim, _fam -> [meta.id, [], [], []] }
-    // [ meta, shared_markers, pgen, pvar, psam ] for the strata in shared mode
+    // [ meta, shared_markers, pgen, pvar, psam, reference_keep ] for the strata in shared mode
     def ch_shared_reference = channel.empty()
     if (!skip_ancestry) {
         ANCESTRY_INFERENCE(
@@ -124,12 +126,14 @@ workflow GWASQC {
             ch_reference,
             file(reference_pop_data),
             file(high_ld_regions),
+            genome_build,
             ancestry_ld_window_size,
             ancestry_ld_step_size,
             ancestry_ld_r2,
             ancestry_n_pcs,
             ancestry_prob_threshold,
             ancestry_sd_filter ?: 0,
+            sample_qc_shared_reference,
         )
         ch_ancestry_remove_by_id = ANCESTRY_INFERENCE.out.mismatch_remove.map { meta, mismatch_remove -> [meta.id, mismatch_remove] }
         ch_ancestry_report_by_id = ANCESTRY_INFERENCE.out.summary
@@ -138,12 +142,13 @@ workflow GWASQC {
             .join(ANCESTRY_INFERENCE.out.pc1_pc2_plot.map { meta, _pdf, png -> [meta.id, png] }, by: 0, failOnDuplicate: true, failOnMismatch: true)
             .join(ANCESTRY_INFERENCE.out.pc3_pc4_plot.map { meta, _pdf, png -> [meta.id, png] }, by: 0, failOnDuplicate: true, failOnMismatch: true)
             .map { id, summary, mismatch_remove, pc1_pc2, pc3_pc4 -> [id, summary, mismatch_remove, [pc1_pc2, pc3_pc4]] }
-        // The ancestry route restores the stratum's own map at every gather, so its products carry the mode.
-        ch_shared_reference = ANCESTRY_INFERENCE.out.prune_in
-            .filter { meta, _prune_in -> meta.sample_qc_marker_set == 'shared' }
-            .map { meta, prune_in -> [meta.id, meta, prune_in] }
+        // The ancestry route restores the stratum's own map at every gather, so its products carry the mode;
+        // the shared markers and the keep list exist for the shared strata alone.
+        ch_shared_reference = ANCESTRY_INFERENCE.out.shared_markers
+            .map { meta, shared_markers -> [meta.id, meta, shared_markers] }
             .join(ANCESTRY_INFERENCE.out.reference_genotypes.filter { meta, _pgen, _pvar, _psam -> meta.sample_qc_marker_set == 'shared' }.map { meta, pgen, pvar, psam -> [meta.id, pgen, pvar, psam] }, by: 0, failOnDuplicate: true, failOnMismatch: true)
-            .map { _id, meta, prune_in, pgen, pvar, psam -> [meta, prune_in, pgen, pvar, psam] }
+            .join(ANCESTRY_INFERENCE.out.reference_keep.map { meta, reference_keep -> [meta.id, reference_keep] }, by: 0, failOnDuplicate: true, failOnMismatch: true)
+            .map { _id, meta, shared_markers, pgen, pvar, psam, reference_keep -> [meta, shared_markers, pgen, pvar, psam, reference_keep] }
     }
 
     //
@@ -159,7 +164,6 @@ workflow GWASQC {
     PLINK_SAMPLE_QC_LISTS(
         ch_sample_qc_inputs,
         ch_shared_reference,
-        skip_ancestry ? [] : file(reference_pop_data),
         file(high_ld_regions),
         ld_window_size,
         ld_step_size,
@@ -222,7 +226,7 @@ workflow GWASQC {
         .map { meta, prune_in -> [meta.id, prune_in] }
         .mix(ch_shared_empty_by_id)
         .join(PLINK_SAMPLE_QC_LISTS.out.highld_exclude.map { meta, highld_exclude -> [meta.id, highld_exclude] }.mix(ch_shared_empty_by_id), by: 0, failOnDuplicate: true, failOnMismatch: true)
-        .join(ch_shared_reference.map { meta, shared_markers, _pgen, _pvar, _psam -> [meta.id, shared_markers] }.mix(ch_study_empty_by_id), by: 0, failOnDuplicate: true, failOnMismatch: true)
+        .join(ch_shared_reference.map { meta, shared_markers, _pgen, _pvar, _psam, _reference_keep -> [meta.id, shared_markers] }.mix(ch_study_empty_by_id), by: 0, failOnDuplicate: true, failOnMismatch: true)
 
     def ch_report_inputs = ch_strata_by_id
         .map { id, meta, _bed, bim, fam, maf_snplist, geno_exclude, hwe_exclude, mind_remove -> [id, meta, bim, fam, maf_snplist, geno_exclude, mind_remove, hwe_exclude] }
@@ -250,6 +254,7 @@ workflow GWASQC {
         mind,
         hwe,
         ld_min_retained_fraction,
+        sample_qc_shared_reference,
         apply_sample_removals,
         ancestry_remove_mismatched,
     )
