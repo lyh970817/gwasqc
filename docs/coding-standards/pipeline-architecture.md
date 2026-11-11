@@ -81,8 +81,14 @@ Decided 2026-09-20 with the foundation milestone of the legacy port; the tuple c
   is noted in its summary row, because pairwise r-squared over a few dozen samples collapses the set (the
   11-sample legacy stratum kept 0.5 %); nothing is re-decided.
 - **[MUST]** In the `shared` mode nothing is pruned on the study side. Heterozygosity and KING relatedness run on
-  the ancestry route's post-high-LD `prune.in`, the harmonised intersect filtered on both sides and pruned on
-  the merged reference; the heterozygosity report of the study and that of the reference samples of the
+  a marker set the ancestry route builds from the harmonised merged reference, outside the long-range LD
+  regions and on the autosomes, chosen by `sample_qc_shared_reference`: `pooled` (the default until real small
+  strata have been measured, issue #5) is the route's own post-high-LD `prune.in`, filtered and pruned on
+  every reference sample; `matched` reruns `--maf`, `--geno` and `--indep-pairwise` in one stats-only run on
+  the reference samples of the stratum's super-population (`--keep`, verified on 2.0.0a.6.9 to compute the
+  filters over the kept samples and to equal the two-step extract-then-prune). The pooled filters therefore
+  sit on the pruning run, not on the restriction, so that a matched set is not pre-restricted by them. The
+  ancestry decomposition uses the pooled set either way. The heterozygosity report of the study and that of the reference samples of the
   stratum's own super-population are computed over those markers against one `--freq` table of those reference
   samples through `--read-freq`, so that the study cannot define its own baseline and the two reports differ
   only in their samples; the sex check runs on every QC-passing chromosome X and Y variant unpruned, because
@@ -116,16 +122,30 @@ Decided 2026-09-20 with the ancestry milestone of the legacy port.
   targets, chose which filters to _compute_, and the pipeline has computed them for every stratum before
   ancestry runs. The study fileset is never materialised; its samples are projected from the original fileset
   with the pruned list under `--extract` and the mind removals under `--remove`, and no other sample list.
+- **[MUST]** Harmonisation runs on the variant tables, before any genotype is read, and is by normalised
+  chromosome, position and alleles, independent of the IDs: a `chr` prefix is dropped and `X`, `Y`, `XY`, `MT`
+  read as `23` to `26`; A/T and C/G pairs are dropped even when the alleles agree; a study ID repeated among the
+  QC'd variants or a matched reference ID repeated in the panel is `duplicate_id`, because plink2 addresses
+  variants by ID; several candidates at a position that do not leave exactly one allele-compatible reference
+  variant, or one claimed by several study variants, are `duplicate_position`; the study side is never
+  flipped. The reference panel is read in chunks keeping only rows at a study position or with a study ID, so a
+  whole-genome panel never sits in memory (10 million variants: 98 s, about 1.1 GB).
+- **[MUST]** The genome build is checked, not lifted: when more than half of the IDs the stratum shares with
+  the panel sit at another chromosome or position, harmonisation stops naming the counts and `genome_build`,
+  because position matching against a panel on another build keeps only a coincidental remainder. Liftover is
+  a preparation step outside the pipeline.
 - **[MUST]** The reference is the one materialised intermediate of the route, and it is materialised twice
-  per stratum: once per fileset restricted to the stratum's variants, because plink2 applies `--extract` only
-  after `--pmerge-list` has concatenated its inputs in full (verified on 2.0.0a.6.9), and once merged,
-  restricted to the harmonised variants and flipped onto the stratum's strand by `--update-alleles`, because
-  pruning, the decomposition and the reference projection all read that fileset. Neither is published. The
-  reference-side filters are the pipeline's `--maf` and `--geno`, never `--hwe`: on a pooled multi-population
-  panel that test measures population structure.
-- **[MUST]** Harmonisation is by variant ID, position and alleles: A/T and C/G pairs are dropped even when the
-  alleles agree, the flip list is exactly what `--update-alleles` applies to the reference, and the study side
-  is never flipped. The long-range LD and non-autosomal exclusion is applied to the merged reference before
+  per stratum: once per fileset restricted by `--extract` to the reference IDs of the harmonised variants,
+  because plink2 applies `--extract` only after `--pmerge-list` has concatenated its inputs in full (verified
+  on 2.0.0a.6.9), and once merged, renamed to the study's IDs by `--update-name` and flipped onto the study's
+  strand by `--update-alleles`, because pruning, the decomposition and the reference projection all read that
+  fileset. The rename belongs to the merge, not to the restriction, and the flip list is keyed by the study
+  IDs: plink2 applies `--update-name` before `--extract` and keys `--update-alleles` by the new IDs, alone and
+  under `--pmerge-list` (verified on 2.0.0a.6.9). Neither fileset is published and neither is filtered. The
+  reference-side filters are the pipeline's `--maf` and `--geno` on the pruning run, never `--hwe`: on a pooled
+  multi-population panel that test measures population structure.
+- **[MUST]** The flip list is exactly what `--update-alleles` applies to the reference, and nothing else is
+  changed. The long-range LD and non-autosomal exclusion is applied to the merged reference before
   `--indep-pairwise`, as the legacy ancestry branch ordered the two.
 - **[MUST]** Projection follows the plink2 recipe: `--freq counts` and `--pca allele-wts vcols=chrom,ref,alt`
   in one run over the pruned reference, then one `--score <weights> 2 5 header-read no-mean-imputation
