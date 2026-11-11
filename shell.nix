@@ -2,7 +2,8 @@
 let
   nextflowVersion = "26.04.6";
   nextflowLanguageServerVersion = "26.04.3";
-  nfCoreSource = "git+https://github.com/nf-core/tools.git@dev";
+  # Keep in step with nf_core_version in .nf-core.yml, the version CI lints with.
+  nfCoreSource = "nf-core==4.0.3";
   waveVersion = "1.8.1";
   # nixpkgs still ships 0.9.3. 0.9.4 added strict-syntax support, which Nextflow
   # 26.04 needs because the v2 parser is now the default, so pin upstream directly
