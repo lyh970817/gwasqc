@@ -41,8 +41,16 @@ expected_ancestry <- "${expected_ancestry}"
 prefix <- "${prefix}"
 process_name <- "${task.process}"
 
+# Sample and variant IDs are read as text: an all-numeric ID such as 007 would otherwise be parsed as 7 and
+# no longer match the fileset it came from.
+id_column_names <- c("FID", "IID", "FID1", "IID1", "FID2", "IID2", "ID1", "ID2", "ID")
+read_table_with_text_ids <- function(path, sep = "\\t") {
+    header <- names(fread(path, sep = sep, header = TRUE, nrows = 0L))
+    text_columns <- header[sub("^#", "", header) %in% id_column_names]
+    fread(path, sep = sep, header = TRUE, colClasses = list(character = text_columns))
+}
 read_plink2_report <- function(path) {
-    report <- fread(path, sep = "\\t", header = TRUE)
+    report <- read_table_with_text_ids(path)
     setnames(report, sub("^#", "", names(report)))
     report
 }
@@ -52,7 +60,7 @@ make_sample_key <- function(table, id_columns) {
 
 reference <- read_plink2_report(reference_file)
 study <- read_plink2_report(study_file)
-pop <- fread(pop_file, header = TRUE)
+pop <- read_table_with_text_ids(pop_file, sep = "auto")
 if (!all(c("IID", "pop", "super_pop") %in% names(pop))) {
     stop("the population data must carry IID, pop and super_pop columns", call. = FALSE)
 }

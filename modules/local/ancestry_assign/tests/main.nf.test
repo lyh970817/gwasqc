@@ -156,6 +156,68 @@ nextflow_process {
         }
     }
 
+    test("synthetic - all-numeric sample IDs with leading zeros") {
+
+        when {
+            process {
+                """
+                // The threshold-only projection of the first case with all-digit IDs: the reference samples are
+                // 0101..0516 under FIDs 00101..00516, the study samples 0901..0907 on A and 0908 planted on B.
+                // Reference labels join on FID and IID as text, and every list must reproduce the IDs exactly.
+                def centroids = [A: [1, 0, 0, 0], B: [0, 1, 0, 0], C: [0, 0, 1, 0], D: [0, 0, 0, 1], E: [-1, -1, 0, 0]]
+                def header = ['#FID', 'IID', 'ALLELE_CT', 'NAMED_ALLELE_DOSAGE_SUM', 'PC1_AVG', 'PC2_AVG', 'PC3_AVG', 'PC4_AVG'].join('\\t')
+                def reference_ids = [:]
+                centroids.keySet().eachWithIndex { group, g ->
+                    reference_ids[group] = (0..<16).collect { k -> String.format('%04d', 100 * (g + 1) + k + 1) }
+                }
+                def reference_rows = centroids.collectMany { group, centre ->
+                    (0..<16).collect { k ->
+                        def id = reference_ids[group][k]
+                        def offset = [1, 2, 4, 8].collect { bit -> (k.intdiv(bit) % 2) * 0.4 - 0.2 }
+                        (['0' + id, id, '400', '400'] + (0..3).collect { axis -> String.format('%.6f', (centre[axis] + offset[axis]) as double) }).join('\\t')
+                    }
+                }
+                def pop_rows = ['FID\\tIID\\tpop\\tsuper_pop'] + centroids.collectMany { group, _centre ->
+                    (0..<16).collect { k ->
+                        def id = reference_ids[group][k]
+                        ['0' + id, id, group + ((k % 2) + 1), group].join('\\t')
+                    }
+                }
+                def study_rows = (0..<7).collect { k ->
+                    def id = String.format('%04d', 901 + k)
+                    def offset = [1, 2, 4, 8].collect { bit -> ((k.intdiv(bit) % 2) * 0.4 - 0.2) * 0.3 }
+                    (['0' + id, id, '400', '400'] + (0..3).collect { axis -> String.format('%.6f', (centroids.A[axis] + offset[axis]) as double) }).join('\\t')
+                } + [
+                    ['00908', '0908', '400', '400', '0.010000', '0.990000', '0.005000', '0.005000'].join('\\t'),
+                ]
+                file("${workDir}/reference.sscore").text = ([header] + reference_rows).join('\\n') + '\\n'
+                file("${workDir}/study.sscore").text = ([header] + study_rows).join('\\n') + '\\n'
+                file("${workDir}/ref_pop.tsv").text = pop_rows.join('\\n') + '\\n'
+                input[0] = [ [ id:'numeric', ancestry:'A' ], file("${workDir}/reference.sscore"), file("${workDir}/study.sscore") ]
+                input[1] = file("${workDir}/ref_pop.tsv")
+                input[2] = 0.5
+                input[3] = 0
+                """
+            }
+        }
+
+        then {
+            def assignment = path(process.out.assignment.get(0).get(1)).readLines().collect { line -> line.split('\t').toList() }
+            def keep = process.out.keep_lists.get(0).get(1).collectEntries { file -> [(new File(file.toString()).name): path(file).readLines()] }
+            def pca = path(process.out.pca_data.get(0).get(1)).readLines().collect { line -> line.split('\t', -1).toList() }
+            def study_ids = (901..907).collect { n -> String.format('%04d', n) } + ['0908']
+            assertAll(
+                { assert process.success },
+                { assert assignment.drop(1).collect { fields -> fields[0..1] } == study_ids.collect { id -> [id == '0908' ? '00908' : '0' + id, id] } },
+                { assert keep['numeric.ancestry_A.keep'] == (901..907).collect { n -> "0${String.format('%04d', n)} ${String.format('%04d', n)}".toString() } },
+                { assert keep['numeric.ancestry_B.keep'] == ['00908 0908'] },
+                { assert path(process.out.sample_remove.get(0).get(1)).readLines() == ['00908 0908'] },
+                { assert pca.drop(1).collect { fields -> fields[1] }.take(3) == ['0101', '0102', '0103'] },
+                { assert pca.drop(1).findAll { fields -> fields[2] == 'study' }.collect { fields -> fields[1] } == study_ids },
+            )
+        }
+    }
+
     test("synthetic - stub") {
 
         options "-stub"

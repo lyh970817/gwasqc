@@ -92,6 +92,32 @@ nextflow_process {
         }
     }
 
+    test("synthetic - all-numeric sample IDs with leading zeros") {
+
+        when {
+            process {
+                """
+                // Sample IDs that are all digits must come back byte for byte, not as the integers they resemble.
+                def report = file("${workDir}/numeric.smiss")
+                report.text = [
+                    ['#FID', 'IID', 'MISSING_CT', 'OBS_CT', 'F_MISS'].join('\\t'),
+                    ['0001', '007', '900', '1000', '0.9'].join('\\t'),
+                    ['0002', '008', '1', '1000', '0.001'].join('\\t'),
+                    ['0100', '0009', '500', '1000', '0.5'].join('\\t'),
+                ].join('\\n') + '\\n'
+                input[0] = [ [ id:'numeric' ], report, 0.05 ]
+                """
+            }
+        }
+
+        then {
+            assertAll(
+                { assert process.success },
+                { assert path(process.out.sample_remove.get(0).get(1)).readLines() == ['0001 007', '0100 0009'] },
+            )
+        }
+    }
+
     test("study_eur - stub") {
 
         options "-stub"

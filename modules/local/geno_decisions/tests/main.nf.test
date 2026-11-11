@@ -92,6 +92,32 @@ nextflow_process {
         }
     }
 
+    test("synthetic - all-numeric variant IDs with leading zeros") {
+
+        when {
+            process {
+                """
+                // Variant IDs that are all digits must come back byte for byte, not as the integers they resemble.
+                def report = file("${workDir}/numeric.vmiss")
+                report.text = [
+                    ['#CHROM', 'ID', 'MISSING_CT', 'OBS_CT', 'F_MISS'].join('\\t'),
+                    ['1', '001', '60', '125', '0.48'].join('\\t'),
+                    ['1', '007', '1', '125', '0.008'].join('\\t'),
+                    ['1', '0010', '25', '125', '0.2'].join('\\t'),
+                ].join('\\n') + '\\n'
+                input[0] = [ [ id:'numeric' ], report, 0.05 ]
+                """
+            }
+        }
+
+        then {
+            assertAll(
+                { assert process.success },
+                { assert path(process.out.variant_exclude.get(0).get(1)).readLines() == ['001', '0010'] },
+            )
+        }
+    }
+
     test("study_eur - stub") {
 
         options "-stub"
