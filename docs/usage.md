@@ -38,9 +38,13 @@ cohort_afr,AFR,/path/to/genotypes/cohort_afr.bed,/path/to/genotypes/cohort_afr.b
 
 An [example samplesheet](../assets/samplesheet.csv) has been provided with the pipeline.
 
+### Chromosome codes
+
+The QC'd fileset carries the human chromosomes only: 1 to 22, X, Y, XY (the pseudo-autosomal regions) and MT. In the `.bim`, each may be written as plink2 reads it: by number (`23` to `26` for X, Y, XY and MT, zero-padded or not) or by letter (`X`, `Y`, `XY`, `MT` or `M`), in either case, with or without a `chr` prefix, and the pseudo-autosomal regions also as `PAR1` and `PAR2`, the names plink2's `--split-par` gives them. A variant under any other code, such as an alt or random contig of GRCh38 (`7_KI270803v1_alt`, `1_KI270706v1_random`), an unplaced contig (`chrUn_KI270742v1`) or the unknown chromosome `0`, is accepted in the input and listed for exclusion before every filter, so that it reaches no statistic, decision list, ancestry projection or QC'd fileset. The list is published per stratum and its line count is the `variants_contig_removed` column of the summary; the MAF filter and everything after it count only the variants on the standard chromosomes.
+
 ### QC thresholds
 
-The variant filter chain applies four thresholds, each a pipeline parameter: `--maf` (variants below this minor allele frequency are dropped), `--geno` (variants whose missing-call rate exceeds this value are dropped), `--mind` (samples whose missing-call rate, measured over the variants that survive `--geno`, exceeds this value are dropped) and `--hwe` (variants whose Hardy-Weinberg exact-test p-value is below this value are dropped). The decision lists are published beside the statistics they were derived from, and the QC'd fileset is written once, at the end, from the original fileset and those lists. Alongside the `--geno` and `--mind` lists the pipeline records a call-rate ladder from 90 % to 99 %, one row per rate, stating what that rate would have removed; nothing on the ladder is applied.
+After the variants on non-standard contigs are excluded (see [Chromosome codes](#chromosome-codes)), the variant filter chain applies four thresholds, each a pipeline parameter: `--maf` (variants below this minor allele frequency are dropped), `--geno` (variants whose missing-call rate exceeds this value are dropped), `--mind` (samples whose missing-call rate, measured over the variants that survive `--geno`, exceeds this value are dropped) and `--hwe` (variants whose Hardy-Weinberg exact-test p-value is below this value are dropped). The decision lists are published beside the statistics they were derived from, and the QC'd fileset is written once, at the end, from the original fileset and those lists. Alongside the `--geno` and `--mind` lists the pipeline records a call-rate ladder from 90 % to 99 %, one row per rate, stating what that rate would have removed; nothing on the ladder is applied.
 
 ### Sample checks
 
@@ -93,7 +97,7 @@ The reference variants are matched to a stratum's QC'd variants by chromosome, p
 
 - **The same genome build as the cohort.** `--genome_build` declares the study's build and the pipeline does not lift anything over. When more than half of the variant IDs a stratum shares with the panel sit at another chromosome or position, the run stops with a message naming the counts and asking for the panel to be lifted over beforehand; below that the disagreeing variants are classed `position_mismatch` and dropped.
 - **Unique reference IDs.** A reference ID that occurs more than once in the panel cannot be addressed by plink2's `--extract`, so a study variant matched to it is classed `duplicate_id` and dropped. Positions shared by several reference variants are resolved by alleles; where that leaves more than one candidate, or one reference variant claimed by several study variants, the site is classed `duplicate_position` and dropped.
-- **Recognisable chromosome codes.** A `chr` prefix is ignored and `X`, `Y`, `XY` and `MT` (or `M`) are read as `23` to `26`, so `chr7` in the panel meets `7` in the study; any other naming is compared as written.
+- **Recognisable chromosome codes.** A `chr` prefix is ignored and `X`, `Y`, `XY` and `MT` (or `M`) are read as `23` to `26`, so `chr7` in the panel meets `7` in the study; any other naming is compared as written. A panel may carry variants on alt, random or other contigs: they are read, and never matched, because the stratum's own variants on such contigs were excluded before the harmonisation.
 
 Every stratum's harmonisation table states, per QC'd study variant, the reference variant it matched, its class and whether the match rested on ID and position or on position alone (see [Outputs](output.md#ancestry)).
 
@@ -209,6 +213,8 @@ If `-profile` is not specified, the pipeline will run locally and expect all sof
 - `test`
   - A profile with a complete configuration for automated testing
   - Includes links to test data so needs no other parameters
+- `test_alt_contig`
+  - The `test` profile with one fixture stratum beside a copy of it that also carries variants on GRCh38 alt and random contigs, against a reference panel that carries the same; checks that those variants are listed and excluded and that nothing else changes
 - `docker`
   - A generic configuration profile to be used with [Docker](https://docker.com/)
 - `singularity`

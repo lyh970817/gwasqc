@@ -1,0 +1,89 @@
+{
+    "study_eur - bim - standard chromosomes only": {
+        "content": [
+            [
+                [
+                    {
+                        "id": "study_eur",
+                        "ancestry": "EUR"
+                    },
+                    "study_eur.contig_exclude.txt:md5,d41d8cd98f00b204e9800998ecf8427e"
+                ]
+            ]
+        ],
+        "timestamp": "2026-11-11T16:12:16.421652252",
+        "meta": {
+            "nf-test": "0.9.5",
+            "nextflow": "26.04.6"
+        }
+    },
+    "study_eur_alt - bim - stub": {
+        "content": [
+            {
+                "variant_exclude": [
+                    [
+                        {
+                            "ancestry": "EUR",
+                            "id": "study_eur_alt"
+                        },
+                        "study_eur_alt.contig_exclude.txt:md5,d41d8cd98f00b204e9800998ecf8427e"
+                    ]
+                ],
+                "versions_gawk": [
+                    [
+                        "CONTIG_EXCLUDE",
+                        "gawk",
+                        "5.3.1"
+                    ]
+                ]
+            }
+        ],
+        "timestamp": "2026-11-11T16:12:38.454958195",
+        "meta": {
+            "nf-test": "0.9.5",
+            "nextflow": "26.04.6"
+        }
+    },
+    "study_eur_alt - bim - alt and random contigs": {
+        "content": [
+            [
+                [
+                    {
+                        "id": "study_eur_alt",
+                        "ancestry": "EUR"
+                    },
+                    "study_eur_alt.contig_exclude.txt:md5,e72b8b8ca4c23bff6d77463f8a3c10e4"
+                ]
+            ],
+            [
+                [
+                    "CONTIG_EXCLUDE",
+                    "gawk",
+                    "5.3.1"
+                ]
+            ]
+        ],
+        "timestamp": "2026-11-11T16:12:05.56071562",
+        "meta": {
+            "nf-test": "0.9.5",
+            "nextflow": "26.04.6"
+        }
+    },
+    "synthetic - pvar - chromosome spellings": {
+        "content": [
+            [
+                [
+                    {
+                        "id": "spellings"
+                    },
+                    "spellings.contig_exclude.txt:md5,2900c11101f4112e9a0ec38480983edc"
+                ]
+            ]
+        ],
+        "timestamp": "2026-11-11T16:12:27.386865601",
+        "meta": {
+            "nf-test": "0.9.5",
+            "nextflow": "26.04.6"
+        }
+    }
+}

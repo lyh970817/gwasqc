@@ -219,6 +219,11 @@ arm64, emulate_amd64, singularity, podman, shifter, charliecloud, apptainer, wav
   samplesheet's relative fileset paths against the fixture base before nf-schema validates them, and is
   included by both `test` and `test_full`. A value set through `-c` is not visible to a profile expression,
   so a resolver of this kind belongs in an `includeConfig`, not in `tests/nextflow.config`.
+- **[MUST]** A test profile whose subject is a cohort relationship, not a method option, replaces the cohort
+  in its own config and reads the same fixture source: `test_alt_contig` includes `conf/test.config`, so the
+  shared resolver chooses the base, and then writes its two-stratum samplesheet and its reference
+  samplesheet against that base, as the resolver writes the reference samplesheet. A `-c` config cannot do
+  this, because the profile's resolved base is not visible to it.
 - **[SHOULD]** Pin test-data paths to a specific `nf-core/test-datasets` commit rather than a branch, so CI
   is reproducible. _(rnaseq)_ The live default `pipelines_testdata_base_path` is branch-pinned rather than
   commit-pinned; the fixture is generated deterministically and its planted defects are asserted by name, so

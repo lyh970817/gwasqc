@@ -22,7 +22,7 @@
                             "id": "test",
                             "sample_qc_marker_set": "study"
                         },
-                        "test.qc_summary.tsv:md5,1900e33e978d53947dae4bb619b95424"
+                        "test.qc_summary.tsv:md5,45e4f472d2ef0e40e6b65b10460b60c6"
                     ]
                 ],
                 "versions_coreutils": [
@@ -41,10 +41,10 @@
                 ]
             }
         ],
-        "timestamp": "2026-09-21T16:54:50.431318979",
+        "timestamp": "2026-11-11T16:16:02.61031213",
         "meta": {
             "nf-test": "0.9.5",
-            "nextflow": "26.04.4"
+            "nextflow": "26.04.6"
         }
     },
     "six samples - pruning collapse note": {
@@ -56,11 +56,11 @@
                         "ancestry": "EUR",
                         "sample_qc_marker_set": "study"
                     },
-                    "test.qc_summary.tsv:md5,b9ae660124d665eaa2e3a2b4de3d4282"
+                    "test.qc_summary.tsv:md5,a048df7a876ffde2952b16e3109b2e1c"
                 ]
             ]
         ],
-        "timestamp": "2026-11-11T13:45:58.15760115",
+        "timestamp": "2026-11-11T16:15:40.175368555",
         "meta": {
             "nf-test": "0.9.5",
             "nextflow": "26.04.6"
@@ -75,7 +75,7 @@
                         "ancestry": "EUR",
                         "sample_qc_marker_set": "shared"
                     },
-                    "test.qc_summary.tsv:md5,e3f7a19f328e6fb3cbdf0a834e1b7d26"
+                    "test.qc_summary.tsv:md5,c5113c10394f12dc89c77d2b6e5b866c"
                 ]
             ],
             [
@@ -87,12 +87,12 @@
                     },
                     [
                         "test.heterozygosity_plots_mqc.yaml:md5,df566dae69083a172ce9146c0e72be25",
-                        "test.variant_qc_ladder_mqc.tsv:md5,0ac081d28dbd8ec1c234f08925ce203e"
+                        "test.variant_qc_ladder_mqc.tsv:md5,b967acb8f697762bf958ae527c0308dc"
                     ]
                 ]
             ]
         ],
-        "timestamp": "2026-11-11T13:45:45.547961009",
+        "timestamp": "2026-11-11T16:15:28.69020309",
         "meta": {
             "nf-test": "0.9.5",
             "nextflow": "26.04.6"
@@ -107,7 +107,7 @@
                         "ancestry": "EUR",
                         "sample_qc_marker_set": "study"
                     },
-                    "test.qc_summary.tsv:md5,827f4fcabe94a11f2fcbe1a582ce97cf"
+                    "test.qc_summary.tsv:md5,8ad392a039053ff33b9393a092a29987"
                 ]
             ],
             [
@@ -124,8 +124,8 @@
                         "test.relatedness_plots_mqc.yaml:md5,f98785b199fa36c6919ef9152adbecaa",
                         "test.sex_check_mismatches_mqc.tsv:md5,4dd4f4e99ca62062f90f254a4ef70d7a",
                         "test.sex_check_plots_mqc.yaml:md5,d946bb897c876dc35cb0829c5a74cbe7",
-                        "test.variant_qc_ladder_mqc.tsv:md5,82460a34475421697765cf85097fd9b8",
-                        "test.variant_qc_plots_mqc.yaml:md5,5728900eb0e265e9999d52104d68f7e6"
+                        "test.variant_qc_ladder_mqc.tsv:md5,6ff3fefa6db1cf327e5a54c149d371ee",
+                        "test.variant_qc_plots_mqc.yaml:md5,410f83e8f160ed3a9d9e42f9d7fe92cd"
                     ]
                 ]
             ],
@@ -144,7 +144,7 @@
                 ]
             ]
         ],
-        "timestamp": "2026-11-11T13:45:32.255446449",
+        "timestamp": "2026-11-11T16:15:17.479137328",
         "meta": {
             "nf-test": "0.9.5",
             "nextflow": "26.04.6"
@@ -159,7 +159,7 @@
                         "ancestry": "EUR",
                         "sample_qc_marker_set": "study"
                     },
-                    "test.qc_summary.tsv:md5,1c3483cbdc854a192b4d36a5bf4b915e"
+                    "test.qc_summary.tsv:md5,66c0ed5eb2f7ae7514cfb1697a74338c"
                 ]
             ],
             [
@@ -171,12 +171,12 @@
                     },
                     [
                         "test.relatedness_pairs_mqc.tsv:md5,18d822ba5068f1027db00f5c3c1fe473",
-                        "test.variant_qc_ladder_mqc.tsv:md5,0ac081d28dbd8ec1c234f08925ce203e"
+                        "test.variant_qc_ladder_mqc.tsv:md5,b967acb8f697762bf958ae527c0308dc"
                     ]
                 ]
             ]
         ],
-        "timestamp": "2026-11-11T13:46:10.586726958",
+        "timestamp": "2026-11-11T16:15:51.620059258",
         "meta": {
             "nf-test": "0.9.5",
             "nextflow": "26.04.6"

@@ -49,7 +49,7 @@ The VCZ format route is deferred to its own issue, and pre-QC batch merging is o
   four optional filter-list slots: `plink2/writesnplist`, `plink2/missing`, `plink2/hardy`,
   `plink2/indeppairwise`, `plink2/checksex`, `plink2/het`, `plink2/makekingtable`, `plink2/makebed`,
   `plink2/pmergelist`, `plink2/pcawts`, `plink2/score` and `plink2/freq`.
-- Pipeline-owned decision, plot and report modules with their plot-data tables: `geno_decisions`,
+- Pipeline-owned decision, plot and report modules with their plot-data tables: `contig_exclude`, `geno_decisions`,
   `mind_decisions`, `hwe_decisions`, `missingness_ladder`, `missingness_plots`, `hwe_plots`, `highld_exclude`,
   `sex_check_decisions`, `heterozygosity_plots`, `relatedness_decisions`, `ancestry_harmonise`,
   `ancestry_assign`, `ancestry_reference_keep`, `stratum_report` and `qc_summary`. The missingness histograms carry a linear and a
@@ -88,6 +88,18 @@ The VCZ format route is deferred to its own issue, and pre-QC batch merging is o
   the reference samples of the stratum's own super-population, published as `<id>.ancestry_matched.prune.in`.
   The choice is recorded per stratum in `gwasqc_summary.tsv` (`sample_qc_shared_reference`) and in the MultiQC
   marker-set section.
+- Exclusion of the variants on non-standard contigs: a variant whose `.bim` chromosome code is not one of
+  1-22, X, Y, XY and MT (numeric or lettered, in either case, with or without a `chr` prefix, and `PAR1`/`PAR2`
+  for the pseudo-autosomal regions), such as a GRCh38 alt or random contig, is listed by the pipeline-owned
+  `contig_exclude` module, published as `qc/<id>/contigs/<id>.contig_exclude.txt` and excluded at the MAF run,
+  so that it reaches no statistic, decision list, ancestry projection or QC'd fileset. The count is the
+  `variants_contig_removed` column of `gwasqc_summary.tsv` and of the MultiQC summary and filter tables, and
+  `variants_maf_removed` counts the standard-chromosome variants alone. A reference panel carrying such
+  contigs is read unchanged: its contig variants are never matched.
+- `test_alt_contig` profile and fixture: the EUR stratum of the synthetic fixture beside a copy of it that
+  also carries eight variants on seven GRCh38 alt and random contigs, against a copy of the reference panel
+  that carries the same, with a pipeline test asserting that the copy's QC'd fileset and every published list
+  and table equal the stratum's own.
 - Upstream-bound `plink2/freq` atom (`--freq`, with the `counts` modifier through `ext.args2`) and an optional
   `--read-freq` table on `plink2/het`; pipeline-owned `ancestry_reference_keep`, which lists the reference
   samples of a stratum's super-population from the population table as a `--keep` list.
@@ -129,6 +141,11 @@ The VCZ format route is deferred to its own issue, and pre-QC batch merging is o
 
 ### Fixed
 
+- Sample and variant IDs are read as text in every R step that reads a plink or population table
+  (`geno_decisions`, `mind_decisions`, `hwe_decisions`, `hwe_plots`, `missingness_ladder`, `missingness_plots`,
+  `sex_check_decisions`, `heterozygosity_plots`, `relatedness_decisions` and `ancestry_assign`), so an
+  all-numeric ID with leading zeros, such as `007`, is written back to the decision lists byte for byte instead
+  of being coerced to a number that no longer matches the fileset.
 - The stubs of `ancestry_assign`, `sex_check_decisions` and `relatedness_decisions` now write the same file set
   and the same headers as their real templates, derived from their inputs, so a `-stub` run exercises the
   published layout rather than a narrower one.

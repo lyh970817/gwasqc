@@ -2,6 +2,22 @@
     "gwasqc fixtures - two strata - stub": {
         "content": [
             {
+                "contig_exclude": [
+                    [
+                        {
+                            "ancestry": "AFR",
+                            "id": "study_afr"
+                        },
+                        "study_afr.contig_exclude.txt:md5,d41d8cd98f00b204e9800998ecf8427e"
+                    ],
+                    [
+                        {
+                            "ancestry": "EUR",
+                            "id": "study_eur"
+                        },
+                        "study_eur.contig_exclude.txt:md5,d41d8cd98f00b204e9800998ecf8427e"
+                    ]
+                ],
                 "geno_exclude": [
                     [
                         {
@@ -302,15 +318,31 @@
                 ]
             }
         ],
-        "timestamp": "2026-09-21T09:36:21.262707634",
+        "timestamp": "2026-11-11T16:21:52.918234631",
         "meta": {
             "nf-test": "0.9.5",
-            "nextflow": "26.04.4"
+            "nextflow": "26.04.6"
         }
     },
     "gwasqc fixtures - two strata": {
         "content": [
             {
+                "contig_exclude": [
+                    [
+                        {
+                            "ancestry": "AFR",
+                            "id": "study_afr"
+                        },
+                        "study_afr.contig_exclude.txt:md5,d41d8cd98f00b204e9800998ecf8427e"
+                    ],
+                    [
+                        {
+                            "ancestry": "EUR",
+                            "id": "study_eur"
+                        },
+                        "study_eur.contig_exclude.txt:md5,d41d8cd98f00b204e9800998ecf8427e"
+                    ]
+                ],
                 "geno_exclude": [
                     [
                         {
@@ -521,10 +553,35 @@
                 ]
             }
         ],
-        "timestamp": "2026-09-21T10:03:50.753357516",
+        "timestamp": "2026-11-11T16:20:27.756117541",
         "meta": {
             "nf-test": "0.9.5",
-            "nextflow": "26.04.4"
+            "nextflow": "26.04.6"
+        }
+    },
+    "gwasqc fixtures - EUR stratum and its alt-contig copy": {
+        "content": [
+            [
+                [
+                    {
+                        "id": "study_eur",
+                        "ancestry": "EUR"
+                    },
+                    "study_eur.contig_exclude.txt:md5,d41d8cd98f00b204e9800998ecf8427e"
+                ],
+                [
+                    {
+                        "id": "study_eur_alt",
+                        "ancestry": "EUR"
+                    },
+                    "study_eur_alt.contig_exclude.txt:md5,e72b8b8ca4c23bff6d77463f8a3c10e4"
+                ]
+            ]
+        ],
+        "timestamp": "2026-11-11T16:18:24.378919796",
+        "meta": {
+            "nf-test": "0.9.5",
+            "nextflow": "26.04.6"
         }
     }
 }

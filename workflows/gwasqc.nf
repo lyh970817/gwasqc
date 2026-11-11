@@ -71,8 +71,10 @@ workflow GWASQC {
     def ch_multiqc_files = channel.empty()
 
     //
-    // SUBWORKFLOW: MAF, missingness and Hardy-Weinberg filter lists, per stratum
+    // SUBWORKFLOW: Non-standard contig, MAF, missingness and Hardy-Weinberg filter lists, per stratum
     //
+    // The contig exclusion is applied at the MAF run, so the MAF keep-list that every later run extracts, the
+    // terminal materialisation's included, carries the standard chromosomes only.
     PLINK_QC_FILTER_LISTS(
         ch_samplesheet,
         geno,
@@ -230,6 +232,7 @@ workflow GWASQC {
 
     def ch_report_inputs = ch_strata_by_id
         .map { id, meta, _bed, bim, fam, maf_snplist, geno_exclude, hwe_exclude, mind_remove -> [id, meta, bim, fam, maf_snplist, geno_exclude, mind_remove, hwe_exclude] }
+        .join(PLINK_QC_FILTER_LISTS.out.contig_exclude.map { meta, contig_exclude -> [meta.id, contig_exclude] }, by: 0, failOnDuplicate: true, failOnMismatch: true)
         .join(PLINK_QC_FILTER_LISTS.out.missingness_ladder.map { meta, ladder -> [meta.id, ladder] }, by: 0, failOnDuplicate: true, failOnMismatch: true)
         .join(ch_marker_lists_by_id, by: 0, failOnDuplicate: true, failOnMismatch: true)
         .join(PLINK_SAMPLE_QC_LISTS.out.sex_mismatch.map { meta, sex_mismatch -> [meta.id, sex_mismatch] }, by: 0, failOnDuplicate: true, failOnMismatch: true)
@@ -243,8 +246,8 @@ workflow GWASQC {
         .join(PLINK_SAMPLE_QC_LISTS.out.sex_check_hist_plot.map { meta, _pdf, png -> [meta.id, [png]] }, by: 0, failOnDuplicate: true, failOnMismatch: true)
         .join(ch_heterozygosity_images_by_id, by: 0, failOnDuplicate: true, failOnMismatch: true)
         .join(PLINK_SAMPLE_QC_LISTS.out.relatedness_hist_plot.map { meta, _pdf, png -> [meta.id, [png]] }, by: 0, failOnDuplicate: true, failOnMismatch: true)
-        .map { _id, meta, bim, fam, maf_snplist, geno_exclude, mind_remove, hwe_exclude, ladder, prune_in, highld_exclude, shared_markers, sex_mismatch, het, relatedness_pairs, relatedness_remove, relatedness_outliers, ancestry_summary, ancestry_mismatch_remove, ancestry_images, qc_bim, qc_fam, variant_qc_images, sex_check_images, heterozygosity_images, relatedness_images ->
-            [meta, fam, bim, maf_snplist, geno_exclude, mind_remove, hwe_exclude, ladder, prune_in, highld_exclude, shared_markers, sex_mismatch, het, relatedness_pairs, relatedness_remove, relatedness_outliers, ancestry_summary, ancestry_mismatch_remove, qc_bim, qc_fam, variant_qc_images, sex_check_images, heterozygosity_images, relatedness_images, ancestry_images]
+        .map { _id, meta, bim, fam, maf_snplist, geno_exclude, mind_remove, hwe_exclude, contig_exclude, ladder, prune_in, highld_exclude, shared_markers, sex_mismatch, het, relatedness_pairs, relatedness_remove, relatedness_outliers, ancestry_summary, ancestry_mismatch_remove, ancestry_images, qc_bim, qc_fam, variant_qc_images, sex_check_images, heterozygosity_images, relatedness_images ->
+            [meta, fam, bim, contig_exclude, maf_snplist, geno_exclude, mind_remove, hwe_exclude, ladder, prune_in, highld_exclude, shared_markers, sex_mismatch, het, relatedness_pairs, relatedness_remove, relatedness_outliers, ancestry_summary, ancestry_mismatch_remove, qc_bim, qc_fam, variant_qc_images, sex_check_images, heterozygosity_images, relatedness_images, ancestry_images]
         }
 
     STRATUM_REPORT(

@@ -27,7 +27,7 @@ Every check runs on the unfiltered fileset with the decision lists accumulated s
 
 ## Pipeline summary
 
-1. Minor allele frequency keep-list over every variant (`plink2 --maf` with `--write-snplist`)
+1. Minor allele frequency keep-list (`plink2 --maf` with `--write-snplist`) over the variants on chromosomes 1 to 22, X, Y, XY and MT, the variants on alt, random and other contigs listed for exclusion first
 2. Missingness ([`plink2 --missing`](https://www.cog-genomics.org/plink/2.0/basic_stats#missing)): a per-variant report over the MAF-passing variants and the `--geno` exclusion list from it, then a second report with that list excluded and the `--mind` removal list from it, plus a call-rate ladder from 90 % to 99 % recording what each rate would remove
 3. Hardy-Weinberg equilibrium ([`plink2 --hardy`](https://www.cog-genomics.org/plink/2.0/basic_stats#hardy)) with an exclusion list at the `--hwe` p-value floor, autosomal and chromosome X read together
 4. LD pruning over every chromosome ([`plink2 --indep-pairwise`](https://www.cog-genomics.org/plink/2.0/ld#indep)), then an exclusion list of the pruned variants that lie in a long-range LD region or off chromosomes 1 to 22

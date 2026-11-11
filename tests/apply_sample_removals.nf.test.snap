@@ -14,6 +14,9 @@
                 "ANCESTRY_REFERENCE_KEEP": {
                     "gawk": "5.3.1"
                 },
+                "CONTIG_EXCLUDE": {
+                    "gawk": "5.3.1"
+                },
                 "GENO_DECISIONS": {
                     "r-base": "4.3.1"
                 },
@@ -131,10 +134,10 @@
                 "study_csa.qc.fam:md5,4871d83e3ba9e1e5e1f91135794c5810"
             ]
         ],
-        "timestamp": "2026-09-21T17:05:02.8580441",
+        "timestamp": "2026-11-11T17:13:46.769719991",
         "meta": {
             "nf-test": "0.9.5",
-            "nextflow": "26.04.4"
+            "nextflow": "26.04.6"
         }
     }
 }

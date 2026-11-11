@@ -1,0 +1,54 @@
+nextflow_pipeline {
+
+    name "Test pipeline on a stratum carrying alt and random contigs"
+    script "../main.nf"
+    profile "test_alt_contig"
+    tag "pipeline"
+    tag "alt_contig"
+
+    // The fixture's EUR stratum beside a copy of it that also carries eight variants on seven GRCh38 alt and
+    // random contigs, each a copy of a common, complete, Hardy-Weinberg-conforming variant, against a
+    // reference panel that carries the same eight contig variants. The copy's eight variants are listed for
+    // exclusion and counted, and nothing else differs between the two strata: every published list and table,
+    // the ancestry route on the contig-carrying panel included, and the QC'd fileset, byte for byte.
+    test("-profile test_alt_contig") {
+
+        when {
+            params {
+                outdir = "$outputDir"
+            }
+        }
+
+        then {
+            def contig_variants = (1..8).collect { i -> "AX-90000000${i}".toString() }
+            def lines = { relative -> new File("${params.outdir}/${relative}").readLines() }
+            def summary_rows = lines('gwasqc_summary.tsv').collect { line -> line.split('\t', -1).toList() }
+            def summary = summary_rows.drop(1).collectEntries { fields -> [(fields[0]): [summary_rows[0], fields].transpose().collectEntries { column, value -> [(column): value] }] }
+            // Every published file of the copy beside the stratum's own under the same name, the figures left
+            // out as nondeterministic bytes and the contig list as the one intended difference.
+            def published = { id -> new File("${params.outdir}/qc/${id}").listFiles().collectMany { stage -> stage.listFiles().toList() }.collect { file -> "${file.parentFile.name}/${file.name.replace("${id}.", '<id>.')}".toString() }.sort() }
+            def compared = published('study_eur').findAll { name -> !(name ==~ /.*\.(pdf|png)$/) && name != 'contigs/<id>.contig_exclude.txt' }
+            def content = { id, name -> new File("${params.outdir}/qc/${id}/${name.replace('<id>.', "${id}.")}").bytes.encodeHex().toString() }
+            def fileset = { id -> ['bed', 'bim', 'fam'].collect { extension -> new File("${params.outdir}/genotypes/${id}/${id}.qc.${extension}").bytes.encodeHex().toString() } }
+            def report = new File("${params.outdir}/multiqc/multiqc_report.html").text
+            assertAll(
+                { assert workflow.success },
+                { assert lines('qc/study_eur_alt/contigs/study_eur_alt.contig_exclude.txt') == contig_variants },
+                { assert lines('qc/study_eur/contigs/study_eur.contig_exclude.txt').isEmpty() },
+                { assert summary.study_eur_alt.subMap(['variants_input', 'variants_contig_removed', 'variants_maf_removed', 'variants_after_maf']) == [variants_input: '3970', variants_contig_removed: '8', variants_maf_removed: '8', variants_after_maf: '3954'] },
+                { assert summary.study_eur.subMap(['variants_input', 'variants_contig_removed']) == [variants_input: '3962', variants_contig_removed: '0'] },
+                { assert summary_rows[0].every { column -> column in ['stratum', 'variants_input', 'variants_contig_removed'] || summary.study_eur[column] == summary.study_eur_alt[column] } },
+                { assert published('study_eur_alt') == published('study_eur') },
+                { assert compared.size() > 30 && compared.every { name -> content('study_eur', name) == content('study_eur_alt', name) } },
+                { assert fileset('study_eur_alt') == fileset('study_eur') },
+                { assert lines('genotypes/study_eur_alt/study_eur_alt.qc.bim').every { line -> line.split('\t')[0] ==~ /^([1-9]|1[0-9]|2[0-2]|X|Y)$/ } },
+                { assert report.contains('variants_contig_removed') },
+                { assert snapshot(
+                    removeNextflowVersion("$outputDir/pipeline_info/nf_core_gwasqc_software_mqc_versions.yml"),
+                    path("${params.outdir}/gwasqc_summary.tsv"),
+                    path("${params.outdir}/qc/study_eur_alt/contigs/study_eur_alt.contig_exclude.txt")
+                ).match() }
+            )
+        }
+    }
+}
