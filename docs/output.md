@@ -13,7 +13,7 @@ The published tree holds only what a reviewer reads: the QC'd fileset, every dec
 The pipeline is built using [Nextflow](https://www.nextflow.io/) and processes data using the following steps:
 
 - [QC summary](#qc-summary) - One table across strata, the same shape as the MultiQC report's first section
-- [Variant and sample QC lists](#variant-and-sample-qc-lists) - Per-stratum MAF keep-list, missingness and Hardy-Weinberg statistics, the decision lists derived from them, and their histograms
+- [Variant and sample QC lists](#variant-and-sample-qc-lists) - Per-stratum exclusion list of the variants on non-standard contigs, MAF keep-list, missingness and Hardy-Weinberg statistics, the decision lists derived from them, and their histograms
 - [LD pruning and long-range LD exclusion](#ld-pruning-and-long-range-ld-exclusion) - The pruned variant set of the sample checks of a stratum in the `study` marker-set mode and the variants excluded from its autosomal reports
 - [Sex check](#sex-check) - The plink2 sex check, the mismatch table and removal list, and the F histogram
 - [Heterozygosity](#heterozygosity) - The heterozygosity report and its plots, report-only
@@ -38,7 +38,8 @@ Every number in the summary is a line count of a published decision list, a row 
 | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `stratum`, `ancestry`                                                                                                                                                            | The samplesheet `id` and `ancestry` of the row.                                                                                                                                                                                                                                                          |
 | `samples_input`, `variants_input`                                                                                                                                                | Lines of the input `.fam` and `.bim`.                                                                                                                                                                                                                                                                    |
-| `maf_threshold`, `variants_maf_removed`, `variants_after_maf`                                                                                                                    | `--maf`, the variants it dropped, and the lines of `<id>.maf.snplist`.                                                                                                                                                                                                                                   |
+| `variants_contig_removed`                                                                                                                                                        | Lines of `<id>.contig_exclude.txt`: the variants on a contig outside 1-22, X, Y, XY and MT, excluded before every filter.                                                                                                                                                                                |
+| `maf_threshold`, `variants_maf_removed`, `variants_after_maf`                                                                                                                    | `--maf`, the variants on the standard chromosomes it dropped, and the lines of `<id>.maf.snplist`.                                                                                                                                                                                                       |
 | `geno_threshold`, `variants_geno_removed`, `variants_after_geno`                                                                                                                 | `--geno`, the lines of `<id>.geno_exclude.txt`, and the MAF-passing variants that remain.                                                                                                                                                                                                                |
 | `mind_threshold`, `samples_mind_removed`, `samples_after_mind`                                                                                                                   | `--mind`, the lines of `<id>.mind_remove.txt`, and the samples that remain.                                                                                                                                                                                                                              |
 | `hwe_threshold`, `variants_hwe_removed`, `variants_after_hwe`                                                                                                                    | `--hwe`, the lines of `<id>.hwe_exclude.txt`, and the QC'd variant set.                                                                                                                                                                                                                                  |
@@ -61,8 +62,10 @@ Every number in the summary is a line count of a published decision list, a row 
 <details markdown="1">
 <summary>Output files</summary>
 
+- `qc/<id>/contigs/`
+  - `<id>.contig_exclude.txt`: Variants whose `.bim` chromosome code is not one of 1-22, X, Y, XY and MT in any of the spellings [Chromosome codes](usage.md#chromosome-codes) lists, such as alt, random and unplaced contigs, one ID per line in `.bim` order; empty when every code is standard.
 - `qc/<id>/maf/`
-  - `<id>.maf.snplist`: Variants passing the `--maf` threshold, one ID per line; the keep-list every later step starts from.
+  - `<id>.maf.snplist`: Variants on the standard chromosomes passing the `--maf` threshold, one ID per line; the keep-list every later step starts from.
 - `qc/<id>/missingness/`
   - `<id>.vmiss`: [plink2 `--missing`](https://www.cog-genomics.org/plink/2.0/basic_stats#missing) per-variant missing-call report over the MAF-passing variants.
   - `<id>.geno_exclude.txt`: Variants whose missing-call rate exceeds `--geno`, one ID per line.
@@ -85,7 +88,7 @@ Every number in the summary is a line count of a published decision list, a row 
 
 </details>
 
-[PLINK 2](https://www.cog-genomics.org/plink/2.0/) computes every statistic on the original fileset with the lists accumulated so far applied through `--extract`, `--exclude` and `--remove`, so no intermediate fileset is written. The decision lists are derived from the statistics in R at the configured thresholds. plink2 writes its `--missing` report before it applies `--geno`, so the variant threshold becomes an exclusion list first and the sample report is computed with that list excluded; a sample at the `--mind` threshold over all variants can survive once its missing calls in the excluded variants no longer count. The legacy missingness histograms were drawn three times with fixed y-axis limits so that the tail could be read under the peak at zero; the log-scale panel shows the same tail at any cohort size.
+[PLINK 2](https://www.cog-genomics.org/plink/2.0/) computes every statistic on the original fileset with the lists accumulated so far applied through `--extract`, `--exclude` and `--remove`, so no intermediate fileset is written. The contig exclusion list is read from the input `.bim` and applied through `--exclude` to the MAF run alone: the MAF keep-list is then a list of standard-chromosome variants, and every later step, the QC'd fileset's included, extracts it. The decision lists are derived from the statistics in R at the configured thresholds. plink2 writes its `--missing` report before it applies `--geno`, so the variant threshold becomes an exclusion list first and the sample report is computed with that list excluded; a sample at the `--mind` threshold over all variants can survive once its missing calls in the excluded variants no longer count. The legacy missingness histograms were drawn three times with fixed y-axis limits so that the tail could be read under the peak at zero; the log-scale panel shows the same tail at any cohort size.
 
 ### LD pruning and long-range LD exclusion
 
@@ -192,7 +195,7 @@ The variant tables of `--reference_panel` are matched to the stratum's QC'd vari
 
 </details>
 
-The fileset keeps the MAF-passing variants minus the `--geno` and `--hwe` exclusions, and drops the `--mind` removals. With `--apply_sample_removals` it also drops the sex mismatches, the listed duplicate members and, unless `--ancestry_remove_mismatched` is off, the ancestry mismatches. The summary's `samples_removed_under_gate` states what the gate removed, or would have removed, in either case.
+The fileset keeps the MAF-passing variants on the standard chromosomes minus the `--geno` and `--hwe` exclusions, and drops the `--mind` removals; no variant on an alt, random or other non-standard contig reaches it. With `--apply_sample_removals` it also drops the sex mismatches, the listed duplicate members and, unless `--ancestry_remove_mismatched` is off, the ancestry mismatches. The summary's `samples_removed_under_gate` states what the gate removed, or would have removed, in either case.
 
 ### MultiQC
 
