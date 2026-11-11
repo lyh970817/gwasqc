@@ -133,6 +133,42 @@ nextflow_process {
         }
     }
 
+    test("synthetic - all-numeric sample IDs with leading zeros") {
+
+        when {
+            process {
+                """
+                // Sample IDs that are all digits must reach the scatter table byte for byte; the join key is the
+                // text, so the two reports must agree on it.
+                def het = file("${workDir}/numeric.het")
+                het.text = [
+                    ['#FID', 'IID', 'O(HOM)', 'E(HOM)', 'OBS_CT', 'F'].join('\\t'),
+                    ['0001', '007', '900', '880', '1000', '0.1'].join('\\t'),
+                    ['0002', '008', '880', '880', '1000', '0.0'].join('\\t'),
+                    ['0100', '0009', '860', '880', '1000', '-0.1'].join('\\t'),
+                ].join('\\n') + '\\n'
+                def sexcheck = file("${workDir}/numeric.sexcheck")
+                sexcheck.text = [
+                    ['#FID', 'IID', 'PEDSEX', 'SNPSEX', 'STATUS', 'F'].join('\\t'),
+                    ['0001', '007', '2', '2', 'OK', '0.05'].join('\\t'),
+                    ['0002', '008', '1', '1', 'OK', '0.95'].join('\\t'),
+                    ['0100', '0009', '1', '1', 'OK', '0.9'].join('\\t'),
+                ].join('\\n') + '\\n'
+                input[0] = [ [ id:'numeric' ], het, sexcheck, [] ]
+                """
+            }
+        }
+
+        then {
+            def scatter = path(process.out.scatter_data.get(0).get(1)).readLines().collect { line -> line.split('\t').toList() }
+            assertAll(
+                { assert process.success },
+                { assert scatter[0] == ['FID', 'IID', 'PEDSEX', 'F_HET', 'F_SEX'] },
+                { assert scatter.drop(1).collect { fields -> fields[0..1] }.sort { pair -> pair[0] } == [['0001', '007'], ['0002', '008'], ['0100', '0009']] },
+            )
+        }
+    }
+
     test("study_eur - stub") {
 
         options "-stub"

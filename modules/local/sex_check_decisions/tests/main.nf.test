@@ -104,6 +104,34 @@ nextflow_process {
         }
     }
 
+    test("synthetic - all-numeric sample IDs with leading zeros") {
+
+        when {
+            process {
+                """
+                // Sample IDs that are all digits must come back byte for byte, not as the integers they resemble.
+                def report = file("${workDir}/numeric.sexcheck")
+                report.text = [
+                    ['#FID', 'IID', 'PEDSEX', 'SNPSEX', 'STATUS', 'F', 'YCOUNT', 'YRATE'].join('\\t'),
+                    ['0001', '007', '2', '1', 'PROBLEM', '0.95', '0', '0'].join('\\t'),
+                    ['0002', '008', '2', '2', 'OK', '0.05', '0', '0'].join('\\t'),
+                    ['0100', '0009', '1', '2', 'PROBLEM', '0.02', '0', '0'].join('\\t'),
+                ].join('\\n') + '\\n'
+                input[0] = [ [ id:'numeric' ], report ]
+                """
+            }
+        }
+
+        then {
+            def mismatch = path(process.out.mismatch.get(0).get(1)).readLines().collect { line -> line.split('\t').toList() }
+            assertAll(
+                { assert process.success },
+                { assert mismatch.drop(1).collect { fields -> fields[0..1] } == [['0001', '007'], ['0100', '0009']] },
+                { assert path(process.out.sample_remove.get(0).get(1)).readLines() == ['0001 007', '0100 0009'] },
+            )
+        }
+    }
+
     test("study_eur - stub") {
 
         options "-stub"

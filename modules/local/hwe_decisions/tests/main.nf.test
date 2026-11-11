@@ -126,6 +126,38 @@ nextflow_process {
         }
     }
 
+    test("synthetic - all-numeric variant IDs with leading zeros") {
+
+        when {
+            process {
+                """
+                // Variant IDs that are all digits must come back byte for byte, in both reports.
+                def header = ['#CHROM', 'ID', 'A1', 'AX', 'HOM_A1_CT', 'HET_A1_CT', 'TWO_AX_CT', 'O(HET_A1)', 'E(HET_A1)', 'P'].join('\\t')
+                def autosomal = file("${workDir}/numeric.hardy")
+                autosomal.text = [
+                    header,
+                    ['1', '001', 'C', 'T', '59', '59', '7', '0.472', '0.413472', '1e-12'].join('\\t'),
+                    ['1', '007', 'C', 'T', '59', '59', '7', '0.472', '0.413472', '0.5'].join('\\t'),
+                ].join('\\n') + '\\n'
+                def chrx = file("${workDir}/numeric.hardy.x")
+                chrx.text = [
+                    header,
+                    ['X', '0010', 'C', 'T', '59', '59', '7', '0.472', '0.413472', '1e-12'].join('\\t'),
+                ].join('\\n') + '\\n'
+                input[0] = [ [ id:'numeric' ], autosomal, chrx ]
+                input[1] = 1e-10
+                """
+            }
+        }
+
+        then {
+            assertAll(
+                { assert process.success },
+                { assert path(process.out.variant_exclude.get(0).get(1)).readLines() == ['001', '0010'] },
+            )
+        }
+    }
+
     test("study_eur - stub") {
 
         options "-stub"

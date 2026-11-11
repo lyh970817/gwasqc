@@ -17,11 +17,16 @@ hwe_threshold <- as.numeric("${hwe}")
 prefix <- "${prefix}"
 process_name <- "${task.process}"
 
+# Sample and variant IDs are read as text: an all-numeric ID such as 007 would otherwise be parsed as 7 and
+# no longer match the fileset it came from.
+id_column_names <- c("FID", "IID", "FID1", "IID1", "FID2", "IID2", "ID1", "ID2", "ID")
 read_plink2_report <- function(path) {
+    header <- strsplit(readLines(path, n = 1L), "\\t", fixed = TRUE)[[1]]
     report <- read.table(
         path,
         header = TRUE,
         sep = "\\t",
+        colClasses = ifelse(sub("^#", "", header) %in% id_column_names, "character", NA),
         comment.char = "",
         quote = "",
         check.names = FALSE,
