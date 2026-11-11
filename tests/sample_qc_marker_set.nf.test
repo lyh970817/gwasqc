@@ -88,6 +88,7 @@ nextflow_pipeline {
                 { assert workflow.success },
                 { assert strata.every { id -> summary[id].subMap(['sample_qc_marker_set', 'variants_ld_pruned_in', 'variants_sample_checks', 'sample_qc_note']) == [sample_qc_marker_set: 'shared', variants_ld_pruned_in: 'NA', variants_sample_checks: 'NA', sample_qc_note: ''] } },
                 { assert strata.every { id -> summary[id].sample_qc_markers == lines("qc/${id}/ancestry/${id}.ancestry.prune.in").size().toString() } },
+                { assert strata.every { id -> summary[id].sample_qc_shared_reference == 'pooled' && !new File("${params.outdir}/qc/${id}/ancestry/${id}.ancestry_matched.prune.in").exists() } },
                 { assert strata.every { id -> !new File("${params.outdir}/qc/${id}/ld_pruning").exists() } },
                 { assert workflow.trace.tasks().findAll { task -> task.name.contains('PLINK2_INDEPPAIRWISE (') && !task.name.contains('REFERENCE') }.isEmpty() },
                 { assert workflow.trace.tasks().findAll { task -> task.name.contains('PLINK2_HET_REFERENCE (') }.size() == 3 },
@@ -102,6 +103,60 @@ nextflow_pipeline {
                 { assert large.every { id -> lines("qc/${id}/sex_check/${id}.sex_mismatch_remove.txt") == ["${prefix(id)}_S010 ${prefix(id)}_S010", "${prefix(id)}_S011 ${prefix(id)}_S011"] } },
                 { assert large.every { id -> relationships(id).subMap(["${prefix(id)}_S020/${prefix(id)}_S021".toString(), "${prefix(id)}_S030/${prefix(id)}_S031".toString(), "${prefix(id)}_S032/${prefix(id)}_S033".toString()]) == [("${prefix(id)}_S020/${prefix(id)}_S021".toString()): 'duplicate_or_mz', ("${prefix(id)}_S030/${prefix(id)}_S031".toString()): 'parent_offspring', ("${prefix(id)}_S032/${prefix(id)}_S033".toString()): 'full_sibling'] } },
                 { assert large.every { id -> lines("qc/${id}/relatedness/${id}.relatedness_remove.txt").size() == 1 } },
+                { assert lines('qc/study_csa/sex_check/study_csa.sex_mismatch_remove.txt') == ['CSA_S010 CSA_S010'] },
+                { assert relationships('study_csa')['CSA_S005/CSA_S006'] == 'duplicate_or_mz' },
+                { assert snapshot(
+                    removeNextflowVersion("$outputDir/pipeline_info/nf_core_gwasqc_software_mqc_versions.yml"),
+                    path("${params.outdir}/gwasqc_summary.tsv")
+                ).match() }
+            )
+        }
+    }
+
+    // `shared` forced on every stratum with the shared markers chosen on the ancestry-matched reference
+    // samples: each stratum's markers are filtered and pruned on its own super-population's 50 reference
+    // samples, the decomposition still runs on the pooled panel, and every planted defect is still found.
+    test("-profile test --sample_qc_marker_set shared --sample_qc_shared_reference matched") {
+
+        when {
+            params {
+                outdir                     = "$outputDir"
+                sample_qc_marker_set       = 'shared'
+                sample_qc_shared_reference = 'matched'
+            }
+        }
+
+        then {
+            def lines = { relative -> new File("${params.outdir}/${relative}").readLines() }
+            def large = ['study_eur', 'study_afr']
+            def strata = large + ['study_csa']
+            def prefix = { id -> id.replace('study_', '').toUpperCase() }
+            def planted = [study_eur: [EUR_S050: 'EAS', EUR_S051: 'AFR', EUR_S052: 'AMR'], study_afr: [AFR_S050: 'EUR', AFR_S051: 'CSA', AFR_S052: 'EAS']]
+            def summary_rows = lines('gwasqc_summary.tsv').collect { line -> line.split('\t', -1).toList() }
+            def summary = summary_rows.drop(1).collectEntries { fields -> [(fields[0]): [summary_rows[0], fields].transpose().collectEntries { column, value -> [(column): value] }] }
+            def relationships = { id ->
+                lines("qc/${id}/relatedness/${id}.relatedness_pairs.tsv").drop(1).collect { line -> line.split('\t') }.collectEntries { fields -> [([fields[1], fields[3]].sort().join('/')): fields[9]] }
+            }
+            def assigned = { id -> lines("qc/${id}/ancestry/${id}.ancestry_assignment.tsv").drop(1).collect { line -> line.split('\t') }.collectEntries { fields -> [(fields[1]): fields[2]] } }
+            def matched = { id -> lines("qc/${id}/ancestry/${id}.ancestry_matched.prune.in") }
+            def report = new File("${params.outdir}/multiqc/multiqc_report.html").text
+            assertAll(
+                { assert workflow.success },
+                // The choice and the marker count are recorded per stratum, and the count is the matched list.
+                { assert strata.every { id -> summary[id].subMap(['sample_qc_marker_set', 'sample_qc_shared_reference', 'sample_qc_note']) == [sample_qc_marker_set: 'shared', sample_qc_shared_reference: 'matched', sample_qc_note: ''] } },
+                { assert strata.every { id -> summary[id].sample_qc_markers == matched(id).size().toString() } },
+                { assert report.contains('sample_qc_shared_reference') },
+                // The matched list is a different choice from the pooled one, within the harmonised set and
+                // outside the long-range LD exclusion, and it is what the baseline frequencies cover.
+                { assert strata.every { id -> matched(id) != lines("qc/${id}/ancestry/${id}.ancestry.prune.in") } },
+                { assert strata.every { id -> lines("qc/${id}/ancestry/${id}.ancestry_harmonised.snplist").containsAll(matched(id)) } },
+                { assert strata.every { id -> matched(id).intersect(lines("qc/${id}/ancestry/${id}.ancestry.highld_exclude.txt")).isEmpty() } },
+                { assert strata.every { id -> lines("qc/${id}/heterozygosity/${id}.reference.afreq").drop(1).collect { line -> line.split('\t')[1] }.sort() == matched(id).sort() } },
+                { assert workflow.trace.tasks().findAll { task -> task.name.contains('PLINK2_INDEPPAIRWISE_MATCHED (') }.size() == 3 },
+                // The decomposition keeps the pooled panel: the planted outliers still leave their labels.
+                { assert large.every { id -> assigned(id).findAll { _iid, group -> group != prefix(id) } == planted[id] } },
+                { assert large.every { id -> lines("qc/${id}/sex_check/${id}.sex_mismatch_remove.txt") == ["${prefix(id)}_S010 ${prefix(id)}_S010", "${prefix(id)}_S011 ${prefix(id)}_S011"] } },
+                { assert large.every { id -> relationships(id).subMap(["${prefix(id)}_S020/${prefix(id)}_S021".toString(), "${prefix(id)}_S030/${prefix(id)}_S031".toString(), "${prefix(id)}_S032/${prefix(id)}_S033".toString()]) == [("${prefix(id)}_S020/${prefix(id)}_S021".toString()): 'duplicate_or_mz', ("${prefix(id)}_S030/${prefix(id)}_S031".toString()): 'parent_offspring', ("${prefix(id)}_S032/${prefix(id)}_S033".toString()): 'full_sibling'] } },
                 { assert lines('qc/study_csa/sex_check/study_csa.sex_mismatch_remove.txt') == ['CSA_S010 CSA_S010'] },
                 { assert relationships('study_csa')['CSA_S005/CSA_S006'] == 'duplicate_or_mz' },
                 { assert snapshot(
