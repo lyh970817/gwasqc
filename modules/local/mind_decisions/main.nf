@@ -8,7 +8,10 @@ process MIND_DECISIONS {
         : 'community.wave.seqera.io/library/r-base:4.3.1--04f3c4b5f283a84a'}"
 
     input:
-    tuple val(meta), path(smiss), val(mind)
+    // The threshold is tuple-local so that one stratum can be listed at several thresholds, as the call-rate
+    // ladder does. `carried_remove` is the list of an earlier rung of the ladder, whose samples the report was
+    // computed without, or `[]`.
+    tuple val(meta), path(smiss), val(mind), path(carried_remove)
 
     output:
     tuple val(meta), path("${prefix}.mind_remove.txt"), emit: sample_remove
@@ -20,14 +23,16 @@ process MIND_DECISIONS {
     task.ext.when == null || task.ext.when
 
     script:
-    // `prefix` must remain visible to the output declarations above; the template reads it too.
+    // `prefix` must remain visible to the output declarations above; the template reads it too, and
+    // `carried_remove_file`, empty when no list is carried.
     prefix = task.ext.prefix ?: "${meta.id}"
+    carried_remove_file = carried_remove ? carried_remove.toString() : ''
     template('mind_decisions.R')
 
     stub:
     prefix = task.ext.prefix ?: "${meta.id}"
     """
-    touch ${prefix}.mind_remove.txt
+    ${carried_remove ? "cat ${carried_remove} > ${prefix}.mind_remove.txt" : "touch ${prefix}.mind_remove.txt"}
     printf '"%s":\\n    r-base: %s\\n' '${task.process}' "\$(Rscript -e 'cat(paste(R.version[["major"]], R.version[["minor"]], sep = "."))')" > versions.yml
     """
 }

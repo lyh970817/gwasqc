@@ -1,0 +1,38 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/nf-core/modules/master/subworkflows/yaml-schema.json
+name: missingness_rung
+description: Apply one rung of the cumulative call-rate ladder to one PLINK fileset per stratum from stats-only plink2 runs, the variant threshold over the variants and samples the previous rung kept and then the sample threshold over the variants that survive it, and emit the cumulative exclusion and removal lists
+keywords:
+  - plink
+  - quality control
+  - missingness
+  - call rate
+components:
+  - plink2/missing
+  - geno_decisions
+  - mind_decisions
+input:
+  - ch_lists:
+      description: One PLINK 1 fileset per stratum with its MAF keep-list and the cumulative exclusion and removal lists of the previous rung, [] for both before the first rung; meta.id must be unique across strata
+      structure: [map meta, path bed, path bim, path fam, path maf_snplist, path geno_exclude, path mind_remove]
+      pattern: "*.{bed,bim,fam,snplist,txt}"
+      ontologies: []
+  - call_rate:
+      description: The rung's call rate in percent; variants and then samples whose missing-call rate exceeds 1 - call_rate / 100 are added to the lists
+      structure: integer call_rate
+output:
+  - lists:
+      type: file
+      description: The input fileset and MAF keep-list with the rung's cumulative exclusion and removal lists, the previous rung's entries first; meta.call_rate names the rung
+      structure: [map meta, path bed, path bim, path fam, path maf_snplist, path geno_exclude, path mind_remove]
+      pattern: "*.{bed,bim,fam,snplist,txt}"
+      ontologies: []
+  - smiss:
+      type: file
+      description: plink2 sample-based missingness report from which the rung's sample threshold was decided, over the MAF-passing variants the rung keeps and the samples the previous rung kept
+      structure: [map meta, path smiss]
+      pattern: "*.smiss"
+      ontologies: []
+authors:
+  - "@lyh970817"
+maintainers:
+  - "@lyh970817"

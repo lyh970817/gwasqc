@@ -36,9 +36,10 @@ workflow GWASQC {
     ch_samplesheet // channel: [ val(meta), path(bed), path(bim), path(fam) ]
     ch_reference // channel: [ val(meta), path(bed), path(bim), path(fam) ], one item per reference fileset; empty when ancestry is skipped
     maf // value: minor allele frequency threshold, applied by PLINK2_WRITESNPLIST through ext.args and recorded in the report
-    geno // value: maximum per-variant missing-call rate
-    mind // value: maximum per-sample missing-call rate
+    geno // value: maximum per-variant missing-call rate; under `iterative`, the last rung of the call-rate ladder applied
+    mind // value: maximum per-sample missing-call rate; under `iterative`, equal to geno
     hwe // value: Hardy-Weinberg exact-test p-value floor
+    missingness_mode // value: `iterative`, the cumulative call-rate ladder applied up to the call rate 1 - geno, or `single`, geno and then mind once
     high_ld_regions // value: path to the BED of long-range LD regions
     genome_build // value: genome build of the study, which the reference panel must share
     reference_pop_data // value: path to the TSV of FID, IID, pop and super_pop per reference sample, or null when ancestry is skipped
@@ -80,6 +81,7 @@ workflow GWASQC {
         geno,
         mind,
         hwe,
+        missingness_mode,
     )
 
     def ch_samplesheet_by_id = ch_samplesheet.map { meta, bed, bim, fam -> [meta.id, meta, bed, bim, fam] }
@@ -257,6 +259,7 @@ workflow GWASQC {
         geno,
         mind,
         hwe,
+        missingness_mode,
         ld_min_retained_fraction,
         sample_qc_shared_reference,
         apply_sample_removals,

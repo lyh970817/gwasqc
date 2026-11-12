@@ -54,11 +54,12 @@ variants_contig_removed	Contig removed	Variants on a contig outside 1-22, X, Y, 
 maf_threshold	MAF threshold	Minor allele frequency below which a variant is dropped	{:g}
 variants_maf_removed	MAF removed	Variants on the standard chromosomes below the MAF threshold	{:,.0f}
 variants_after_maf	After MAF	Variants passing the MAF threshold	{:,.0f}
-geno_threshold	geno threshold	Per-variant missing-call rate above which a variant is dropped	{:g}
-variants_geno_removed	geno removed	Variants above the geno threshold over the MAF-passing set	{:,.0f}
+missingness_mode	Missingness mode	How the missingness thresholds were applied: iterative, the cumulative call-rate ladder from 90 % up to the call rate 1 - geno, or single, geno and then mind once
+geno_threshold	geno threshold	Per-variant missing-call rate above which a variant is dropped; in iterative mode, the last rung applied	{:g}
+variants_geno_removed	geno removed	Variants the applied missingness exclusions drop from the MAF-passing set, over every rung in iterative mode	{:,.0f}
 variants_after_geno	After geno	Variants remaining after the geno exclusion	{:,.0f}
-mind_threshold	mind threshold	Per-sample missing-call rate above which a sample is dropped	{:g}
-samples_mind_removed	mind removed	Samples above the mind threshold over the geno-retained variants	{:,.0f}
+mind_threshold	mind threshold	Per-sample missing-call rate above which a sample is dropped; in iterative mode, the last rung applied	{:g}
+samples_mind_removed	mind removed	Samples the applied missingness removals drop, each over the variants its step kept, over every rung in iterative mode	{:,.0f}
 samples_after_mind	After mind	Samples remaining after the mind removal	{:,.0f}
 hwe_threshold	HWE threshold	Hardy-Weinberg exact-test p-value below which a variant is dropped	{:g}
 variants_hwe_removed	HWE removed	Variants below the HWE threshold	{:,.0f}
@@ -88,7 +89,7 @@ relatedness_third_degree	Third degree	Pairs with kinship between 0.0442 and 0.08
 relatedness_removed	Duplicates listed	One member of each duplicate/MZ pair, the one with the higher missing-call rate	{:,.0f}
 relatedness_removals	Duplicate list	Whether the duplicate list was applied to the QC'd fileset
 relatedness_outliers	Kinship outliers	Samples whose mean kinship lies above the cohort mean by the configured standard deviations; listed, never applied	{:,.0f}
-ancestry_unassigned	Unassigned	Study samples whose largest posterior did not reach the threshold, or that the centroid rule unassigned	{:,.0f}
+ancestry_unassigned	Unassigned	Study samples whose largest class probability did not reach the threshold, or that the centroid rule unassigned	{:,.0f}
 ancestry_mismatches	Ancestry mismatches	Study samples not assigned to the stratum's label, the unassigned included	{:,.0f}
 ancestry_removals	Ancestry list	Whether the ancestry mismatch list was applied to the QC'd fileset
 samples_removed_under_gate	Gate removes	Samples the removal gate removes, or would remove when off: the union of the mind, sex, duplicate and, when configured, ancestry lists	{:,.0f}
@@ -156,12 +157,12 @@ mqc_table() {
 all_columns=$(gawk -F'\t' 'NR == 1 { for (i = 2; i <= NF; i++) printf "%s%s", (i > 2 ? " " : ""), $i }' gwasqc_summary.tsv)
 ancestry_columns=$(gawk -F'\t' 'NR == 1 { for (i = 2; i <= NF; i++) if ($i ~ /^ancestry_(n_|unassigned|mismatches|removals)/) printf "%s%s", (n++ ? " " : ""), $i }' gwasqc_summary.tsv)
 
-summary_hidden='maf_threshold variants_after_maf geno_threshold variants_after_geno mind_threshold samples_after_mind hwe_threshold variants_ld_pruned_out variants_sample_checks sample_qc_shared_reference sample_qc_note sex_removals het_samples het_f_mean het_f_sd het_f_min het_f_max het_outside_3sd relatedness_pairs_reported relatedness_parent_offspring relatedness_full_sibling relatedness_second_degree relatedness_third_degree relatedness_removals relatedness_outliers ancestry_removals samples_removed_under_gate'
+summary_hidden='maf_threshold variants_after_maf missingness_mode geno_threshold variants_after_geno mind_threshold samples_after_mind hwe_threshold variants_ld_pruned_out variants_sample_checks sample_qc_shared_reference sample_qc_note sex_removals het_samples het_f_mean het_f_sd het_f_min het_f_max het_outside_3sd relatedness_pairs_reported relatedness_parent_offspring relatedness_full_sibling relatedness_second_degree relatedness_third_degree relatedness_removals relatedness_outliers ancestry_removals samples_removed_under_gate'
 mqc_table gwasqc_qc_summary_mqc.tsv gwasqc_qc_summary gwasqc_qc_summary 'QC summary' 'One row per stratum: the samples and variants that entered, what each stage removed or listed, and what left. The hidden columns hold the thresholds and the per-stage detail; the sections below repeat them by stage.' 'QC summary' '' --hidden "$summary_hidden" $all_columns
 
 variant_qc_description='Per stratum: the input fileset, the variants on contigs outside 1-22, X, Y, XY and MT, what each filter of the MAF, missingness and Hardy-Weinberg chain removes at its threshold, the call-rate ladder, the LD-pruned set the sample checks run on in study mode, and the review histograms.'
-mqc_table gwasqc_variant_qc_filters_mqc.tsv gwasqc_variant_qc_filters gwasqc_variant_qc 'Variant and sample filters' "$variant_qc_description" 'Filters' 'Variants and samples removed by each filter at its threshold, applied in this order from the input fileset after the variants on non-standard contigs are excluded; every comparison is strict, as in plink2. The pruning columns read NA for a stratum in the shared marker-set mode, which prunes nothing on the study side.' \
-    samples_input variants_input variants_contig_removed maf_threshold variants_maf_removed variants_after_maf geno_threshold variants_geno_removed variants_after_geno mind_threshold samples_mind_removed samples_after_mind hwe_threshold variants_hwe_removed variants_after_hwe variants_ld_pruned_in variants_ld_pruned_out variants_highld_excluded variants_sample_checks
+mqc_table gwasqc_variant_qc_filters_mqc.tsv gwasqc_variant_qc_filters gwasqc_variant_qc 'Variant and sample filters' "$variant_qc_description" 'Filters' 'Variants and samples removed by each filter at its threshold, applied in this order from the input fileset after the variants on non-standard contigs are excluded; every comparison is strict, as in plink2. In iterative missingness mode the geno and mind columns count every rung of the call-rate ladder up to the threshold shown. The pruning columns read NA for a stratum in the shared marker-set mode, which prunes nothing on the study side.' \
+    samples_input variants_input variants_contig_removed maf_threshold variants_maf_removed variants_after_maf missingness_mode geno_threshold variants_geno_removed variants_after_geno mind_threshold samples_mind_removed samples_after_mind hwe_threshold variants_hwe_removed variants_after_hwe variants_ld_pruned_in variants_ld_pruned_out variants_highld_excluded variants_sample_checks
 
 mqc_table gwasqc_sample_qc_markers_mqc.tsv gwasqc_sample_qc_markers gwasqc_sample_qc_markers 'Sample QC marker set' 'The variant set the sex check, heterozygosity and relatedness reports of each stratum ran on, chosen per stratum by --sample_qc_marker_set: study, the stratum'"'"'s own LD-pruned QC'"'"'d variants, or shared, the harmonised reference-pruned markers of the ancestry route with the ancestry-matched reference frequencies as the heterozygosity baseline; under auto a stratum with fewer than --small_n_threshold samples after the mind filter takes shared. A shared marker set is filtered and LD-pruned on the pooled reference panel or on the reference samples of the stratum'"'"'s super-population, as --sample_qc_shared_reference chose. The note flags study-mode pruning that retained fewer than the --ld_min_retained_fraction floor of the QC'"'"'d variants, the signature of pruning collapse on a small stratum.' 'Marker set' 'The mode of each stratum, the reference samples a shared set was chosen on, the markers its autosomal checks ran on, and the pruning-collapse note.' \
     samples_after_mind sample_qc_marker_set sample_qc_shared_reference sample_qc_markers variants_after_hwe variants_ld_pruned_in sample_qc_note
@@ -176,7 +177,7 @@ mqc_table gwasqc_relatedness_summary_mqc.tsv gwasqc_relatedness_summary gwasqc_r
     relatedness_pairs_reported relatedness_duplicate_or_mz relatedness_parent_offspring relatedness_full_sibling relatedness_second_degree relatedness_third_degree relatedness_removed relatedness_removals relatedness_outliers
 
 if [ -n "$ancestry_columns" ]; then
-    mqc_table gwasqc_ancestry_summary_mqc.tsv gwasqc_ancestry_summary gwasqc_ancestry 'Ancestry' 'Study samples projected onto the reference principal components and assigned by linear discriminant analysis. The samples not assigned to the stratum label are its mismatches.' 'Summary' 'Study samples assigned per super-population against the stratum label, the unassigned, and the mismatches listed for removal.' \
+    mqc_table gwasqc_ancestry_summary_mqc.tsv gwasqc_ancestry_summary gwasqc_ancestry 'Ancestry' 'Study samples projected onto the reference principal components and assigned by the elastic-net multinomial classifier of the legacy pipeline, trained on the reference. The samples not assigned to the stratum label are its mismatches.' 'Summary' 'Study samples assigned per super-population against the stratum label, the unassigned, and the mismatches listed for removal.' \
         ancestry $ancestry_columns
 fi
 

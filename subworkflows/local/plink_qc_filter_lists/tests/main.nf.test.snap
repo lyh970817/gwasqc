@@ -24,14 +24,14 @@
                             "ancestry": "AFR",
                             "id": "study_afr"
                         },
-                        "study_afr.geno_exclude.txt:md5,d41d8cd98f00b204e9800998ecf8427e"
+                        "study_afr.rung95.geno_exclude.txt:md5,d41d8cd98f00b204e9800998ecf8427e"
                     ],
                     [
                         {
                             "ancestry": "EUR",
                             "id": "study_eur"
                         },
-                        "study_eur.geno_exclude.txt:md5,d41d8cd98f00b204e9800998ecf8427e"
+                        "study_eur.rung95.geno_exclude.txt:md5,d41d8cd98f00b204e9800998ecf8427e"
                     ]
                 ],
                 "hardy": [
@@ -190,14 +190,14 @@
                             "ancestry": "AFR",
                             "id": "study_afr"
                         },
-                        "study_afr.mind_remove.txt:md5,d41d8cd98f00b204e9800998ecf8427e"
+                        "study_afr.rung95.mind_remove.txt:md5,d41d8cd98f00b204e9800998ecf8427e"
                     ],
                     [
                         {
                             "ancestry": "EUR",
                             "id": "study_eur"
                         },
-                        "study_eur.mind_remove.txt:md5,d41d8cd98f00b204e9800998ecf8427e"
+                        "study_eur.rung95.mind_remove.txt:md5,d41d8cd98f00b204e9800998ecf8427e"
                     ]
                 ],
                 "missingness_ladder": [
@@ -206,14 +206,14 @@
                             "ancestry": "AFR",
                             "id": "study_afr"
                         },
-                        "study_afr.missingness_ladder.tsv:md5,6db4d75477a422eaf685abf58c479466"
+                        "study_afr.missingness_ladder.tsv:md5,c78b2ad52a866dbc5d16d36dc72b6cc9"
                     ],
                     [
                         {
                             "ancestry": "EUR",
                             "id": "study_eur"
                         },
-                        "study_eur.missingness_ladder.tsv:md5,6db4d75477a422eaf685abf58c479466"
+                        "study_eur.missingness_ladder.tsv:md5,c78b2ad52a866dbc5d16d36dc72b6cc9"
                     ]
                 ],
                 "smiss": [
@@ -222,14 +222,14 @@
                             "ancestry": "AFR",
                             "id": "study_afr"
                         },
-                        "study_afr.smiss:md5,d41d8cd98f00b204e9800998ecf8427e"
+                        "study_afr.rung95.smiss:md5,d41d8cd98f00b204e9800998ecf8427e"
                     ],
                     [
                         {
                             "ancestry": "EUR",
                             "id": "study_eur"
                         },
-                        "study_eur.smiss:md5,d41d8cd98f00b204e9800998ecf8427e"
+                        "study_eur.rung95.smiss:md5,d41d8cd98f00b204e9800998ecf8427e"
                     ]
                 ],
                 "smiss_hist_data": [
@@ -318,7 +318,7 @@
                 ]
             }
         ],
-        "timestamp": "2026-11-11T16:21:52.918234631",
+        "timestamp": "2026-11-12T05:05:33.604586965",
         "meta": {
             "nf-test": "0.9.5",
             "nextflow": "26.04.6"
@@ -349,14 +349,14 @@
                             "ancestry": "AFR",
                             "id": "study_afr"
                         },
-                        "study_afr.geno_exclude.txt:md5,306ebae029a8d020020a2f3978a8bf8c"
+                        "study_afr.rung95.geno_exclude.txt:md5,f385939792934edb31219d51cbf79d8f"
                     ],
                     [
                         {
                             "ancestry": "EUR",
                             "id": "study_eur"
                         },
-                        "study_eur.geno_exclude.txt:md5,3da7987f6f7096b36350eabe2e8f8882"
+                        "study_eur.rung95.geno_exclude.txt:md5,f0f3e8c5b9e33e4b48377cd4831501eb"
                     ]
                 ],
                 "hardy": [
@@ -365,14 +365,14 @@
                             "ancestry": "AFR",
                             "id": "study_afr"
                         },
-                        "study_afr.hardy:md5,48446f14b45f6fed07bec225d4f046b5"
+                        "study_afr.hardy:md5,104db322aee4fd5d1a2ddcf1c4326a4b"
                     ],
                     [
                         {
                             "ancestry": "EUR",
                             "id": "study_eur"
                         },
-                        "study_eur.hardy:md5,d3dcccb5ecf820795c42faca038c874f"
+                        "study_eur.hardy:md5,0e4cadff801db7131ac9622d19d1a142"
                     ]
                 ],
                 "hardy_x": [
@@ -413,14 +413,14 @@
                             "ancestry": "AFR",
                             "id": "study_afr"
                         },
-                        "study_afr.hwe_hist.tsv:md5,3a5cc0eefc31b5e41595ffa8b54e7201"
+                        "study_afr.hwe_hist.tsv:md5,4e076de63a8d8c1839b039fb4e96470d"
                     ],
                     [
                         {
                             "ancestry": "EUR",
                             "id": "study_eur"
                         },
-                        "study_eur.hwe_hist.tsv:md5,7accfc674606707e51697940cda292bc"
+                        "study_eur.hwe_hist.tsv:md5,c4d665b76754b66c60748b3576beb9b9"
                     ]
                 ],
                 "hwe_window_data": [
@@ -461,14 +461,14 @@
                             "ancestry": "AFR",
                             "id": "study_afr"
                         },
-                        "study_afr.mind_remove.txt:md5,517e189d70d03694e22dc434cf8d7f7d"
+                        "study_afr.rung95.mind_remove.txt:md5,517e189d70d03694e22dc434cf8d7f7d"
                     ],
                     [
                         {
                             "ancestry": "EUR",
                             "id": "study_eur"
                         },
-                        "study_eur.mind_remove.txt:md5,448301c601adc8a7c6d42a36aafd4159"
+                        "study_eur.rung95.mind_remove.txt:md5,448301c601adc8a7c6d42a36aafd4159"
                     ]
                 ],
                 "missingness_ladder": [
@@ -477,14 +477,14 @@
                             "ancestry": "AFR",
                             "id": "study_afr"
                         },
-                        "study_afr.missingness_ladder.tsv:md5,d066e418aaf6047defadc4c15887878f"
+                        "study_afr.missingness_ladder.tsv:md5,65a5f145c32c29609eaf59a503d486ef"
                     ],
                     [
                         {
                             "ancestry": "EUR",
                             "id": "study_eur"
                         },
-                        "study_eur.missingness_ladder.tsv:md5,3adcfa9ead6ef939e3a281f0e270c5f2"
+                        "study_eur.missingness_ladder.tsv:md5,428cb7a209fdb8d0342435818327cdf0"
                     ]
                 ],
                 "smiss": [
@@ -493,14 +493,14 @@
                             "ancestry": "AFR",
                             "id": "study_afr"
                         },
-                        "study_afr.smiss:md5,3bf83021eb1e89746b250509f85f3caf"
+                        "study_afr.rung95.smiss:md5,5b406101dd5ec8aa7fbcfd8d056be6a1"
                     ],
                     [
                         {
                             "ancestry": "EUR",
                             "id": "study_eur"
                         },
-                        "study_eur.smiss:md5,09c1955f2bf1ec8e48342a8a8cc2b843"
+                        "study_eur.rung95.smiss:md5,32ab6d297103045c3106321c7403f58e"
                     ]
                 ],
                 "smiss_hist_data": [
@@ -509,14 +509,14 @@
                             "ancestry": "AFR",
                             "id": "study_afr"
                         },
-                        "study_afr.smiss_hist.tsv:md5,515662d42f7b630ee4898eab4423e9b3"
+                        "study_afr.smiss_hist.tsv:md5,3e64d6a13f1e19e5f1f51784d5d2bc4e"
                     ],
                     [
                         {
                             "ancestry": "EUR",
                             "id": "study_eur"
                         },
-                        "study_eur.smiss_hist.tsv:md5,1e9cb5e58688af332a792a0e673c919c"
+                        "study_eur.smiss_hist.tsv:md5,902c4c81c13d10b03114cbfe8708cb1c"
                     ]
                 ],
                 "vmiss": [
@@ -553,7 +553,7 @@
                 ]
             }
         ],
-        "timestamp": "2026-11-11T16:20:27.756117541",
+        "timestamp": "2026-11-12T04:56:37.713884455",
         "meta": {
             "nf-test": "0.9.5",
             "nextflow": "26.04.6"

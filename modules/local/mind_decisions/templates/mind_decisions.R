@@ -5,12 +5,17 @@
 # One file is written:
 #
 #   <prefix>.mind_remove.txt   FID IID (or IID) of samples with F_MISS > threshold, one per line, for
-#                              plink2 --remove
+#                              plink2 --remove, after the carried list when one is given
+#
+# A carried list is the removal list of the previous rung of the call-rate ladder, and the report was computed
+# with it removed: its lines are written first, unchanged, so that each rung's list is the cumulative removal
+# of the ladder so far. The report cannot list a carried sample, so the two parts never overlap.
 #
 # "Exceeds" is strict, which is what plink2 `--mind` applies. Base R only, for the reason given in
 # geno_decisions.R.
 
 smiss_file <- "${smiss}"
+carried_file <- "${carried_remove_file}"
 mind_threshold <- as.numeric("${mind}")
 prefix <- "${prefix}"
 process_name <- "${task.process}"
@@ -43,9 +48,11 @@ sample_rates <- as.numeric(smiss[["F_MISS"]])
 
 # plink2 `--remove` reads FID IID pairs, or bare IIDs when the report carries no FID column.
 sample_columns <- intersect(c("FID", "IID"), names(smiss))
+writeLines(if (nzchar(carried_file)) readLines(carried_file) else character(0), paste0(prefix, ".mind_remove.txt"))
 write.table(
     smiss[!is.na(sample_rates) & sample_rates > mind_threshold, sample_columns, drop = FALSE],
     paste0(prefix, ".mind_remove.txt"),
+    append = TRUE,
     quote = FALSE,
     sep = " ",
     row.names = FALSE,

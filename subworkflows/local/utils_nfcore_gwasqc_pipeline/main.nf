@@ -38,6 +38,9 @@ workflow PIPELINE_INITIALISATION {
     ancestry_remove_mismatched // boolean: Under apply_sample_removals, remove the samples not assigned to the stratum's ancestry
     sample_qc_marker_set //  string: Marker set of the sample checks, auto, study or shared
     small_n_threshold // integer: Under auto, the post-mind sample count below which a stratum uses the shared marker set
+    missingness_mode //  string: How the missingness thresholds are applied, iterative or single
+    geno //  number: Maximum per-variant missing-call rate
+    mind //  number: Maximum per-sample missing-call rate
     help // boolean: Display help message and exit
     help_full // boolean: Show the full help message
     show_hidden // boolean: Show hidden parameters in the help message
@@ -103,6 +106,16 @@ workflow PIPELINE_INITIALISATION {
     UTILS_NFCORE_PIPELINE(
         nextflow_cli_args
     )
+
+    //
+    // Validate the missingness thresholds against the mode that applies them
+    //
+    // The iterative mode applies the legacy call-rate ladder, which steps whole call-rate percentages from 90
+    // and applies one threshold to variants and samples at each rung, so the last rung it applies is named by
+    // a geno and mind that are equal and a whole percentage on the ladder.
+    if (missingness_mode == 'iterative') {
+        validateIterativeMissingness(geno, mind)
+    }
 
     //
     // Validate the reference assets and read the super-population vocabulary of the population table
@@ -227,6 +240,19 @@ def validateAncestryLabel(meta, bed, bim, fam, super_pops, fatal) {
         log.warn("[nf-core/gwasqc]: ${message}; every sample of the stratum will be listed as an ancestry mismatch")
     }
     return [meta, bed, bim, fam]
+}
+
+//
+// Reject, before anything runs, thresholds the iterative ladder cannot apply: its last rung is the call rate
+// 1 - geno, which must be a whole percentage from 90 to 99, and a rung applies one threshold to variants and
+// samples, so mind must equal geno.
+//
+def validateIterativeMissingness(geno, mind) {
+    def call_rate = 100 * (1 - (geno as double))
+    def rung = Math.round(call_rate) as int
+    if (Math.abs(call_rate - rung) > 1e-9 || rung < 90 || rung > 99 || Math.abs((geno as double) - (mind as double)) > 1e-12) {
+        error("[nf-core/gwasqc] ERROR: --missingness_mode iterative applies the call-rate ladder from 90 % up to the call rate 1 - --geno, with one threshold for variants and samples at each rung, so --geno and --mind must be equal and one of 0.01, 0.02, ..., 0.10 (got --geno ${geno}, --mind ${mind}); choose such a pair, or --missingness_mode single for any other")
+    }
 }
 
 //

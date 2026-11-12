@@ -37,7 +37,7 @@ nextflow_process {
         when {
             process {
                 """
-                input[0] = PLINK2_MISSING.out.vmiss.map { meta, vmiss -> [meta, vmiss, 0.10] }
+                input[0] = PLINK2_MISSING.out.vmiss.map { meta, vmiss -> [meta, vmiss, 0.10, []] }
                 """
             }
         }
@@ -56,7 +56,7 @@ nextflow_process {
         when {
             process {
                 """
-                input[0] = PLINK2_MISSING.out.vmiss.map { meta, vmiss -> [meta, vmiss, 0.02] }
+                input[0] = PLINK2_MISSING.out.vmiss.map { meta, vmiss -> [meta, vmiss, 0.02, []] }
                 """
             }
         }
@@ -79,7 +79,7 @@ nextflow_process {
                 // A missing required column is a failure, never an empty exclusion list.
                 def report = file("${workDir}/no_rate.vmiss")
                 report.text = '#CHROM\\tID\\tMISSING_CT\\tOBS_CT\\n1\\trs1\\t0\\t125\\n'
-                input[0] = [ [ id:'no_rate' ], report, 0.05 ]
+                input[0] = [ [ id:'no_rate' ], report, 0.05, [] ]
                 """
             }
         }
@@ -105,7 +105,7 @@ nextflow_process {
                     ['1', '007', '1', '125', '0.008'].join('\\t'),
                     ['1', '0010', '25', '125', '0.2'].join('\\t'),
                 ].join('\\n') + '\\n'
-                input[0] = [ [ id:'numeric' ], report, 0.05 ]
+                input[0] = [ [ id:'numeric' ], report, 0.05, [] ]
                 """
             }
         }
@@ -118,6 +118,34 @@ nextflow_process {
         }
     }
 
+    test("synthetic - carried list of an earlier rung") {
+
+        when {
+            process {
+                """
+                // A rung of the call-rate ladder: the report was computed without the carried variants, and the
+                // list written is the carried one followed by this rung's own exclusions.
+                def report = file("${workDir}/rung.vmiss")
+                report.text = [
+                    ['#CHROM', 'ID', 'MISSING_CT', 'OBS_CT', 'F_MISS'].join('\\t'),
+                    ['1', 'rs3', '8', '100', '0.08'].join('\\t'),
+                    ['1', 'rs4', '2', '100', '0.02'].join('\\t'),
+                ].join('\\n') + '\\n'
+                def carried = file("${workDir}/rung90.geno_exclude.txt")
+                carried.text = 'rs1\\nrs2\\n'
+                input[0] = [ [ id:'rung' ], report, 0.05, carried ]
+                """
+            }
+        }
+
+        then {
+            assertAll(
+                { assert process.success },
+                { assert path(process.out.variant_exclude.get(0).get(1)).readLines() == ['rs1', 'rs2', 'rs3'] },
+            )
+        }
+    }
+
     test("study_eur - stub") {
 
         options "-stub"
@@ -125,7 +153,7 @@ nextflow_process {
         when {
             process {
                 """
-                input[0] = PLINK2_MISSING.out.vmiss.map { meta, vmiss -> [meta, vmiss, 0.05] }
+                input[0] = PLINK2_MISSING.out.vmiss.map { meta, vmiss -> [meta, vmiss, 0.05, []] }
                 """
             }
         }

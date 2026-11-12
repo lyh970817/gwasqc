@@ -26,6 +26,12 @@ input:
     - geno:
         type: float
         description: Variants whose missing-call rate exceeds this value are listed for exclusion; tuple-local so that one report can be listed at several thresholds
+    - carried_exclude:
+        type: file
+        description: Optional exclusion list of the previous rung of the call-rate ladder, one variant ID per line, whose variants the report was computed without; written first, unchanged, so that the output is the ladder's cumulative exclusion list. Pass [] when there is none
+        pattern: "*.geno_exclude.txt"
+        ontologies:
+          - edam: "http://edamontology.org/format_2330" # Text
 output:
   variant_exclude:
     - - meta:
@@ -33,7 +39,7 @@ output:
           description: Metadata map propagated from input
       - "${prefix}.geno_exclude.txt":
           type: file
-          description: One variant ID per line for plink2 --exclude; empty when no variant exceeds the geno threshold
+          description: One variant ID per line for plink2 --exclude, the carried list first; empty when nothing is carried and no variant exceeds the geno threshold
           pattern: "*.geno_exclude.txt"
           ontologies:
             - edam: "http://edamontology.org/format_2330" # Text

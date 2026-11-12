@@ -9,74 +9,26 @@ nextflow_process {
     tag "modules_local"
     tag "missingness_ladder"
 
-    // Two rungs stand in for the pipeline's ten. The module only reads the reports it is given, so both
-    // per-rung sample reports are computed on the unfiltered fixture stratum under distinct prefixes; the
-    // subworkflow test covers the real chain, where each rung's report excludes that rung's variants. The
-    // planted defects (fixture README): twenty variants above F_MISS 0.10, samples EUR_S040 and EUR_S041 at
-    // 0.15 and 0.22, EUR_S042 at 0.05, the next sample at 0.0083.
-    setup {
-        run("PLINK2_MISSING") {
-            script "../../plink2/missing/main.nf"
-            process {
-                """
-                input[0] = [
-                    [ id:'study_eur', ancestry:'EUR' ],
-                    file(params.pipelines_testdata_base_path + 'data/gwasqc/genotypes/study_eur.bed', checkIfExists: true),
-                    file(params.pipelines_testdata_base_path + 'data/gwasqc/genotypes/study_eur.bim', checkIfExists: true),
-                    file(params.pipelines_testdata_base_path + 'data/gwasqc/genotypes/study_eur.fam', checkIfExists: true),
-                    [],
-                    [],
-                    [],
-                    [],
-                ]
-                """
-            }
-        }
-        run("PLINK2_MISSING", alias: "PLINK2_MISSING_RUNG90") {
-            script "../../plink2/missing/main.nf"
-            process {
-                """
-                input[0] = [
-                    [ id:'study_eur', ancestry:'EUR' ],
-                    file(params.pipelines_testdata_base_path + 'data/gwasqc/genotypes/study_eur.bed', checkIfExists: true),
-                    file(params.pipelines_testdata_base_path + 'data/gwasqc/genotypes/study_eur.bim', checkIfExists: true),
-                    file(params.pipelines_testdata_base_path + 'data/gwasqc/genotypes/study_eur.fam', checkIfExists: true),
-                    [],
-                    [],
-                    [],
-                    [],
-                ]
-                """
-            }
-        }
-        run("PLINK2_MISSING", alias: "PLINK2_MISSING_RUNG99") {
-            script "../../plink2/missing/main.nf"
-            process {
-                """
-                input[0] = [
-                    [ id:'study_eur', ancestry:'EUR' ],
-                    file(params.pipelines_testdata_base_path + 'data/gwasqc/genotypes/study_eur.bed', checkIfExists: true),
-                    file(params.pipelines_testdata_base_path + 'data/gwasqc/genotypes/study_eur.bim', checkIfExists: true),
-                    file(params.pipelines_testdata_base_path + 'data/gwasqc/genotypes/study_eur.fam', checkIfExists: true),
-                    [],
-                    [],
-                    [],
-                    [],
-                ]
-                """
-            }
-        }
-    }
-
-    test("study_eur - rungs 90 and 99") {
+    // Three cumulative rungs of a synthetic stratum of ten variants and five samples stand in for the
+    // pipeline's ten: rung 90 excludes v1 and removes s1; rung 91 adds v2 and nothing else; rung 92 adds s2.
+    // The module only counts the lists, so the subworkflow test covers the real chain.
+    test("synthetic - three cumulative rungs") {
 
         when {
             process {
                 """
-                input[0] = PLINK2_MISSING.out.vmiss
-                    .join(PLINK2_MISSING_RUNG90.out.smiss)
-                    .join(PLINK2_MISSING_RUNG99.out.smiss)
-                    .map { meta, vmiss, smiss90, smiss99 -> [meta, vmiss, [90, 99], [smiss90, smiss99]] }
+                def snplist = file("${workDir}/stratum.maf.snplist")
+                snplist.text = (1..10).collect { k -> 'v' + k }.join('\\n') + '\\n'
+                def fam = file("${workDir}/stratum.fam")
+                fam.text = (1..5).collect { k -> 's' + k + ' s' + k + ' 0 0 1 -9' }.join('\\n') + '\\n'
+                def lists = [
+                    90: [['v1'], ['s1 s1']],
+                    91: [['v1', 'v2'], ['s1 s1']],
+                    92: [['v1', 'v2'], ['s1 s1', 's2 s2']],
+                ]
+                def geno = lists.collect { rate, pair -> def f = file("${workDir}/stratum.rung" + rate + ".geno_exclude.txt"); f.text = pair[0].join('\\n') + '\\n'; f }
+                def mind = lists.collect { rate, pair -> def f = file("${workDir}/stratum.rung" + rate + ".mind_remove.txt"); f.text = pair[1].join('\\n') + '\\n'; f }
+                input[0] = [ [ id:'stratum' ], snplist, fam, [90, 91, 92], geno, mind ]
                 """
             }
         }
@@ -85,49 +37,38 @@ nextflow_process {
             def ladder = path(process.out.ladder.get(0).get(1)).readLines().collect { line -> line.split('\t').toList() }
             assertAll(
                 { assert process.success },
-                { assert ladder.size() == 3 },
-                { assert ladder[0] == ['call_rate', 'missing_threshold', 'variants_removed', 'variants_remaining', 'samples_removed', 'samples_remaining'] },
-                { assert ladder[1] == ['90', '0.1', '20', '3942', '2', '123'] },
-                { assert ladder[2][0..1] == ['99', '0.01'] },
-                { assert (ladder[2][2] as Integer) > 20 },
-                { assert ladder[2][4..5] == ['3', '122'] },
-                { assert snapshot(process.out.ladder, process.out.versions).match() },
+                { assert ladder[0] == ['step', 'call_rate', 'filter', 'missing_threshold', 'variants_removed', 'variants_remaining', 'samples_removed', 'samples_remaining'] },
+                // The legacy Iterative_Missingness table: a variant and a sample step per rung, each applied to
+                // what the step before it left.
+                { assert ladder.drop(1) == [
+                    ['90', '90', 'geno', '0.1', '1', '9', '0', '5'],
+                    ['90/90', '90', 'mind', '0.1', '0', '9', '1', '4'],
+                    ['90/91', '91', 'geno', '0.09', '1', '8', '0', '4'],
+                    ['91/91', '91', 'mind', '0.09', '0', '8', '0', '4'],
+                    ['91/92', '92', 'geno', '0.08', '0', '8', '0', '4'],
+                    ['92/92', '92', 'mind', '0.08', '0', '8', '1', '3'],
+                ] },
+                { assert snapshot(process.out).match() },
             )
         }
     }
 
-    test("study_eur - rung report without F_MISS fails") {
-
-        when {
-            process {
-                """
-                // A missing required column in any rung's report is a failure, never a rung of zeros.
-                def report = file("${workDir}/no_rate.ladder90.smiss")
-                report.text = '#FID\\tIID\\tMISSING_CT\\tOBS_CT\\nS1\\tS1\\t0\\t3962\\n'
-                input[0] = PLINK2_MISSING.out.vmiss.map { meta, vmiss -> [meta, vmiss, [90], [report]] }
-                """
-            }
-        }
-
-        then {
-            assertAll(
-                { assert process.failed },
-                { assert process.errorReport.contains('must carry an F_MISS column') },
-            )
-        }
-    }
-
-    test("study_eur - stub") {
+    test("synthetic - stub") {
 
         options "-stub"
 
         when {
             process {
                 """
-                input[0] = PLINK2_MISSING.out.vmiss
-                    .join(PLINK2_MISSING_RUNG90.out.smiss)
-                    .join(PLINK2_MISSING_RUNG99.out.smiss)
-                    .map { meta, vmiss, smiss90, smiss99 -> [meta, vmiss, [90, 99], [smiss90, smiss99]] }
+                def snplist = file("${workDir}/stratum.maf.snplist")
+                snplist.text = 'v1\\n'
+                def fam = file("${workDir}/stratum.fam")
+                fam.text = 's1 s1 0 0 1 -9\\n'
+                def geno = file("${workDir}/stratum.rung90.geno_exclude.txt")
+                geno.text = ''
+                def mind = file("${workDir}/stratum.rung90.mind_remove.txt")
+                mind.text = ''
+                input[0] = [ [ id:'stratum' ], snplist, fam, [90], [geno], [mind] ]
                 """
             }
         }
@@ -135,6 +76,7 @@ nextflow_process {
         then {
             assertAll(
                 { assert process.success },
+                { assert path(process.out.ladder.get(0).get(1)).readLines() == ['step\tcall_rate\tfilter\tmissing_threshold\tvariants_removed\tvariants_remaining\tsamples_removed\tsamples_remaining'] },
                 { assert snapshot(sanitizeOutput(process.out)).match() },
             )
         }

@@ -25,7 +25,13 @@ input:
           - edam: "http://edamontology.org/format_3475" # TSV
     - mind:
         type: float
-        description: Samples whose missing-call rate exceeds this value are listed for removal
+        description: Samples whose missing-call rate exceeds this value are listed for removal; tuple-local so that one stratum can be listed at several thresholds
+    - carried_remove:
+        type: file
+        description: Optional removal list of the previous rung of the call-rate ladder, in the output's format, whose samples the report was computed without; written first, unchanged, so that the output is the ladder's cumulative removal list. Pass [] when there is none
+        pattern: "*.mind_remove.txt"
+        ontologies:
+          - edam: "http://edamontology.org/format_2330" # Text
 output:
   sample_remove:
     - - meta:
@@ -33,7 +39,7 @@ output:
           description: Metadata map propagated from input
       - "${prefix}.mind_remove.txt":
           type: file
-          description: One space-separated FID IID pair, or bare IID, per line for plink2 --remove; empty when no sample exceeds the mind threshold
+          description: One space-separated FID IID pair, or bare IID, per line for plink2 --remove, the carried list first; empty when nothing is carried and no sample exceeds the mind threshold
           pattern: "*.mind_remove.txt"
           ontologies:
             - edam: "http://edamontology.org/format_2330" # Text

@@ -96,7 +96,7 @@
             "title": "QC threshold options",
             "type": "object",
             "fa_icon": "fas fa-filter",
-            "description": "Thresholds of the variant filter chain. Every comparison is strict, as in plink2 itself.",
+            "description": "Thresholds and order of the variant filter chain. Every comparison is strict, as in plink2 itself.",
             "properties": {
                 "maf": {
                     "type": "number",
@@ -112,7 +112,8 @@
                     "minimum": 0,
                     "maximum": 1,
                     "description": "Maximum per-variant missing-call rate; variants whose rate exceeds this value are listed for exclusion.",
-                    "fa_icon": "fas fa-percentage"
+                    "fa_icon": "fas fa-percentage",
+                    "help_text": "Under `--missingness_mode iterative` (the default) this is the last rung of the call-rate ladder: it must equal `--mind` and be a whole percentage from 0.01 to 0.10, and the ladder is applied from 0.10 down to it."
                 },
                 "mind": {
                     "type": "number",
@@ -120,7 +121,8 @@
                     "minimum": 0,
                     "maximum": 1,
                     "description": "Maximum per-sample missing-call rate; samples whose rate exceeds this value are listed for removal.",
-                    "fa_icon": "fas fa-percentage"
+                    "fa_icon": "fas fa-percentage",
+                    "help_text": "Under `--missingness_mode iterative` (the default) it must equal `--geno`."
                 },
                 "hwe": {
                     "type": "number",
@@ -129,6 +131,14 @@
                     "maximum": 1,
                     "description": "Hardy-Weinberg equilibrium exact-test p-value threshold; variants with a p-value below this value are listed for exclusion.",
                     "fa_icon": "fas fa-percentage"
+                },
+                "missingness_mode": {
+                    "type": "string",
+                    "default": "iterative",
+                    "enum": ["iterative", "single"],
+                    "description": "How the variant and sample missingness thresholds are applied: `iterative` applies the call-rate ladder from 90 % up to the call rate 1 - `--geno`, each rung's variant and then sample threshold on the previous rung's result, as the legacy GLAD pipeline applied it; `single` applies `--geno` and then `--mind` once.",
+                    "help_text": "`iterative` needs `--geno` and `--mind` to be equal and a whole percentage from 0.01 to 0.10: the legacy ladder steps whole call-rate percentages and applies one threshold to variants and samples at each rung. `single` takes any pair of thresholds. The call-rate ladder table is computed and published in both modes.",
+                    "fa_icon": "fas fa-stream"
                 }
             }
         },

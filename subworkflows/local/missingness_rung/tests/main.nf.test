@@ -1,0 +1,147 @@
+nextflow_workflow {
+
+    name "Test Workflow MISSINGNESS_RUNG"
+    script "../main.nf"
+    workflow "MISSINGNESS_RUNG"
+
+    tag "subworkflows"
+    tag "subworkflows_local"
+    tag "plink2/missing"
+    tag "geno_decisions"
+    tag "mind_decisions"
+    tag "subworkflows/missingness_rung"
+
+    // The missing-block copy of the EUR stratum: seven samples miss every variant of chromosomes 1 and 2, so the
+    // block variants sit at F_MISS 0.056 and the block samples at 0.156 over the whole variant set.
+    test("gwasqc fixtures - missing-block copy - first rung") {
+
+        when {
+            workflow {
+                """
+                input[0] = channel.of(
+                    [
+                        [ id:'study_eur_missing_block', ancestry:'EUR' ],
+                        file(params.pipelines_testdata_base_path + 'data/gwasqc/missing_block/study_eur_missing_block.bed', checkIfExists: true),
+                        file(params.pipelines_testdata_base_path + 'data/gwasqc/missing_block/study_eur_missing_block.bim', checkIfExists: true),
+                        file(params.pipelines_testdata_base_path + 'data/gwasqc/missing_block/study_eur_missing_block.fam', checkIfExists: true),
+                        [],
+                        [],
+                        [],
+                    ]
+                )
+                input[1] = 90
+                """
+            }
+        }
+
+        then {
+            def lists = workflow.out.lists.get(0)
+            def geno_exclude = path(lists[5]).readLines()
+            def mind_remove = path(lists[6]).readLines()
+            def smiss = path(workflow.out.smiss.get(0)[1]).readLines().drop(1).collect { line -> line.split('\t') }
+            def block_samples = (100..106).collect { n -> "EUR_S${n} EUR_S${n}".toString() }
+            assertAll(
+                { assert workflow.success },
+                // The rung names itself in the metadata and in the list names.
+                { assert lists[0] == [id: 'study_eur_missing_block', ancestry: 'EUR', call_rate: 90] },
+                { assert path(lists[5]).fileName.toString() == 'study_eur_missing_block.rung90.geno_exclude.txt' },
+                { assert path(lists[6]).fileName.toString() == 'study_eur_missing_block.rung90.mind_remove.txt' },
+                // At call rate 90 only the twenty planted variants fall; the sample step then runs over the
+                // variants that are left, every sample still present, and removes the two planted samples and
+                // the seven block samples.
+                { assert geno_exclude.size() == 20 },
+                { assert mind_remove.sort() == (['EUR_S040 EUR_S040', 'EUR_S041 EUR_S041'] + block_samples).sort() },
+                { assert smiss.size() == 125 },
+                { assert smiss.collect { fields -> fields[3] as Integer }.max() == 3962 - 20 },
+                { assert snapshot(sanitizeOutput(workflow.out)).match() },
+            )
+        }
+    }
+
+    // The next rung starts from the first rung's lists: its reports leave out what they name, and its own lists
+    // repeat them before adding to them.
+    test("gwasqc fixtures - missing-block copy - second rung on the first rung's lists") {
+
+        setup {
+            run("MISSINGNESS_RUNG", alias: "MISSINGNESS_RUNG_FIRST") {
+                script "../main.nf"
+                workflow {
+                    """
+                    input[0] = channel.of(
+                        [
+                            [ id:'study_eur_missing_block', ancestry:'EUR' ],
+                            file(params.pipelines_testdata_base_path + 'data/gwasqc/missing_block/study_eur_missing_block.bed', checkIfExists: true),
+                            file(params.pipelines_testdata_base_path + 'data/gwasqc/missing_block/study_eur_missing_block.bim', checkIfExists: true),
+                            file(params.pipelines_testdata_base_path + 'data/gwasqc/missing_block/study_eur_missing_block.fam', checkIfExists: true),
+                            [],
+                            [],
+                            [],
+                        ]
+                    )
+                    input[1] = 90
+                    """
+                }
+            }
+        }
+
+        when {
+            workflow {
+                """
+                input[0] = MISSINGNESS_RUNG_FIRST.out.lists
+                input[1] = 95
+                """
+            }
+        }
+
+        then {
+            def lists = workflow.out.lists.get(0)
+            def geno_exclude = path(lists[5]).readLines()
+            def mind_remove = path(lists[6]).readLines()
+            def smiss = path(workflow.out.smiss.get(0)[1]).readLines().drop(1).collect { line -> line.split('\t') }
+            assertAll(
+                { assert workflow.success },
+                // The later rung overwrites the earlier one in the metadata.
+                { assert lists[0] == [id: 'study_eur_missing_block', ancestry: 'EUR', call_rate: 95] },
+                // The nine samples the first rung removed are in neither report and are carried in the list,
+                // which gains no sample; with the block samples gone the block variants are complete and stay,
+                // and five variants join the twenty carried ones.
+                { assert smiss.size() == 125 - 9 },
+                { assert mind_remove.sort() == (['EUR_S040 EUR_S040', 'EUR_S041 EUR_S041'] + (100..106).collect { n -> "EUR_S${n} EUR_S${n}".toString() }).sort() },
+                { assert geno_exclude.size() == 25 },
+                { assert smiss.collect { fields -> fields[3] as Integer }.max() == 3962 - geno_exclude.size() },
+                { assert snapshot(sanitizeOutput(workflow.out)).match() },
+            )
+        }
+    }
+
+    test("gwasqc fixtures - missing-block copy - first rung - stub") {
+
+        options "-stub"
+
+        when {
+            workflow {
+                """
+                input[0] = channel.of(
+                    [
+                        [ id:'study_eur_missing_block', ancestry:'EUR' ],
+                        file(params.pipelines_testdata_base_path + 'data/gwasqc/missing_block/study_eur_missing_block.bed', checkIfExists: true),
+                        file(params.pipelines_testdata_base_path + 'data/gwasqc/missing_block/study_eur_missing_block.bim', checkIfExists: true),
+                        file(params.pipelines_testdata_base_path + 'data/gwasqc/missing_block/study_eur_missing_block.fam', checkIfExists: true),
+                        [],
+                        [],
+                        [],
+                    ]
+                )
+                input[1] = 90
+                """
+            }
+        }
+
+        then {
+            assertAll(
+                { assert workflow.success },
+                { assert snapshot(sanitizeOutput(workflow.out)).match() },
+            )
+        }
+    }
+}
