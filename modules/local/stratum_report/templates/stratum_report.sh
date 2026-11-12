@@ -27,6 +27,8 @@ hwe=$(gawk -v value='!{hwe}' 'BEGIN { printf "%g", value }')
 ld_min_retained_fraction=$(gawk -v value='!{ld_min_retained_fraction}' 'BEGIN { printf "%g", value }')
 sample_qc_marker_set='!{meta.sample_qc_marker_set}'
 sample_qc_shared_reference='!{sample_qc_shared_reference}'
+shared_reference_used='!{shared_reference}'
+n_reference_matched='!{n_reference_matched}'
 apply_sample_removals='!{apply_sample_removals}'
 ancestry_remove_mismatched='!{ancestry_remove_mismatched}'
 fam='!{fam}'
@@ -107,12 +109,16 @@ add variants_after_hwe "$variants_after_hwe"
 # long-range LD regions, and pruning that kept fewer than the configured fraction of the QC'd variants is
 # noted, because pairwise r-squared over a handful of samples collapses the set; in shared mode there is no
 # study-side pruning and the set is the reference-pruned shared marker list, pruned on the pooled or the
-# ancestry-matched reference samples as recorded, so the pruning columns read NA, as does the reference
-# choice in study mode.
+# ancestry-matched reference samples as recorded (a matched group below 50 samples falls back to the pooled
+# panel, recorded as pooled with a note), so the pruning columns read NA, as does the reference choice in
+# study mode.
 sample_qc_note=''
 shared_reference='NA'
 if [ "$sample_qc_marker_set" = 'shared' ]; then
-    shared_reference=$sample_qc_shared_reference
+    shared_reference=$shared_reference_used
+    if [ "$sample_qc_shared_reference" = 'matched' ] && [ "$shared_reference_used" = 'pooled' ]; then
+        sample_qc_note="the stratum's super-population has $n_reference_matched reference samples, fewer than the 50 plink2 needs to prune and estimate frequencies on; the pooled reference was used for the shared markers"
+    fi
     variants_ld_pruned_in='NA'
     variants_ld_pruned_out='NA'
     variants_highld_excluded='NA'

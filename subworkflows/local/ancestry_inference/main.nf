@@ -35,9 +35,12 @@ workflow ANCESTRY_INFERENCE {
     n_pcs // value: number of principal components computed and projected
     prob_threshold // value: posterior probability at or above which a study sample is assigned
     sd_filter // value: standard deviations of the centroid rule, 0 when the rule is off
-    shared_reference // value: `pooled` or `matched`, the reference samples the shared marker set is filtered and pruned on
+    shared_reference // value: `pooled` or `matched`, the reference samples the shared marker set is filtered and pruned on; a matched group below 50 samples falls back to `pooled`
 
     main:
+
+    // plink2 refuses LD pruning and frequency estimates below this many samples
+    def min_matched_reference_samples = 50
 
     // The study fileset is never materialised: its QC'd variant set reaches the reference as the filter
     // chain's lists, and its samples are projected from the original fileset with the pruned list. The
@@ -145,24 +148,43 @@ workflow ANCESTRY_INFERENCE {
 
     def ch_reference_keep_by_id = ANCESTRY_REFERENCE_KEEP.out.sample_keep.map { meta, keep -> [meta.id, keep] }
 
+    // The reference the shared markers are chosen on, per stratum: the requested one, except that a matched
+    // group below plink2's 50-sample floor for LD pruning and frequency estimates falls back to the pooled
+    // panel. The keep list is the one place its size is known; the route carries it with the choice, so that
+    // the summary records the reference actually used and why.
+    def ch_shared_route_by_id = ch_reference_keep_by_id.map { id, keep ->
+        def n_reference_matched = keep.countLines()
+        [id, n_reference_matched, shared_reference == 'matched' && n_reference_matched >= min_matched_reference_samples ? 'matched' : 'pooled']
+    }
+
     //
     // MODULE: Filtering and LD pruning of the matched reference samples outside the regions and off the sex
-    // chromosomes, under `matched` only
+    // chromosomes, for the strata whose route is `matched`
     //
     PLINK2_INDEPPAIRWISE_MATCHED(
         ch_shared_merged_by_id
             .join(HIGHLD_EXCLUDE_REFERENCE.out.variant_exclude.filter { meta, _highld_exclude -> meta.sample_qc_marker_set == 'shared' }.map { meta, highld_exclude -> [meta.id, highld_exclude] }, by: 0, failOnDuplicate: true, failOnMismatch: true)
             .join(ch_reference_keep_by_id, by: 0, failOnDuplicate: true, failOnMismatch: true)
-            .filter { _id, _meta, _pgen, _pvar, _psam, _highld_exclude, _keep -> shared_reference == 'matched' }
-            .map { _id, meta, pgen, pvar, psam, highld_exclude, keep -> [meta, pgen, pvar, psam, [], highld_exclude, keep, []] },
+            .join(ch_shared_route_by_id, by: 0, failOnDuplicate: true, failOnMismatch: true)
+            .filter { _id, _meta, _pgen, _pvar, _psam, _highld_exclude, _keep, _n_reference_matched, route -> route == 'matched' }
+            .map { _id, meta, pgen, pvar, psam, highld_exclude, keep, _n_reference_matched, _route -> [meta, pgen, pvar, psam, [], highld_exclude, keep, []] },
         ld_window_size,
         ld_step_size,
         ld_r2,
     )
 
-    def ch_shared_markers = shared_reference == 'matched'
-        ? PLINK2_INDEPPAIRWISE_MATCHED.out.prune_in
-        : PLINK2_INDEPPAIRWISE_REFERENCE.out.prune_in.filter { meta, _prune_in -> meta.sample_qc_marker_set == 'shared' }
+    // The stratum's map gains the reference used and the size of its matched group. Each list is joined to
+    // the strata whose route chose it; the pooled list exists for every stratum, so its join is the one place
+    // where unmatched keys are the strata of the other route and are dropped by design.
+    def ch_matched_markers = PLINK2_INDEPPAIRWISE_MATCHED.out.prune_in
+        .map { meta, prune_in -> [meta.id, meta, prune_in] }
+        .join(ch_shared_route_by_id.filter { _id, _n_reference_matched, route -> route == 'matched' }, by: 0, failOnDuplicate: true, failOnMismatch: true)
+    def ch_pooled_markers = PLINK2_INDEPPAIRWISE_REFERENCE.out.prune_in
+        .map { meta, prune_in -> [meta.id, meta, prune_in] }
+        .join(ch_shared_route_by_id.filter { _id, _n_reference_matched, route -> route == 'pooled' }, by: 0, failOnDuplicate: true)
+    def ch_shared_markers = ch_matched_markers
+        .mix(ch_pooled_markers)
+        .map { _id, meta, prune_in, n_reference_matched, route -> [meta + [shared_reference: route, n_reference_matched: n_reference_matched], prune_in] }
 
     def ch_pruned_reference_by_id = ch_merged_by_id.join(PLINK2_INDEPPAIRWISE_REFERENCE.out.prune_in.map { meta, prune_in -> [meta.id, prune_in] }, by: 0, failOnDuplicate: true, failOnMismatch: true)
 
@@ -214,7 +236,7 @@ workflow ANCESTRY_INFERENCE {
     highld_exclude        = HIGHLD_EXCLUDE_REFERENCE.out.variant_exclude // channel: [ val(meta), path(highld_exclude) ]
     prune_in              = PLINK2_INDEPPAIRWISE_REFERENCE.out.prune_in // channel: [ val(meta), path(prune_in) ]
     reference_keep        = ANCESTRY_REFERENCE_KEEP.out.sample_keep // channel: [ val(meta), path(reference_keep) ], the strata in shared mode
-    shared_markers        = ch_shared_markers // channel: [ val(meta), path(shared_markers) ], the strata in shared mode: the pooled or the matched prune.in
+    shared_markers        = ch_shared_markers // channel: [ val(meta), path(shared_markers) ], the strata in shared mode: the pooled or the matched prune.in; meta carries shared_reference, the reference used, and n_reference_matched
     allele_weights        = PLINK2_PCAWTS.out.allele_weights // channel: [ val(meta), path(allele_weights) ]
     eigenval              = PLINK2_PCAWTS.out.eigenval // channel: [ val(meta), path(eigenval) ]
     reference_scores      = PLINK2_SCORE_REFERENCE.out.sscore // channel: [ val(meta), path(sscore) ]

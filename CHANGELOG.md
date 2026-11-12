@@ -83,11 +83,18 @@ The VCZ format route is deferred to its own issue, and pre-QC batch merging is o
   (`sample_qc_marker_set`, `sample_qc_markers`, `sample_qc_note`) and in a MultiQC section, and a `study`-mode
   stratum whose pruning kept fewer than `ld_min_retained_fraction` of its QC'd variants is noted.
 - Choice of the reference samples the `shared` marker set is filtered and pruned on
-  (`sample_qc_shared_reference`): `pooled`, the default, takes the ancestry route's pruned markers over the
-  whole panel; `matched` reruns `--maf`, `--geno` and `--indep-pairwise` outside the long-range LD regions on
-  the reference samples of the stratum's own super-population, published as `<id>.ancestry_matched.prune.in`.
-  The choice is recorded per stratum in `gwasqc_summary.tsv` (`sample_qc_shared_reference`) and in the MultiQC
-  marker-set section.
+  (`sample_qc_shared_reference`): `matched`, the default, reruns `--maf`, `--geno` and `--indep-pairwise`
+  outside the long-range LD regions on the reference samples of the stratum's own super-population, published
+  as `<id>.ancestry_matched.prune.in`; `pooled` takes the ancestry route's pruned markers over the whole panel.
+  A super-population with fewer than 50 reference samples, below which plink2 refuses LD pruning and frequency
+  estimates, uses the pooled panel for that stratum, recorded as `pooled` with a `sample_qc_note`. The reference
+  used is recorded per stratum in `gwasqc_summary.tsv` (`sample_qc_shared_reference`) and in the MultiQC
+  marker-set section. `matched` is the default because of the first real run on CREATE (MID, 11 study samples
+  against 136 matched reference samples; AMR, 70 against 412): pooled filtering and pruning left 57 MID
+  heterozygosity markers monomorphic in the matched reference (none under `matched`), the matched
+  heterozygosity F agreed better with the predecessor pipeline's estimates (r 0.983 against 0.969 for MID,
+  0.886 against 0.724 for AMR) at a cost of 6-8 % of the pruned markers (MID 69,057 against 73,681; AMR 62,562
+  against 67,879), and the sex check and ancestry outputs were byte-identical between the modes.
 - Exclusion of the variants on non-standard contigs: a variant whose `.bim` chromosome code is not one of
   1-22, X, Y, XY and MT (numeric or lettered, in either case, with or without a `chr` prefix, and `PAR1`/`PAR2`
   for the pseudo-autosomal regions), such as a GRCh38 alt or random contig, is listed by the pipeline-owned

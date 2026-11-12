@@ -97,13 +97,11 @@ Decided 2026-09-20 with the foundation milestone of the legacy port; the tuple c
   11-sample legacy stratum kept 0.5 %); nothing is re-decided.
 - **[MUST]** In the `shared` mode nothing is pruned on the study side. Heterozygosity and KING relatedness run on
   a marker set the ancestry route builds from the harmonised merged reference, outside the long-range LD
-  regions and on the autosomes, chosen by `sample_qc_shared_reference`: `pooled` (the default until real small
-  strata have been measured, issue #5) is the route's own post-high-LD `prune.in`, filtered and pruned on
-  every reference sample; `matched` reruns `--maf`, `--geno` and `--indep-pairwise` in one stats-only run on
+  regions and on the autosomes, chosen by `sample_qc_shared_reference`: `matched` (the default, issue #5) reruns `--maf`, `--geno` and `--indep-pairwise` in one stats-only run on
   the reference samples of the stratum's super-population (`--keep`, verified on 2.0.0a.6.9 to compute the
   filters over the kept samples and to equal the two-step extract-then-prune). The pooled filters therefore
   sit on the pruning run, not on the restriction, so that a matched set is not pre-restricted by them. The
-  ancestry decomposition uses the pooled set either way. The heterozygosity report of the study and that of the reference samples of the
+  ancestry decomposition uses the pooled set either way. `pooled` is the route's own post-high-LD `prune.in`, filtered and pruned on every reference sample, and is also the fallback for a stratum whose super-population has fewer than 50 reference samples, below which plink2 refuses the pruning; the route decides this once from the line count of the keep list and records the reference used in the stratum's meta, whence the summary reports it. The heterozygosity report of the study and that of the reference samples of the
   stratum's own super-population are computed over those markers against one `--freq` table of those reference
   samples through `--read-freq`, so that the study cannot define its own baseline and the two reports differ
   only in their samples; the sex check runs on every QC-passing chromosome X and Y variant unpruned, because

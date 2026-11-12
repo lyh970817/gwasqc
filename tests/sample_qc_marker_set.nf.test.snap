@@ -97,7 +97,7 @@
             "nextflow": "26.04.6"
         }
     },
-    "-profile test --sample_qc_marker_set shared": {
+    "-profile test --sample_qc_marker_set shared --sample_qc_shared_reference pooled": {
         "content": [
             {
                 "ANCESTRY_ASSIGN": {
@@ -228,7 +228,7 @@
             "nextflow": "26.04.6"
         }
     },
-    "-profile test --sample_qc_marker_set shared --sample_qc_shared_reference matched": {
+    "-profile test --sample_qc_marker_set shared": {
         "content": [
             {
                 "ANCESTRY_ASSIGN": {

@@ -11,8 +11,9 @@ process STRATUM_REPORT {
     // The original and the QC'd fileset members are staged apart because a stratum's input fileset may carry
     // any basename; the figures are staged by the report section they belong to. The study-side pruning lists
     // are present for a stratum in study mode and the shared marker list for one in shared mode; the other
-    // slot is an empty list.
-    tuple val(meta), path(fam, stageAs: 'input/*'), path(bim, stageAs: 'input/*'), path(contig_exclude), path(maf_snplist), path(geno_exclude), path(mind_remove), path(hwe_exclude), path(ladder), path(prune_in), path(highld_exclude), path(shared_markers), path(sex_mismatch), path(het), path(relatedness_pairs), path(relatedness_remove), path(relatedness_outliers), path(ancestry_summary), path(ancestry_mismatch_remove), path(qc_bim, stageAs: 'qc/*'), path(qc_fam, stageAs: 'qc/*'), path(variant_qc_images, stageAs: 'images/variant_qc/*'), path(sex_check_images, stageAs: 'images/sex_check/*'), path(heterozygosity_images, stageAs: 'images/heterozygosity/*'), path(relatedness_images, stageAs: 'images/relatedness/*'), path(ancestry_images, stageAs: 'images/ancestry/*')
+    // slot is an empty list. The reference used and the size of the matched group arrive with the shared
+    // marker list, NA for a stratum in study mode.
+    tuple val(meta), path(fam, stageAs: 'input/*'), path(bim, stageAs: 'input/*'), path(contig_exclude), path(maf_snplist), path(geno_exclude), path(mind_remove), path(hwe_exclude), path(ladder), path(prune_in), path(highld_exclude), path(shared_markers), val(shared_reference), val(n_reference_matched), path(sex_mismatch), path(het), path(relatedness_pairs), path(relatedness_remove), path(relatedness_outliers), path(ancestry_summary), path(ancestry_mismatch_remove), path(qc_bim, stageAs: 'qc/*'), path(qc_fam, stageAs: 'qc/*'), path(variant_qc_images, stageAs: 'images/variant_qc/*'), path(sex_check_images, stageAs: 'images/sex_check/*'), path(heterozygosity_images, stageAs: 'images/heterozygosity/*'), path(relatedness_images, stageAs: 'images/relatedness/*'), path(ancestry_images, stageAs: 'images/ancestry/*')
     val maf
     val geno
     val mind

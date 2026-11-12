@@ -222,13 +222,14 @@ workflow GWASQC {
     def ch_shared_empty_by_id = ch_strata_by_id
         .filter { _id, meta, _bed, _bim, _fam, _maf_snplist, _geno_exclude, _hwe_exclude, _mind_remove -> meta.sample_qc_marker_set == 'shared' }
         .map { id, _meta, _bed, _bim, _fam, _maf_snplist, _geno_exclude, _hwe_exclude, _mind_remove -> [id, []] }
-    // [ id, prune_in, highld_exclude, shared_markers ], one item per stratum, each slot empty for the mode
-    // that does not produce it
+    // [ id, prune_in, highld_exclude, shared_markers, shared_reference, n_reference_matched ], one item per
+    // stratum, each list slot empty for the mode that does not produce it; the reference used and the size of
+    // the matched group are those the ancestry route chose, NA for a stratum in study mode
     def ch_marker_lists_by_id = PLINK_SAMPLE_QC_LISTS.out.prune_in
         .map { meta, prune_in -> [meta.id, prune_in] }
         .mix(ch_shared_empty_by_id)
         .join(PLINK_SAMPLE_QC_LISTS.out.highld_exclude.map { meta, highld_exclude -> [meta.id, highld_exclude] }.mix(ch_shared_empty_by_id), by: 0, failOnDuplicate: true, failOnMismatch: true)
-        .join(ch_shared_reference.map { meta, shared_markers, _pgen, _pvar, _psam, _reference_keep -> [meta.id, shared_markers] }.mix(ch_study_empty_by_id), by: 0, failOnDuplicate: true, failOnMismatch: true)
+        .join(ch_shared_reference.map { meta, shared_markers, _pgen, _pvar, _psam, _reference_keep -> [meta.id, shared_markers, meta.shared_reference, meta.n_reference_matched] }.mix(ch_study_empty_by_id.map { id, empty -> [id, empty, 'NA', 'NA'] }), by: 0, failOnDuplicate: true, failOnMismatch: true)
 
     def ch_report_inputs = ch_strata_by_id
         .map { id, meta, _bed, bim, fam, maf_snplist, geno_exclude, hwe_exclude, mind_remove -> [id, meta, bim, fam, maf_snplist, geno_exclude, mind_remove, hwe_exclude] }
@@ -246,8 +247,8 @@ workflow GWASQC {
         .join(PLINK_SAMPLE_QC_LISTS.out.sex_check_hist_plot.map { meta, _pdf, png -> [meta.id, [png]] }, by: 0, failOnDuplicate: true, failOnMismatch: true)
         .join(ch_heterozygosity_images_by_id, by: 0, failOnDuplicate: true, failOnMismatch: true)
         .join(PLINK_SAMPLE_QC_LISTS.out.relatedness_hist_plot.map { meta, _pdf, png -> [meta.id, [png]] }, by: 0, failOnDuplicate: true, failOnMismatch: true)
-        .map { _id, meta, bim, fam, maf_snplist, geno_exclude, mind_remove, hwe_exclude, contig_exclude, ladder, prune_in, highld_exclude, shared_markers, sex_mismatch, het, relatedness_pairs, relatedness_remove, relatedness_outliers, ancestry_summary, ancestry_mismatch_remove, ancestry_images, qc_bim, qc_fam, variant_qc_images, sex_check_images, heterozygosity_images, relatedness_images ->
-            [meta, fam, bim, contig_exclude, maf_snplist, geno_exclude, mind_remove, hwe_exclude, ladder, prune_in, highld_exclude, shared_markers, sex_mismatch, het, relatedness_pairs, relatedness_remove, relatedness_outliers, ancestry_summary, ancestry_mismatch_remove, qc_bim, qc_fam, variant_qc_images, sex_check_images, heterozygosity_images, relatedness_images, ancestry_images]
+        .map { _id, meta, bim, fam, maf_snplist, geno_exclude, mind_remove, hwe_exclude, contig_exclude, ladder, prune_in, highld_exclude, shared_markers, shared_reference, n_reference_matched, sex_mismatch, het, relatedness_pairs, relatedness_remove, relatedness_outliers, ancestry_summary, ancestry_mismatch_remove, ancestry_images, qc_bim, qc_fam, variant_qc_images, sex_check_images, heterozygosity_images, relatedness_images ->
+            [meta, fam, bim, contig_exclude, maf_snplist, geno_exclude, mind_remove, hwe_exclude, ladder, prune_in, highld_exclude, shared_markers, shared_reference, n_reference_matched, sex_mismatch, het, relatedness_pairs, relatedness_remove, relatedness_outliers, ancestry_summary, ancestry_mismatch_remove, qc_bim, qc_fam, variant_qc_images, sex_check_images, heterozygosity_images, relatedness_images, ancestry_images]
         }
 
     STRATUM_REPORT(

@@ -169,7 +169,8 @@ are part of that route's contract.
   regions and every non-autosomal variant excluded before pruning and the reference-side `--maf` and `--geno`
   applied in the pruning run itself, chosen by `sample_qc_shared_reference`: under `pooled`, the route's own
   `PLINK2_INDEPPAIRWISE_REFERENCE` list over every reference sample; under `matched`,
-  `PLINK2_INDEPPAIRWISE_MATCHED` over the reference samples of the stratum's super-population (`--keep`). Its
+  `PLINK2_INDEPPAIRWISE_MATCHED` over the reference samples of the stratum's super-population (`--keep`),
+  except that a super-population of fewer than 50 reference samples takes the pooled list. Its
   IDs are the study's, because the merged reference was renamed to them. It is a variant list in the format
   above and reaches a sample-QC atom only through `--extract`, so it is interchangeable with the study-side
   `prune.in` at that slot.

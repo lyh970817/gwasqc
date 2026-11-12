@@ -61,15 +61,16 @@ nextflow_pipeline {
         }
     }
 
-    // `shared` forced on every stratum: the 125-sample strata take the reference-pruned markers and the
-    // ancestry-matched reference baseline too, prune nothing on the study side, and still find every
-    // planted defect.
-    test("-profile test --sample_qc_marker_set shared") {
+    // `shared` forced on every stratum with the shared markers chosen on the whole panel: the 125-sample
+    // strata take the reference-pruned markers and the ancestry-matched reference baseline too, prune nothing
+    // on the study side, and still find every planted defect.
+    test("-profile test --sample_qc_marker_set shared --sample_qc_shared_reference pooled") {
 
         when {
             params {
-                outdir               = "$outputDir"
-                sample_qc_marker_set = 'shared'
+                outdir                     = "$outputDir"
+                sample_qc_marker_set       = 'shared'
+                sample_qc_shared_reference = 'pooled'
             }
         }
 
@@ -113,16 +114,14 @@ nextflow_pipeline {
         }
     }
 
-    // `shared` forced on every stratum with the shared markers chosen on the ancestry-matched reference
-    // samples: each stratum's markers are filtered and pruned on its own super-population's 50 reference
+    // `shared` forced on every stratum under the default reference choice, `matched`: each stratum's markers are filtered and pruned on its own super-population's 50 reference
     // samples, the decomposition still runs on the pooled panel, and every planted defect is still found.
-    test("-profile test --sample_qc_marker_set shared --sample_qc_shared_reference matched") {
+    test("-profile test --sample_qc_marker_set shared") {
 
         when {
             params {
-                outdir                     = "$outputDir"
-                sample_qc_marker_set       = 'shared'
-                sample_qc_shared_reference = 'matched'
+                outdir               = "$outputDir"
+                sample_qc_marker_set = 'shared'
             }
         }
 
@@ -163,6 +162,55 @@ nextflow_pipeline {
                     removeNextflowVersion("$outputDir/pipeline_info/nf_core_gwasqc_software_mqc_versions.yml"),
                     path("${params.outdir}/gwasqc_summary.tsv")
                 ).match() }
+            )
+        }
+    }
+
+    // A reference super-population below plink2's 50-sample floor for LD pruning: the pop table is the
+    // fixture's with one CSA reference sample relabelled AMR, so the CSA group has 49. Under the default
+    // `matched` the 12-sample CSA stratum, the only one `auto` sends to the shared set, falls back to the
+    // pooled panel and says so instead of failing in plink2; the large strata are in study mode.
+    test("-profile test --reference_pop_data a CSA group of 49 reference samples") {
+
+        when {
+            params {
+                outdir              = "$outputDir"
+                reference_pop_data  = {
+                    def base = System.getenv('GWASQC_TEST_FIXTURES') ?: 'https://raw.githubusercontent.com/nf-core/test-datasets/gwasqc/'
+                    base = base.endsWith('/') ? base : "${base}/"
+                    def table = base.contains('://') ? new URL("${base}data/gwasqc/reference/ref_pop.tsv").text : new File("${base}data/gwasqc/reference/ref_pop.tsv").text
+                    def relabelled = false
+                    def rows = table.readLines().collect { line ->
+                        def fields = line.split('\t', -1)
+                        if (!relabelled && fields[3] == 'CSA') {
+                            relabelled = true
+                            fields[3] = 'AMR'
+                        }
+                        fields.join('\t')
+                    }
+                    def target = new File(System.getProperty('java.io.tmpdir'), 'nf-core-gwasqc/ref_pop_csa49.tsv')
+                    target.parentFile.mkdirs()
+                    target.text = rows.join('\n') + '\n'
+                    target.absolutePath
+                }.call()
+            }
+        }
+
+        then {
+            def lines = { relative -> new File("${params.outdir}/${relative}").readLines() }
+            def summary_rows = lines('gwasqc_summary.tsv').collect { line -> line.split('\t', -1).toList() }
+            def summary = summary_rows.drop(1).collectEntries { fields -> [(fields[0]): [summary_rows[0], fields].transpose().collectEntries { column, value -> [(column): value] }] }
+            def report = new File("${params.outdir}/multiqc/multiqc_report.html").text
+            assertAll(
+                { assert workflow.success },
+                { assert summary.study_csa.subMap(['sample_qc_marker_set', 'sample_qc_shared_reference']) == [sample_qc_marker_set: 'shared', sample_qc_shared_reference: 'pooled'] },
+                { assert summary.study_csa.sample_qc_note.startsWith("the stratum's super-population has 49 reference samples, fewer than the 50 plink2 needs") },
+                { assert summary.study_csa.sample_qc_markers == lines('qc/study_csa/ancestry/study_csa.ancestry.prune.in').size().toString() },
+                { assert !new File("${params.outdir}/qc/study_csa/ancestry/study_csa.ancestry_matched.prune.in").exists() },
+                { assert lines('qc/study_csa/heterozygosity/study_csa.reference_keep.txt').size() == 49 },
+                { assert workflow.trace.tasks().findAll { task -> task.name.contains('PLINK2_INDEPPAIRWISE_MATCHED (') }.isEmpty() },
+                { assert ['study_eur', 'study_afr'].every { id -> summary[id].sample_qc_shared_reference == 'NA' && summary[id].sample_qc_note == '' } },
+                { assert report.contains('the pooled reference was used') },
             )
         }
     }

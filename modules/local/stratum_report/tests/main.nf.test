@@ -41,6 +41,8 @@ nextflow_process {
                     write.call('test.prune.in', (1..6).collect { i -> "v\${i}" }.join('\\n') + '\\n'),
                     write.call('test.highld_exclude.txt', 'v6\\n'),
                     [],
+                    'NA',
+                    'NA',
                     write.call('test.sex_mismatch.tsv', 'FID\\tIID\\tPEDSEX\\tSNPSEX\\tSTATUS\\tF\\tYCOUNT\\tYRATE\\nS2\\tS2\\t2\\t1\\tPROBLEM\\t0.99\\t30\\t1\\n'),
                     write.call('test.het', '#FID\\tIID\\tO(HOM)\\tE(HOM)\\tOBS_CT\\tF\\nS1\\tS1\\t10\\t10\\t20\\t0.01\\nS2\\tS2\\t10\\t10\\t20\\t-0.02\\nS3\\tS3\\t10\\t10\\t20\\t0.03\\nS4\\tS4\\t10\\t10\\t20\\t0\\nS5\\tS5\\t10\\t10\\t20\\t0.5\\n'),
                     write.call('test.relatedness_pairs.tsv', 'FID1\\tIID1\\tFID2\\tIID2\\tNSNP\\tHETHET\\tIBS0\\tKINSHIP\\tDEGREE\\tRELATIONSHIP\\nS4\\tS4\\tS3\\tS3\\t5\\t0.3\\t0\\t0.5\\t0\\tduplicate_or_mz\\nS5\\tS5\\tS1\\tS1\\t5\\t0.2\\t0\\t0.25\\t1\\tparent_offspring\\nS5\\tS5\\tS2\\tS2\\t5\\t0.1\\t0.01\\t0.06\\t3\\tthird_degree\\n'),
@@ -131,6 +133,8 @@ nextflow_process {
                     [],
                     [],
                     write.call('test.ancestry.prune.in', (1..4).collect { i -> "v\${i}" }.join('\\n') + '\\n'),
+                    'pooled',
+                    '136',
                     write.call('test.sex_mismatch.tsv', 'FID\\tIID\\tPEDSEX\\tSNPSEX\\tSTATUS\\tF\\tYCOUNT\\tYRATE\\n'),
                     write.call('test.het', '#FID\\tIID\\tO(HOM)\\tE(HOM)\\tOBS_CT\\tF\\nS1\\tS1\\t10\\t10\\t20\\t0.01\\nS2\\tS2\\t10\\t10\\t20\\t-0.02\\nS3\\tS3\\t10\\t10\\t20\\t0.03\\n'),
                     write.call('test.relatedness_pairs.tsv', 'FID1\\tIID1\\tFID2\\tIID2\\tNSNP\\tHETHET\\tIBS0\\tKINSHIP\\tDEGREE\\tRELATIONSHIP\\n'),
@@ -175,6 +179,77 @@ nextflow_process {
         }
     }
 
+    // A matched request whose group fell below plink2's 50-sample floor: the route used the pooled panel, and
+    // the row records `pooled` with a note naming the size of the group.
+    test("six samples - matched reference fell back to pooled") {
+
+        when {
+            process {
+                """
+                def dir = file('stratum_report_inputs_fallback')
+                dir.mkdirs()
+                def write = { name, text -> def target = dir.resolve(name); target.text = text; target }
+                def png = { name -> def target = dir.resolve(name); target.bytes = 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII='.decodeBase64(); target }
+                input[0] = [
+                    [ id:'test', ancestry:'EUR', sample_qc_marker_set:'shared' ],
+                    write.call('input.fam', (1..6).collect { i -> "S\${i} S\${i} 0 0 1 -9" }.join('\\n') + '\\n'),
+                    write.call('input.bim', (1..10).collect { i -> "1\\tv\${i}\\t0\\t\${i * 1000}\\tA\\tG" }.join('\\n') + '\\n'),
+                    write.call('test.contig_exclude.txt', ''),
+                    write.call('test.maf.snplist', (1..9).collect { i -> "v\${i}" }.join('\\n') + '\\n'),
+                    write.call('test.geno_exclude.txt', 'v9\\n'),
+                    write.call('test.mind_remove.txt', 'S6 S6\\n'),
+                    write.call('test.hwe_exclude.txt', 'v8\\n'),
+                    write.call('test.missingness_ladder.tsv', 'call_rate\\tmissing_threshold\\tvariants_removed\\tvariants_remaining\\tsamples_removed\\tsamples_remaining\\n90\\t0.1\\t1\\t8\\t1\\t5\\n'),
+                    [],
+                    [],
+                    write.call('test.ancestry.prune.in', (1..4).collect { i -> "v\${i}" }.join('\\n') + '\\n'),
+                    'pooled',
+                    '38',
+                    write.call('test.sex_mismatch.tsv', 'FID\\tIID\\tPEDSEX\\tSNPSEX\\tSTATUS\\tF\\tYCOUNT\\tYRATE\\n'),
+                    write.call('test.het', '#FID\\tIID\\tO(HOM)\\tE(HOM)\\tOBS_CT\\tF\\nS1\\tS1\\t10\\t10\\t20\\t0.01\\nS2\\tS2\\t10\\t10\\t20\\t-0.02\\nS3\\tS3\\t10\\t10\\t20\\t0.03\\n'),
+                    write.call('test.relatedness_pairs.tsv', 'FID1\\tIID1\\tFID2\\tIID2\\tNSNP\\tHETHET\\tIBS0\\tKINSHIP\\tDEGREE\\tRELATIONSHIP\\n'),
+                    write.call('test.relatedness_remove.txt', ''),
+                    write.call('test.relatedness_outliers.txt', ''),
+                    write.call('test.ancestry_summary.tsv', 'GROUP\\tSTATUS\\tN_REFERENCE\\tN_STUDY\\tRULE\\nEUR\\tassigned\\t50\\t5\\tmax posterior >= 0.5\\nunassigned\\tbelow_threshold\\tNA\\t0\\tmax posterior < 0.5\\n'),
+                    write.call('test.ancestry_mismatch_remove.txt', ''),
+                    write.call('test.qc.bim', (1..7).collect { i -> "1\\tv\${i}\\t0\\t\${i * 1000}\\tA\\tG" }.join('\\n') + '\\n'),
+                    write.call('test.qc.fam', (1..5).collect { i -> "S\${i} S\${i} 0 0 1 -9" }.join('\\n') + '\\n'),
+                    [],
+                    [],
+                    [png.call('test.het_hist.png')],
+                    [],
+                    [],
+                ]
+                input[1] = 0.01
+                input[2] = 0.05
+                input[3] = 0.05
+                input[4] = 1e-10
+                input[5] = 0.05
+                input[6] = 'matched'
+                input[7] = false
+                input[8] = true
+                """
+            }
+        }
+
+        then {
+            def summary_lines = path(process.out.summary.get(0).get(1)).readLines().collect { line -> line.split('\t', -1).toList() }
+            def summary = [summary_lines[0], summary_lines[1]].transpose().collectEntries { column, value -> [(column): value] }
+            def fragments = process.out.multiqc.get(0).get(1).collect { fragment -> file(fragment.toString()) }.collectEntries { fragment -> [(fragment.name): fragment] }
+            assertAll(
+                { assert process.success },
+                { assert summary.subMap(['variants_after_hwe', 'variants_ld_pruned_in', 'variants_ld_pruned_out', 'variants_highld_excluded', 'variants_sample_checks']) == [variants_after_hwe: '7', variants_ld_pruned_in: 'NA', variants_ld_pruned_out: 'NA', variants_highld_excluded: 'NA', variants_sample_checks: 'NA'] },
+                { assert summary.subMap(['sample_qc_marker_set', 'sample_qc_shared_reference', 'sample_qc_markers', 'sample_qc_note']) == [sample_qc_marker_set: 'shared', sample_qc_shared_reference: 'pooled', sample_qc_markers: '4', sample_qc_note: summary.sample_qc_note] },
+                // The header is the same as in study mode, so the rows of a mixed run share one table.
+                { assert summary_lines[0].indexOf('sample_qc_marker_set') == summary_lines[0].indexOf('variants_sample_checks') + 1 },
+                { assert fragments.keySet().sort() == ['test.heterozygosity_plots_mqc.yaml', 'test.variant_qc_ladder_mqc.tsv'] },
+                { assert fragments['test.heterozygosity_plots_mqc.yaml'].text.contains('the shared marker set: 4 reference-pruned markers') },
+                { assert summary.sample_qc_shared_reference == 'pooled' },
+                { assert summary.sample_qc_note.contains('has 38 reference samples') && summary.sample_qc_note.contains('pooled reference was used') },
+            )
+        }
+    }
+
     // Study mode whose pruning collapsed: one of seven QC'd variants survives, below a 20 % floor, so the row
     // carries the note; with the floor at 0 nothing is noted.
     test("six samples - pruning collapse note") {
@@ -198,6 +273,8 @@ nextflow_process {
                     write.call('test.prune.in', 'v1\\n'),
                     write.call('test.highld_exclude.txt', ''),
                     [],
+                    'NA',
+                    'NA',
                     write.call('test.sex_mismatch.tsv', 'FID\\tIID\\tPEDSEX\\tSNPSEX\\tSTATUS\\tF\\tYCOUNT\\tYRATE\\n'),
                     write.call('test.het', '#FID\\tIID\\tO(HOM)\\tE(HOM)\\tOBS_CT\\tF\\nS1\\tS1\\t10\\t10\\t20\\t0.01\\n'),
                     write.call('test.relatedness_pairs.tsv', 'FID1\\tIID1\\tFID2\\tIID2\\tNSNP\\tHETHET\\tIBS0\\tKINSHIP\\tDEGREE\\tRELATIONSHIP\\n'),
@@ -258,6 +335,8 @@ nextflow_process {
                     write.call('test.prune.in', (1..6).collect { i -> "v\${i}" }.join('\\n') + '\\n'),
                     write.call('test.highld_exclude.txt', 'v6\\n'),
                     [],
+                    'NA',
+                    'NA',
                     write.call('test.sex_mismatch.tsv', 'FID\\tIID\\tPEDSEX\\tSNPSEX\\tSTATUS\\tF\\tYCOUNT\\tYRATE\\n'),
                     write.call('test.het', '#FID\\tIID\\tO(HOM)\\tE(HOM)\\tOBS_CT\\tF\\nS1\\tS1\\t10\\t10\\t20\\t0.01\\nS2\\tS2\\t10\\t10\\t20\\t-0.02\\nS3\\tS3\\t10\\t10\\t20\\t0.03\\n'),
                     write.call('test.relatedness_pairs.tsv', 'FID1\\tIID1\\tFID2\\tIID2\\tNSNP\\tHETHET\\tIBS0\\tKINSHIP\\tDEGREE\\tRELATIONSHIP\\nS4\\tS4\\tS3\\tS3\\t5\\t0.3\\t0\\t0.5\\t0\\tduplicate_or_mz\\n'),
@@ -325,6 +404,8 @@ nextflow_process {
                     write.call('test.prune.in', 'v1\\n'),
                     write.call('test.highld_exclude.txt', ''),
                     [],
+                    'NA',
+                    'NA',
                     write.call('test.sex_mismatch.tsv', 'FID\\tIID\\n'),
                     write.call('test.het', '#FID\\tIID\\tF\\n'),
                     write.call('test.relatedness_pairs.tsv', 'FID1\\tIID1\\tFID2\\tIID2\\tKINSHIP\\tIBS0\\tRELATIONSHIP\\n'),
