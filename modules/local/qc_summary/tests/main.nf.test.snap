@@ -8,10 +8,10 @@
                 [
                     "gwasqc_ancestry_summary_mqc.tsv:md5,c624a3cf737e96429420a6d899848592",
                     "gwasqc_heterozygosity_summary_mqc.tsv:md5,053dda5d5ea19198f3e47b3cc74a6c2e",
-                    "gwasqc_qc_summary_mqc.tsv:md5,05697df2759e37b97354eb3bf22ae01e",
-                    "gwasqc_relatedness_summary_mqc.tsv:md5,01070e79d724bbccf7f4a8a65681b21b",
+                    "gwasqc_qc_summary_mqc.tsv:md5,ca637702cd9bb43426bf4d4b4adb8131",
+                    "gwasqc_relatedness_summary_mqc.tsv:md5,1f5478d01eb5e18c129c46127e2abd0b",
                     "gwasqc_sample_qc_markers_mqc.tsv:md5,c1c33fccbbdc7e1ac9267677d2f64f16",
-                    "gwasqc_sample_removals_mqc.tsv:md5,f246adc46d4baa601b7c05fcceddc3db",
+                    "gwasqc_sample_removals_mqc.tsv:md5,ddcee972a0f0e86ec19f148d17a6d3c8",
                     "gwasqc_sex_check_summary_mqc.tsv:md5,fcbea82a70254b9a4e6102b2253bc791",
                     "gwasqc_variant_qc_filters_mqc.tsv:md5,c8dc19d241c680edebb01c57e61c2910"
                 ]
@@ -24,7 +24,7 @@
                 ]
             ]
         ],
-        "timestamp": "2026-11-12T06:44:36.672929392",
+        "timestamp": "2026-11-12T11:51:15.118591759",
         "meta": {
             "nf-test": "0.9.5",
             "nextflow": "26.04.6"

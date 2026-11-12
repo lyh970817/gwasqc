@@ -122,10 +122,10 @@
                     "nf-core/gwasqc": "v1.0.0dev"
                 }
             },
-            "gwasqc_summary.tsv:md5,48adb731933dda9b5d7f4db583aa1258",
+            "gwasqc_summary.tsv:md5,f04471e43976f652c52ae1c906087c29",
             "study_eur_alt.contig_exclude.txt:md5,e72b8b8ca4c23bff6d77463f8a3c10e4"
         ],
-        "timestamp": "2026-11-12T08:10:20.30132827",
+        "timestamp": "2026-11-12T12:26:11.828620844",
         "meta": {
             "nf-test": "0.9.5",
             "nextflow": "26.04.6"
