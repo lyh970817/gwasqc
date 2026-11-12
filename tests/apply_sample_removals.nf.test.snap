@@ -71,6 +71,9 @@
                 "PLINK2_INDEPPAIRWISE": {
                     "plink2": "2.0.0-a.6.9LM"
                 },
+                "PLINK2_INDEPPAIRWISE_MATCHED": {
+                    "plink2": "2.0.0-a.6.9LM"
+                },
                 "PLINK2_INDEPPAIRWISE_REFERENCE": {
                     "plink2": "2.0.0-a.6.9LM"
                 },
@@ -134,7 +137,7 @@
                 "study_csa.qc.fam:md5,4871d83e3ba9e1e5e1f91135794c5810"
             ]
         ],
-        "timestamp": "2026-11-11T17:13:46.769719991",
+        "timestamp": "2026-11-11T19:42:41.573029733",
         "meta": {
             "nf-test": "0.9.5",
             "nextflow": "26.04.6"

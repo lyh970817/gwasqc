@@ -53,7 +53,7 @@ nextflow_pipeline {
             // The study mode adds the pruning stage; the shared mode adds the reference baseline files beside
             // the heterozygosity report and has no pruning stage.
             def study_layout = layout + [ld_pruning: ['<id>.highld_exclude.txt', '<id>.prune.in'], heterozygosity: heterozygosity_files]
-            def shared_layout = layout + [heterozygosity: (heterozygosity_files + ['<id>.reference.afreq', '<id>.reference.het', '<id>.reference_keep.txt']).sort()]
+            def shared_layout = layout + [ancestry: (layout.ancestry + ['<id>.ancestry_matched.prune.in']).sort(), heterozygosity: (heterozygosity_files + ['<id>.reference.afreq', '<id>.reference.het', '<id>.reference_keep.txt']).sort()]
             def report = new File("${params.outdir}/multiqc/multiqc_report.html").text
             def sections = ['gwasqc_qc_summary', 'gwasqc_variant_qc', 'gwasqc_variant_qc_filters', 'gwasqc_variant_qc_ladder', 'gwasqc_sample_qc_markers', 'gwasqc_sex_check', 'gwasqc_sex_check_summary', 'gwasqc_sex_check_mismatches', 'gwasqc_heterozygosity', 'gwasqc_heterozygosity_summary', 'gwasqc_relatedness', 'gwasqc_relatedness_summary', 'gwasqc_relatedness_pairs', 'gwasqc_ancestry', 'gwasqc_ancestry_summary', 'gwasqc_sample_removals'] + strata.collectMany { id -> ['variant_qc', 'sex_check', 'heterozygosity', 'relatedness', 'ancestry'].collect { stage -> "gwasqc_${stage}_plots_${id}".toString() } }
             def het_hist = { id -> lines("qc/${id}/heterozygosity/${id}.het_hist.tsv").drop(1).collect { line -> line.split('\t').toList() } }
@@ -74,13 +74,13 @@ nextflow_pipeline {
                 { assert large.every { id -> summary[id]["ancestry_n_${prefix(id)}".toString()] == '120' } },
                 // The marker-set mode: `auto` keeps the 125-sample strata on their own pruned variants and
                 // sends the 12-sample stratum to the shared set, whose pruning columns read NA and whose check
-                // markers are the ancestry route's pruned list; no note is raised, as the fixture has no LD.
+                // markers are the ancestry-matched pruned list; no note is raised, as the fixture has no LD.
                 { assert large.every { id -> summary[id].subMap(['samples_after_mind', 'sample_qc_marker_set', 'sample_qc_note']) == [samples_after_mind: '123', sample_qc_marker_set: 'study', sample_qc_note: ''] } },
                 { assert large.every { id -> summary[id].sample_qc_markers == (lines("qc/${id}/ld_pruning/${id}.prune.in").size() - lines("qc/${id}/ld_pruning/${id}.highld_exclude.txt").size()).toString() } },
                 { assert summary.study_csa.subMap(['ancestry', 'samples_input', 'variants_input', 'samples_mind_removed', 'samples_after_mind', 'variants_hwe_removed', 'variants_ld_pruned_in', 'variants_ld_pruned_out', 'variants_highld_excluded', 'variants_sample_checks', 'sample_qc_marker_set', 'sample_qc_note']) == [ancestry: 'CSA', samples_input: '12', variants_input: '3962', samples_mind_removed: '0', samples_after_mind: '12', variants_hwe_removed: '0', variants_ld_pruned_in: 'NA', variants_ld_pruned_out: 'NA', variants_highld_excluded: 'NA', variants_sample_checks: 'NA', sample_qc_marker_set: 'shared', sample_qc_note: ''] },
-                { assert summary.study_csa.sample_qc_markers == lines('qc/study_csa/ancestry/study_csa.ancestry.prune.in').size().toString() },
-                // The shared set is chosen on the pooled reference by default; a study-mode row reads NA.
-                { assert summary.study_csa.sample_qc_shared_reference == 'pooled' && large.every { id -> summary[id].sample_qc_shared_reference == 'NA' } },
+                { assert summary.study_csa.sample_qc_markers == lines('qc/study_csa/ancestry/study_csa.ancestry_matched.prune.in').size().toString() },
+                // The shared set is chosen on the ancestry-matched reference by default; a study-mode row reads NA.
+                { assert summary.study_csa.sample_qc_shared_reference == 'matched' && large.every { id -> summary[id].sample_qc_shared_reference == 'NA' } },
                 // The small stratum's planted defects: the one sex mismatch, the one duplicate pair with one
                 // member listed, all twelve samples assigned CSA; the gate is off, so nothing leaves the fileset.
                 { assert summary.study_csa.subMap(['sex_check_problems', 'relatedness_duplicate_or_mz', 'relatedness_removed', 'ancestry_n_CSA', 'ancestry_unassigned', 'ancestry_mismatches', 'samples_removed_under_gate', 'samples_removed', 'samples_final', 'het_samples']) == [sex_check_problems: '1', relatedness_duplicate_or_mz: '1', relatedness_removed: '1', ancestry_n_CSA: '12', ancestry_unassigned: '0', ancestry_mismatches: '0', samples_removed_under_gate: '2', samples_removed: '0', samples_final: '12', het_samples: '12'] },
@@ -93,7 +93,7 @@ nextflow_pipeline {
                 // histogram data carrying both sources over one set of bins.
                 { assert lines('qc/study_csa/heterozygosity/study_csa.reference_keep.txt').size() == 50 },
                 { assert lines('qc/study_csa/heterozygosity/study_csa.reference_keep.txt').every { line -> line.split(' ')[1].startsWith('GIH_') || line.split(' ')[1].startsWith('PJL_') } },
-                { assert lines('qc/study_csa/heterozygosity/study_csa.reference.afreq').drop(1).collect { line -> line.split('\t')[1] }.sort() == lines('qc/study_csa/ancestry/study_csa.ancestry.prune.in').sort() },
+                { assert lines('qc/study_csa/heterozygosity/study_csa.reference.afreq').drop(1).collect { line -> line.split('\t')[1] }.sort() == lines('qc/study_csa/ancestry/study_csa.ancestry_matched.prune.in').sort() },
                 { assert lines('qc/study_csa/heterozygosity/study_csa.reference.het').size() == 51 },
                 { assert het_hist('study_csa').collect { fields -> fields[0] }.unique() == ['study', 'reference'] },
                 { assert het_hist('study_csa').findAll { fields -> fields[0] == 'study' }.sum { fields -> fields[3] as Integer } == 12 },
