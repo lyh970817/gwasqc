@@ -89,6 +89,12 @@ input:
         pattern: "*.prune.in"
         ontologies:
           - edam: "http://edamontology.org/format_2330" # Text
+    - shared_reference:
+        type: string
+        description: The reference the shared marker list was pruned on, `pooled` or `matched`, as the ancestry route chose it for the stratum; NA in study mode
+    - n_reference_matched:
+        type: integer
+        description: The number of reference samples in the stratum's super-population, quoted in the fallback note; NA in study mode
     - sex_mismatch:
         type: file
         description: The PROBLEM rows of the plink2 --check-sex report with its header, an IID column and optionally an FID column; header only when there is no mismatch
@@ -188,7 +194,7 @@ input:
       description: Fraction of the QC'd variants below which study-mode LD pruning is noted as collapsed in the row; strict less-than
   - sample_qc_shared_reference:
       type: string
-      description: The reference samples the shared marker set was filtered and pruned on, `pooled` or `matched`; recorded in the row of a stratum in shared mode, and NA in the row of one in study mode
+      description: The reference samples the shared marker set was requested on, `pooled` or `matched`; a matched request whose group has fewer than 50 reference samples is recorded in the row as pooled, with a note
   - apply_sample_removals:
       type: boolean
       description: Whether the sex-mismatch, duplicate and ancestry-mismatch lists were applied to the QC'd fileset

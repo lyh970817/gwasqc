@@ -187,10 +187,10 @@
                 },
                 "sample_qc_shared_reference": {
                     "type": "string",
-                    "default": "pooled",
+                    "default": "matched",
                     "enum": ["pooled", "matched"],
-                    "description": "Which reference samples choose the `shared` marker set: `pooled`, every reference sample, so that the shared markers are the ancestry decomposition's own filtered, pruned list; or `matched`, the reference samples of the stratum's super-population, on which the reference-side `--maf` and `--geno` filters, the long-range LD exclusion and `--indep-pairwise` are applied instead.",
-                    "help_text": "Only strata in the `shared` mode read this. Under `matched` the filters and pruning run on the reference samples whose `super_pop` in `--reference_pop_data` is the stratum's `ancestry`, over the merged, harmonised reference; plink2 refuses to prune fewer than 50 samples, so the matched group must have at least 50 reference samples. The ancestry decomposition and projection use the pooled panel either way, and the heterozygosity baseline is the matched samples either way. The choice and the marker count of each stratum are recorded in `gwasqc_summary.tsv` and the MultiQC report.",
+                    "description": "Which reference samples choose the `shared` marker set: `matched`, the reference samples of the stratum's super-population, on which the reference-side `--maf` and `--geno` filters, the long-range LD exclusion and `--indep-pairwise` are applied; or `pooled`, every reference sample, so that the shared markers are the ancestry decomposition's own filtered, pruned list.",
+                    "help_text": "Only strata in the `shared` mode read this. Under `matched` the filters and pruning run on the reference samples whose `super_pop` in `--reference_pop_data` is the stratum's `ancestry`, over the merged, harmonised reference; plink2 refuses to prune fewer than 50 samples, so a stratum whose super-population has fewer than 50 reference samples uses the pooled panel instead, and its summary row records `pooled` with a note. The ancestry decomposition and projection use the pooled panel either way, and the heterozygosity baseline is the matched samples either way. The choice and the marker count of each stratum are recorded in `gwasqc_summary.tsv` and the MultiQC report.",
                     "fa_icon": "fas fa-layer-group"
                 },
                 "small_n_threshold": {

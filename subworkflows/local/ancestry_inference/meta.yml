@@ -57,7 +57,7 @@ input:
       description: Standard deviations of the centroid rule that unassigns an assigned sample lying too far from its group on any component; 0 switches the rule off
       structure: number sd_filter
   - shared_reference:
-      description: The reference samples the shared marker set is filtered and pruned on, `pooled` (every reference sample, the decomposition's own pruned list) or `matched` (the reference samples of the stratum's super-population)
+      description: The reference samples the shared marker set is filtered and pruned on, `pooled` (every reference sample, the decomposition's own pruned list) or `matched` (the reference samples of the stratum's super-population; a group below 50 samples uses `pooled`)
       structure: string shared_reference
 output:
   - harmonisation:
