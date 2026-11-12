@@ -93,6 +93,7 @@ nextflow_workflow {
                 // The figure emits carry PDFs, whose bytes change with the creation time R writes into them,
                 // so they are asserted for presence per stratum and left out of the content snapshot.
                 { assert [workflow.out.vmiss_hist_plot, workflow.out.smiss_hist_plot, workflow.out.ladder_plot, workflow.out.hwe_hist_plot, workflow.out.hwe_window_plot].every { emission -> emission.size() == 2 && emission.every { entry -> path(entry[1]).size() > 0 && path(entry[2]).size() > 0 } } },
+                { assert workflow.out.vmiss_hist_ylim_plot.size() == 2 && workflow.out.vmiss_hist_ylim_plot.every { entry -> path(entry[1]).size() > 0 } },
                 { assert snapshot(sanitizeOutput(workflow.out).findAll { entry -> !entry.key.endsWith('_plot') }).match() },
             )
         }

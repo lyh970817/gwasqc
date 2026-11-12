@@ -180,6 +180,7 @@ workflow PLINK_QC_FILTER_LISTS {
     hwe_exclude        = HWE_DECISIONS.out.variant_exclude // channel: [ val(meta), path(hwe_exclude) ]
     vmiss_hist_data    = MISSINGNESS_PLOTS.out.variant_hist_data // channel: [ val(meta), path(vmiss_hist) ]
     vmiss_hist_plot    = MISSINGNESS_PLOTS.out.variant_hist_plot // channel: [ val(meta), path(pdf), path(png) ]
+    vmiss_hist_ylim_plot = MISSINGNESS_PLOTS.out.variant_hist_ylim_plot // channel: [ val(meta), path(pdf) ]
     smiss_hist_data    = MISSINGNESS_PLOTS.out.sample_hist_data // channel: [ val(meta), path(smiss_hist) ]
     smiss_hist_plot    = MISSINGNESS_PLOTS.out.sample_hist_plot // channel: [ val(meta), path(pdf), path(png) ]
     ladder_plot        = MISSINGNESS_PLOTS.out.ladder_plot // channel: [ val(meta), path(pdf), path(png) ]

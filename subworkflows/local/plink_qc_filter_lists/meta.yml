@@ -113,6 +113,12 @@ output:
       structure: [map meta, path pdf, path png]
       pattern: "*.vmiss_hist.{pdf,png}"
       ontologies: []
+  - vmiss_hist_ylim_plot:
+      type: file
+      description: The legacy per-variant missingness histograms, one PDF page per fixed y-axis limit of 100, 5000 and 600000
+      structure: [map meta, path pdf]
+      pattern: "*.vmiss_hist_ylim.pdf"
+      ontologies: []
   - smiss_hist_data:
       type: file
       description: Histogram counts of the per-sample missing-call rate over the geno-retained variants, the data behind the plot

@@ -49,6 +49,8 @@ nextflow_process {
         then {
             def variant_hist = path(process.out.variant_hist_data.get(0).get(1)).readLines().collect { line -> line.split('\t').toList() }
             def sample_hist = path(process.out.sample_hist_data.get(0).get(1)).readLines().collect { line -> line.split('\t').toList() }
+            // The legacy figures: one PDF page per fixed y-axis limit of 100, 5000 and 600000.
+            def ylim_pdf = new String(path(process.out.variant_hist_ylim_plot.get(0).get(1)).toFile().bytes, 'ISO-8859-1')
             assertAll(
                 { assert process.success },
                 { assert variant_hist[0] == ['bin_start', 'bin_end', 'count'] },
@@ -64,6 +66,7 @@ nextflow_process {
                 { assert (sample_hist[100][1] as Double) > 0.05 },
                 { assert path(process.out.variant_hist_plot.get(0).get(1)).size() > 0 },
                 { assert path(process.out.variant_hist_plot.get(0).get(2)).size() > 0 },
+                { assert (ylim_pdf =~ /\/Type \/Page(?!s)/).count == 3 },
                 { assert path(process.out.sample_hist_plot.get(0).get(2)).size() > 0 },
                 { assert path(process.out.ladder_plot.get(0).get(1)).size() > 0 },
                 { assert path(process.out.ladder_plot.get(0).get(2)).size() > 0 },

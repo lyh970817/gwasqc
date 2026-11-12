@@ -150,7 +150,8 @@ The VCZ format route is deferred to its own issue, and pre-QC batch merging is o
   outlier at or above the cohort mean plus `--relatedness_indiv_sd` standard deviations. The duplicate rule
   compares the sample missingness over the MAF-passing variants before the `--geno` filter, the legacy
   `_check.imiss`.
-- The per-individual mean-kinship histogram (`<id>.relatedness_indiv_hist.*`) of the legacy chain is published.
+- The per-individual mean-kinship histogram (`<id>.relatedness_indiv_hist.*`) and the three fixed-limit
+  per-variant missingness histogram pages (`<id>.vmiss_hist_ylim.pdf`) of the legacy chain are published.
 
 ### Fixed
 

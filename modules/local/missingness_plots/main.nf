@@ -15,6 +15,7 @@ process MISSINGNESS_PLOTS {
     output:
     tuple val(meta), path("${prefix}.vmiss_hist.tsv"), emit: variant_hist_data
     tuple val(meta), path("${prefix}.vmiss_hist.pdf"), path("${prefix}.vmiss_hist.png"), emit: variant_hist_plot
+    tuple val(meta), path("${prefix}.vmiss_hist_ylim.pdf"), emit: variant_hist_ylim_plot
     tuple val(meta), path("${prefix}.smiss_hist.tsv"), emit: sample_hist_data
     tuple val(meta), path("${prefix}.smiss_hist.pdf"), path("${prefix}.smiss_hist.png"), emit: sample_hist_plot
     tuple val(meta), path("${prefix}.missingness_ladder.pdf"), path("${prefix}.missingness_ladder.png"), emit: ladder_plot
@@ -36,6 +37,7 @@ process MISSINGNESS_PLOTS {
     printf 'bin_start\\tbin_end\\tcount\\n' > ${prefix}.vmiss_hist.tsv
     touch ${prefix}.vmiss_hist.pdf
     touch ${prefix}.vmiss_hist.png
+    touch ${prefix}.vmiss_hist_ylim.pdf
     printf 'bin_start\\tbin_end\\tcount\\n' > ${prefix}.smiss_hist.tsv
     touch ${prefix}.smiss_hist.pdf
     touch ${prefix}.smiss_hist.png

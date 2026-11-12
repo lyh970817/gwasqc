@@ -77,6 +77,16 @@ output:
           pattern: "*.vmiss_hist.png"
           ontologies:
             - edam: "http://edamontology.org/format_3603" # PNG
+  variant_hist_ylim_plot:
+    - - meta:
+          type: map
+          description: Metadata map propagated from input
+      - "${prefix}.vmiss_hist_ylim.pdf":
+          type: file
+          description: The legacy missingness_histograms.r figures of the per-variant missing-call rate, R's hist() on its own breaks for a request of 100 cells, one page per fixed y-axis limit of 100, 5000 and 600000
+          pattern: "*.vmiss_hist_ylim.pdf"
+          ontologies:
+            - edam: "http://edamontology.org/format_3508" # PDF
   sample_hist_data:
     - - meta:
           type: map

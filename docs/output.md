@@ -75,6 +75,7 @@ Every number in the summary is a line count of a published decision list, a row 
   - `<id>.missingness_ladder.pdf`, `<id>.missingness_ladder.png`: The ladder rendered as a table image.
   - `<id>.vmiss_hist.tsv`: Counts of variants in 100 bins of `F_MISS` (`bin_start`, `bin_end`, `count`) from zero to the larger of the largest rate and `--geno`, the data behind the histogram.
   - `<id>.vmiss_hist.pdf`, `<id>.vmiss_hist.png`: Histogram of the per-variant missing-call rate, counts on a linear and on a log scale side by side, with `--geno` as a dashed line.
+  - `<id>.vmiss_hist_ylim.pdf`: The legacy `missingness_histograms.r` figures of the per-variant missing-call rate, R's `hist(F_MISS, 100)` with the y axis limited to 100, 5000 and 600000, one page each, so the tail can be read under the peak at zero.
   - `<id>.smiss_hist.tsv`: Counts of samples in 100 bins of `F_MISS` from zero to the larger of the largest rate and `--mind`, the data behind the histogram.
   - `<id>.smiss_hist.pdf`, `<id>.smiss_hist.png`: Histogram of the per-sample missing-call rate in the same two panels, with `--mind` as a dashed line.
 - `qc/<id>/hwe/`

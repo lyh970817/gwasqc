@@ -7,14 +7,18 @@
 #
 #   <prefix>.vmiss_hist.tsv               per-variant F_MISS histogram counts, the data behind the histogram
 #   <prefix>.vmiss_hist.pdf/.png          the histogram, counts on a linear and on a log scale side by side
+#   <prefix>.vmiss_hist_ylim.pdf          the legacy figures: the same rates, one page per y-axis limit of 100,
+#                                         5000 and 600000
 #   <prefix>.smiss_hist.tsv               per-sample F_MISS histogram counts
 #   <prefix>.smiss_hist.pdf/.png          the histogram, in the same two panels
 #   <prefix>.missingness_ladder.pdf/.png  the call-rate ladder table as an image
 #
 # The legacy missingness_histograms.r drew the variant histogram three times, with y-axis limits of 100, 5000
-# and 600000, so that the tail could be read under the peak at zero; here one panel is drawn on a linear count
-# scale and one on a log1p scale, which shows the same tail at any cohort size. The bins span from zero to the
-# larger of the largest rate and the threshold, so that the dashed threshold line always lies within the plot.
+# and 600000, so that the tail could be read under the peak at zero; those three figures are drawn as it drew
+# them, `hist(F_MISS, 100, ylim = c(0, limit))` on R's own breaks for a request of 100 cells, one page each.
+# Beside them one panel is drawn on a linear count scale and one on a log1p scale, which shows the same tail at
+# any cohort size; their bins span from zero to the larger of the largest rate and the threshold, so that the
+# dashed threshold line always lies within the plot.
 # The ladder is drawn as the legacy itmiss_table.r drew it, a table image, without the gridExtra dependency.
 
 suppressPackageStartupMessages({
@@ -88,12 +92,20 @@ write_panels <- function(panels, stem, width = 12, height = 5) {
 }
 
 # Per-variant missingness over the MAF-passing variants, against the geno threshold.
-variant_bins <- histogram_bins(as.numeric(read_plink2_report(vmiss_file)[["F_MISS"]]), geno_threshold)
+variant_rates <- as.numeric(read_plink2_report(vmiss_file)[["F_MISS"]])
+variant_bins <- histogram_bins(variant_rates, geno_threshold)
 fwrite(variant_bins, paste0(prefix, ".vmiss_hist.tsv"), sep = "\\t")
 write_panels(
     histogram_panels(variant_bins, geno_threshold, "geno", paste(prefix, "variant missingness"), "missing-call rate per variant (F_MISS)", "variants"),
     paste0(prefix, ".vmiss_hist")
 )
+
+# The legacy figures, one page per fixed y-axis limit.
+pdf(paste0(prefix, ".vmiss_hist_ylim.pdf"))
+for (y_limit in c(100, 5000, 600000)) {
+    hist(variant_rates, 100, ylim = c(0, y_limit), main = sprintf("%s variant missingness, y-axis limit %s", prefix, format(y_limit, scientific = FALSE)), xlab = "missing-call rate per variant (F_MISS)")
+}
+invisible(dev.off())
 
 # Per-sample missingness over the geno-retained variants, against the mind threshold.
 sample_bins <- histogram_bins(as.numeric(read_plink2_report(smiss_file)[["F_MISS"]]), mind_threshold)
