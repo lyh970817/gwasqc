@@ -5,8 +5,12 @@ channels:
   - bioconda
 dependencies:
   - conda-forge::r-base=4.4.3
+  # caret trains the legacy elastic-net multinomial classifier (method glmnet) and glmnet fits it.
+  - conda-forge::r-caret=7.0_1
   - conda-forge::r-data.table=1.17.8
   - conda-forge::r-ggplot2=3.5.2
-  # MASS supplies the linear discriminant classifier; it is pinned at the version the lock file already
-  # resolves as an import of ggplot2, so the frozen image is unchanged by declaring it.
-  - conda-forge::r-mass=7.3_66
+  - conda-forge::r-glmnet=4.1_10
+  # caret's multiClassSummary, the legacy resampling summary, loads both namespaces at run time; caret only
+  # suggests MLmetrics, so it is declared here.
+  - conda-forge::r-mlmetrics=1.1.3
+  - conda-forge::r-proc=1.19.0.1

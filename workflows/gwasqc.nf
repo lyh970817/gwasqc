@@ -53,7 +53,7 @@ workflow GWASQC {
     ancestry_ld_step_size // value: --indep-pairwise step on the merged reference, in variants
     ancestry_ld_r2 // value: --indep-pairwise r-squared threshold on the merged reference
     ancestry_n_pcs // value: number of reference principal components computed and projected
-    ancestry_prob_threshold // value: posterior probability at or above which a study sample is assigned
+    ancestry_prob_threshold // value: class probability at or above which a study sample is assigned
     ancestry_sd_filter // value: standard deviations of the centroid rule, or null when the rule is off
     apply_sample_removals // boolean: apply the sex, relatedness and ancestry removal lists to the QC'd fileset
     ancestry_remove_mismatched // boolean: under apply_sample_removals, also remove the samples not assigned to the stratum's ancestry

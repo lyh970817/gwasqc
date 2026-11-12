@@ -323,7 +323,7 @@
                     "default": 0.5,
                     "minimum": 0,
                     "maximum": 1,
-                    "description": "Posterior probability at or above which a study sample is assigned to its most probable super-population; below it the sample is unassigned.",
+                    "description": "Class probability at or above which a study sample is assigned to its most probable super-population; below it the sample is unassigned.",
                     "fa_icon": "fas fa-percentage"
                 },
                 "ancestry_sd_filter": {

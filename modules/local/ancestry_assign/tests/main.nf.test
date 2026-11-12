@@ -10,11 +10,10 @@ nextflow_process {
     tag "ancestry_assign"
 
     // Synthetic projections, written by each case into its work directory: five reference groups of sixteen
-    // samples on unit centroids in four components, each group a ±0.2 two-level design on every axis so that
-    // the pooled covariance is exactly 0.04 on the diagonal, and ten study samples of a stratum labelled A:
-    // seven on A, one planted on B, one just off the centroid of A, B and C (posterior 0.39 for A, so no
-    // group reaches 0.5) and one on A but 4 standard deviations out on PC4 (assigned unless the
-    // standard-deviation rule is on).
+    // samples on unit centroids in four components, each group a ±0.2 two-level design on every axis, and ten
+    // study samples of a stratum labelled A: seven on A, one planted on B, one just off the centroid of A, B
+    // and C (class probability 0.42 for A under the seeded five-fold tuning, so no group reaches 0.5) and one
+    // on A but 4 standard deviations out on PC4 (assigned unless the standard-deviation rule is on).
 
     test("synthetic - threshold only") {
 
@@ -63,13 +62,14 @@ nextflow_process {
             def keep = process.out.keep_lists.get(0).get(1).collectEntries { file -> [(new File(file.toString()).name): path(file).readLines()] }
             def summary = path(process.out.summary.get(0).get(1)).readLines().collect { line -> line.split('\t', -1).toList() }
             def model = path(process.out.model.get(0).get(1)).readLines().drop(1).collect { line -> line.split('\t').toList() }
+            def tuning = path(process.out.tuning.get(0).get(1)).readLines().collect { line -> line.split('\t').toList() }
             def pca = path(process.out.pca_data.get(0).get(1)).readLines().collect { line -> line.split('\t', -1).toList() }
             assertAll(
                 { assert process.success },
                 { assert assignment[0] == ['FID', 'IID', 'ASSIGNED', 'STATUS', 'MAX_PROB', 'MAX_ABS_Z', 'PROB_A', 'PROB_B', 'PROB_C', 'PROB_D', 'PROB_E'] },
                 { assert assigned == [S_001: 'A', S_002: 'A', S_003: 'A', S_004: 'A', S_005: 'A', S_006: 'A', S_007: 'A', S_008: 'B', S_009: 'unassigned', S_010: 'A'] },
                 { assert status.S_009 == 'below_threshold' },
-                { assert Math.abs((assignment.drop(1).find { fields -> fields[1] == 'S_009' }[4] as Double) - 0.39) < 0.01 },
+                { assert Math.abs((assignment.drop(1).find { fields -> fields[1] == 'S_009' }[4] as Double) - 0.42) < 0.01 },
                 // Without the rule the far-out sample is assigned, and its distance is still reported: 0.8 over
                 // the group's sample standard deviation on PC4, 0.2 * sqrt(16 / 15).
                 { assert Math.abs((assignment.drop(1).find { fields -> fields[1] == 'S_010' }[5] as Double) - 3.873) < 0.001 },
@@ -81,17 +81,23 @@ nextflow_process {
                 // The counts describe the threshold rule and nothing else.
                 { assert summary[0] == ['GROUP', 'STATUS', 'N_REFERENCE', 'N_STUDY', 'RULE'] },
                 { assert summary.drop(1).collect { fields -> fields[0..3] } == [['A', 'assigned', '16', '8'], ['B', 'assigned', '16', '1'], ['C', 'assigned', '16', '0'], ['D', 'assigned', '16', '0'], ['E', 'assigned', '16', '0'], ['unassigned', 'below_threshold', '', '1']] },
-                { assert summary.drop(1).every { fields -> fields[4] == (fields[0] == 'unassigned' ? 'max posterior < 0.5' : 'max posterior >= 0.5') } },
-                // Leave-one-out on well-separated groups is perfect.
-                { assert model.findAll { fields -> fields[0] == fields[1] }.every { fields -> fields[2] == '16' } },
-                { assert model.findAll { fields -> fields[0] != fields[1] }.every { fields -> fields[2] == '0' } },
+                { assert summary.drop(1).every { fields -> fields[4] == (fields[0] == 'unassigned' ? 'max probability < 0.5' : 'max probability >= 0.5') } },
+                // Five-fold cross-validation on well-separated groups is perfect, and every held-out prediction
+                // reaches the threshold.
+                { assert model.size() == 25 },
+                { assert model.findAll { fields -> fields[0] == fields[1] }.every { fields -> fields[2] == '16' && fields[3] == '16' } },
+                { assert model.findAll { fields -> fields[0] != fields[1] }.every { fields -> fields[2] == '0' && fields[3] == '0' } },
+                // caret's default elastic-net grid, three alphas by three lambdas, one pair selected.
+                { assert tuning[0] == ['ALPHA', 'LAMBDA', 'LOGLOSS', 'LOGLOSS_SD', 'ACCURACY', 'ACCURACY_SD', 'KAPPA', 'KAPPA_SD', 'SELECTED'] },
+                { assert tuning.size() == 10 },
+                { assert tuning.count { fields -> fields[8] == 'TRUE' } == 1 },
                 { assert pca[0] == ['FID', 'IID', 'SOURCE', 'POP', 'SUPER_POP', 'ASSIGNED', 'PC1', 'PC2', 'PC3', 'PC4'] },
                 { assert pca.size() == 91 },
                 { assert pca.count { fields -> fields[2] == 'reference' } == 80 },
                 { assert pca.find { fields -> fields[1] == 'S_008' }[3..5] == ['', '', 'B'] },
                 { assert path(process.out.pc1_pc2_plot.get(0).get(1)).size() > 0 },
                 { assert path(process.out.pc3_pc4_plot.get(0).get(2)).size() > 0 },
-                { assert snapshot(process.out.assignment, process.out.summary, process.out.model, process.out.keep_lists, process.out.sample_remove, process.out.pca_data, process.out.versions).match() },
+                { assert snapshot(process.out.assignment, process.out.summary, process.out.model, process.out.tuning, process.out.keep_lists, process.out.sample_remove, process.out.pca_data, process.out.versions).match() },
             )
         }
     }
@@ -149,8 +155,8 @@ nextflow_process {
                 { assert keep['synthetic.ancestry_A.keep'].size() == 7 },
                 { assert path(process.out.sample_remove.get(0).get(1)).readLines() == ['S_008 S_008', 'S_009 S_009', 'S_010 S_010'] },
                 { assert summary.collect { fields -> fields[0..3] } == [['A', 'assigned', '16', '7'], ['B', 'assigned', '16', '1'], ['C', 'assigned', '16', '0'], ['D', 'assigned', '16', '0'], ['E', 'assigned', '16', '0'], ['unassigned', 'below_threshold', '', '1'], ['unassigned', 'outside_sd', '', '1']] },
-                { assert summary.find { fields -> fields[0] == 'A' }[4] == "max posterior >= 0.5 and every PC within 3 SD of the group's reference mean" },
-                { assert summary.find { fields -> fields[1] == 'outside_sd' }[4] == "max posterior >= 0.5 but a PC beyond 3 SD of the group's reference mean" },
+                { assert summary.find { fields -> fields[0] == 'A' }[4] == "max probability >= 0.5 and every PC within 3 SD of the group's reference mean" },
+                { assert summary.find { fields -> fields[1] == 'outside_sd' }[4] == "max probability >= 0.5 but a PC beyond 3 SD of the group's reference mean" },
                 { assert snapshot(process.out.assignment, process.out.summary, process.out.keep_lists, process.out.sample_remove).match() },
             )
         }
@@ -246,6 +252,8 @@ nextflow_process {
                 // The same headers the template writes for these inputs.
                 { assert path(process.out.assignment.get(0).get(1)).readLines() == ['FID\tIID\tASSIGNED\tSTATUS\tMAX_PROB\tMAX_ABS_Z\tPROB_A\tPROB_B'] },
                 { assert path(process.out.summary.get(0).get(1)).readLines() == ['GROUP\tSTATUS\tN_REFERENCE\tN_STUDY\tRULE'] },
+                { assert path(process.out.model.get(0).get(1)).readLines() == ['OBSERVED\tPREDICTED\tN\tN_THRESHOLD'] },
+                { assert path(process.out.tuning.get(0).get(1)).readLines() == ['ALPHA\tLAMBDA\tLOGLOSS\tLOGLOSS_SD\tACCURACY\tACCURACY_SD\tKAPPA\tKAPPA_SD\tSELECTED'] },
                 { assert path(process.out.pca_data.get(0).get(1)).readLines() == ['FID\tIID\tSOURCE\tPOP\tSUPER_POP\tASSIGNED\tPC1\tPC2\tPC3\tPC4'] },
                 { assert keep == ['synthetic.ancestry_A.keep', 'synthetic.ancestry_B.keep'] },
                 { assert snapshot(sanitizeOutput(process.out)).match() },

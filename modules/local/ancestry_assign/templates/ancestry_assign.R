@@ -5,10 +5,14 @@
 # Files written:
 #
 #   <prefix>.ancestry_assignment.tsv      per study sample: ASSIGNED, STATUS, MAX_PROB, MAX_ABS_Z and the
-#                                         posterior probability of every super-population
+#                                         class probability of every super-population
 #   <prefix>.ancestry_summary.tsv         study and reference sample counts per group, each row stating the
 #                                         rule that produced its count
-#   <prefix>.ancestry_model.tsv           leave-one-out confusion of the classifier on the reference samples
+#   <prefix>.ancestry_model.tsv           five-fold cross-validated confusion of the classifier on the
+#                                         reference samples, all held-out predictions and those reaching the
+#                                         threshold
+#   <prefix>.ancestry_model_tuning.tsv    the tuning grid with its cross-validated performance, the selected
+#                                         alpha and lambda marked
 #   <prefix>.ancestry_<group>.keep        FID IID of the study samples assigned to each super-population
 #   <prefix>.ancestry_mismatch_remove.txt FID IID of the study samples not assigned to the stratum's own label,
 #                                         the unassigned included, for plink2 --remove
@@ -16,20 +20,26 @@
 #   <prefix>.ancestry_pc1_pc2.pdf/.png    PC1 against PC2, reference populations in their own colours and the
 #   <prefix>.ancestry_pc3_pc4.pdf/.png    study samples drawn above them, orange with a dark outline
 #
-# The classifier is linear discriminant analysis on the reference coordinates (MASS::lda) with equal prior
-# probability for every super-population, so that the sizes of the reference groups do not tilt the
-# assignment; it replaces the legacy elastic-net multinomial fit, which needed caret and glmnet, with a
-# closed-form fit that needs no tuning and no random seed. A study sample is assigned to the super-population
-# of its largest posterior probability when that probability reaches prob_threshold, and is otherwise
-# unassigned. When sd_filter is positive, an assigned sample whose coordinate on any component lies more than
-# sd_filter standard deviations from its group's reference mean becomes unassigned as well; the legacy script
-# reported this rule while leaving it commented out, so its group counts described nothing. Here every count
-# names the rule that produced it.
+# The classifier is the legacy ancestry_identifier.r model: every component is centred and scaled by the mean
+# and standard deviation of all scored reference samples, and caret::train fits an elastic-net multinomial
+# model (method glmnet) of the super_pop labels on every component, choosing alpha and lambda from caret's
+# default grid by log-loss in five-fold cross-validation. The study samples, scaled the same way, take the
+# class probabilities of the final model at the selected lambda. The cross-validation folds are drawn under a
+# fixed seed, which the legacy script did not set, so that one input always gives one model. A fit that
+# stops fails the task with caret's and glmnet's messages, as the legacy script stopped; a fit that warns
+# is used, as the legacy script used it, and its warnings are relayed to the task log. A study sample is
+# assigned to the super-population of its largest probability when that probability reaches prob_threshold,
+# and is otherwise unassigned; the legacy script rounded the probabilities to three decimals and required
+# the largest to exceed the threshold. When sd_filter is positive, an assigned sample whose coordinate on
+# any component lies more than sd_filter standard deviations from its group's reference mean becomes
+# unassigned as well; the legacy script reported this rule while leaving it commented out, so its group
+# counts described nothing. Here every count names the rule that produced it.
 
 suppressPackageStartupMessages({
     library(data.table)
     library(ggplot2)
-    library(MASS)
+    library(caret)
+    library(glmnet)
 })
 
 reference_file <- "${reference_scores}"
@@ -90,21 +100,101 @@ if (nrow(labelled) < nrow(reference)) {
 }
 groups <- factor(labelled[["super_pop"]])
 levels_k <- levels(groups)
-equal_prior <- rep(1 / length(levels_k), length(levels_k))
-reference_x <- as.matrix(labelled[, pcs, with = FALSE])
-model <- lda(reference_x, grouping = groups, prior = equal_prior)
-loo <- lda(reference_x, grouping = groups, prior = equal_prior, CV = TRUE)
 
-# Leave-one-out confusion of the reference, every pair of groups listed.
-confusion <- as.data.frame(table(OBSERVED = groups, PREDICTED = factor(loo[["class"]], levels = levels_k)), stringsAsFactors = FALSE)
+# Every component is centred on the mean and divided by the standard deviation of all scored reference samples,
+# for the reference and the study alike, as the legacy `.scale` file did.
+reference_mean <- vapply(pcs, function(pc) mean(reference[[pc]]), numeric(1))
+reference_sd <- vapply(pcs, function(pc) sd(reference[[pc]]), numeric(1))
+scale_by_reference <- function(table) {
+    scaled <- as.data.frame(table[, pcs, with = FALSE])
+    for (pc in pcs) scaled[[pc]] <- (scaled[[pc]] - reference_mean[[pc]]) / reference_sd[[pc]]
+    scaled
+}
+
+# caret names its class-probability columns after the factor levels and refuses a level that is not a
+# syntactic R name, which a super_pop label such as 1KG-AFR is; the model is trained on syntactic names and
+# every output maps them back to the labels.
+class_names <- make.names(levels_k, unique = TRUE)
+names(class_names) <- levels_k
+
+# The legacy model: caret's elastic-net multinomial fit over its default tuning grid, chosen by multinomial
+# log-loss in five-fold cross-validation with class probabilities kept for the held-out predictions. The seed
+# fixes the folds, which the legacy script left to the session; a fixed seed makes the model, and with it the
+# task's outputs, reproducible.
+cv_seed <- 1L
+fit_warnings <- character(0)
+set.seed(cv_seed)
+model <- withCallingHandlers(
+    tryCatch(
+        train(
+            y = factor(class_names[as.character(groups)], levels = class_names),
+            x = scale_by_reference(labelled),
+            method = "glmnet",
+            metric = "logLoss",
+            trControl = trainControl(method = "cv", number = 5, classProbs = TRUE, savePredictions = "final", summaryFunction = multiClassSummary)
+        ),
+        error = function(e) {
+            stop(sprintf(
+                "the ancestry classifier could not be fitted on the %d labelled reference samples (caret::train, method glmnet): %s%s",
+                nrow(labelled),
+                conditionMessage(e),
+                if (length(fit_warnings) > 0L) paste0("; warnings raised while fitting: ", paste(unique(fit_warnings), collapse = " | ")) else ""
+            ), call. = FALSE)
+        }
+    ),
+    warning = function(w) {
+        fit_warnings <<- c(fit_warnings, conditionMessage(w))
+        invokeRestart("muffleWarning")
+    }
+)
+# Warnings are relayed to the task log and nothing more, as the legacy script left them: caret warns whenever
+# one of multiClassSummary's measures is undefined in a resample, which need not touch the log-loss it
+# selects on, and of a resample whose fit failed; glmnet warns of a class of fewer than eight samples and of
+# a lambda path it cut short. caret itself stops when no resample yields the log-loss.
+for (warning_text in unique(fit_warnings)) message("caret::train warned: ", warning_text)
+
+# The tuning grid with its cross-validated performance, the selected row marked.
+tuning <- as.data.table(model[["results"]])
+best <- model[["bestTune"]]
+tuning_table <- data.table(
+    ALPHA = signif(tuning[["alpha"]], 6),
+    LAMBDA = signif(tuning[["lambda"]], 6),
+    LOGLOSS = signif(tuning[["logLoss"]], 6),
+    LOGLOSS_SD = signif(tuning[["logLossSD"]], 6),
+    ACCURACY = signif(tuning[["Accuracy"]], 6),
+    ACCURACY_SD = signif(tuning[["AccuracySD"]], 6),
+    KAPPA = signif(tuning[["Kappa"]], 6),
+    KAPPA_SD = signif(tuning[["KappaSD"]], 6),
+    SELECTED = tuning[["alpha"]] == best[["alpha"]] & tuning[["lambda"]] == best[["lambda"]]
+)
+fwrite(tuning_table, paste0(prefix, ".ancestry_model_tuning.tsv"), sep = "\\t")
+
+# Cross-validated confusion of the reference at the selected tuning, every pair of groups listed: N counts every
+# held-out prediction, N_THRESHOLD only those whose largest class probability reaches the threshold, the two
+# matrices the legacy script reported.
+label_of <- setNames(levels_k, class_names)
+held_out <- as.data.frame(model[["pred"]])
+held_out_max <- apply(as.matrix(held_out[, class_names, drop = FALSE]), 1, max)
+confusion_counts <- function(rows) {
+    as.data.frame(table(
+        OBSERVED = factor(label_of[as.character(held_out[["obs"]][rows])], levels = levels_k),
+        PREDICTED = factor(label_of[as.character(held_out[["pred"]][rows])], levels = levels_k)
+    ), stringsAsFactors = FALSE)
+}
+confusion <- confusion_counts(rep(TRUE, nrow(held_out)))
 setnames(confusion, "Freq", "N")
+confusion[["N_THRESHOLD"]] <- confusion_counts(held_out_max >= prob_threshold)[["Freq"]]
 fwrite(confusion, paste0(prefix, ".ancestry_model.tsv"), sep = "\\t")
 
-# Study assignment.
+# Study assignment: the class probabilities of the final model at its selected lambda, on the study components
+# scaled by the reference.
 study_x <- as.matrix(study[, pcs, with = FALSE])
-posterior <- predict(model, newdata = study_x)[["posterior"]]
-max_prob <- apply(posterior, 1, max)
-nearest <- levels_k[apply(posterior, 1, which.max)]
+final_model <- model[["finalModel"]]
+response <- predict(final_model, newx = data.matrix(scale_by_reference(study)), type = "response", s = final_model[["lambdaOpt"]])
+probability <- matrix(response[, , 1], nrow = nrow(study), dimnames = list(NULL, dimnames(response)[[2]]))[, class_names, drop = FALSE]
+colnames(probability) <- levels_k
+max_prob <- apply(probability, 1, max)
+nearest <- levels_k[apply(probability, 1, which.max)]
 reached <- max_prob >= prob_threshold
 assigned <- ifelse(reached, nearest, "unassigned")
 status <- ifelse(reached, "assigned", "below_threshold")
@@ -130,7 +220,7 @@ assignment[, STATUS := status]
 assignment[, MAX_PROB := round(max_prob, 6)]
 assignment[, MAX_ABS_Z := round(max_abs_z, 4)]
 for (group in levels_k) {
-    set(assignment, j = paste0("PROB_", group), value = round(posterior[, group], 6))
+    set(assignment, j = paste0("PROB_", group), value = round(probability[, group], 6))
 }
 fwrite(assignment, paste0(prefix, ".ancestry_assignment.tsv"), sep = "\\t")
 
@@ -142,7 +232,7 @@ for (group in levels_k) {
 writeLines(study_key[assigned != expected_ancestry], paste0(prefix, ".ancestry_mismatch_remove.txt"))
 
 # Group counts, each row naming the rule behind it.
-threshold_rule <- sprintf("max posterior >= %s", format(prob_threshold))
+threshold_rule <- sprintf("max probability >= %s", format(prob_threshold))
 sd_rule_on <- !is.na(sd_filter) && sd_filter > 0
 summary <- data.table(
     GROUP = levels_k,
@@ -151,7 +241,7 @@ summary <- data.table(
     N_STUDY = vapply(levels_k, function(group) sum(assigned == group), integer(1)),
     RULE = if (sd_rule_on) sprintf("%s and every PC within %s SD of the group's reference mean", threshold_rule, format(sd_filter)) else threshold_rule
 )
-summary <- rbind(summary, data.table(GROUP = "unassigned", STATUS = "below_threshold", N_REFERENCE = NA_integer_, N_STUDY = sum(status == "below_threshold"), RULE = sprintf("max posterior < %s", format(prob_threshold))))
+summary <- rbind(summary, data.table(GROUP = "unassigned", STATUS = "below_threshold", N_REFERENCE = NA_integer_, N_STUDY = sum(status == "below_threshold"), RULE = sprintf("max probability < %s", format(prob_threshold))))
 if (sd_rule_on) {
     summary <- rbind(summary, data.table(GROUP = "unassigned", STATUS = "outside_sd", N_REFERENCE = NA_integer_, N_STUDY = sum(status == "outside_sd"), RULE = sprintf("%s but a PC beyond %s SD of the group's reference mean", threshold_rule, format(sd_filter))))
 }
@@ -202,7 +292,10 @@ writeLines(
         paste0("    r-base: ", r_version),
         paste0("    r-ggplot2: ", as.character(packageVersion("ggplot2"))),
         paste0("    r-data.table: ", as.character(packageVersion("data.table"))),
-        paste0("    r-mass: ", as.character(packageVersion("MASS")))
+        paste0("    r-caret: ", as.character(packageVersion("caret"))),
+        paste0("    r-glmnet: ", as.character(packageVersion("glmnet"))),
+        paste0("    r-mlmetrics: ", as.character(packageVersion("MLmetrics"))),
+        paste0("    r-proc: ", as.character(packageVersion("pROC")))
     ),
     "versions.yml"
 )
