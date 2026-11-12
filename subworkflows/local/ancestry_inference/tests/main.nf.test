@@ -48,6 +48,7 @@ nextflow_workflow {
                 input[1] = 0.05
                 input[2] = 0.05
                 input[3] = 1e-10
+                input[4] = 'iterative'
                 """
             }
         }
@@ -123,7 +124,9 @@ nextflow_workflow {
             def assignment = by_id(workflow.out.assignment)
             def summary = by_id(workflow.out.summary)
             def model = by_id(workflow.out.model)
+            def tuning = by_id(workflow.out.tuning)
             def mismatch_remove = by_id(workflow.out.mismatch_remove)
+            def score_command = { scores, id -> scores[id].parent.resolve('.command.sh').text }
             def rows_of = { id -> harmonisation[id].readLines().drop(1).collect { line -> line.split('\t', -1) } }
             def classes = { id -> rows_of(id).groupBy { fields -> fields[10] }.collectEntries { name, rows -> [(name): rows.collect { fields -> fields[0] }.sort()] } }
             def table_ids = { id -> rows_of(id).collect { fields -> fields[0] } }
@@ -157,7 +160,18 @@ nextflow_workflow {
                 { assert strata.every { id -> reference_scores[id].readLines().size() == 251 } },
                 // The two mind removals are not projected.
                 { assert strata.every { id -> study_scores[id].readLines().size() == 124 } },
-                // The reference classifies itself perfectly, leave-one-out.
+                // The legacy projection: both runs score raw allele dosages with the same weight columns, the
+                // reference mean-imputes a missing call and the study does not, and neither reads a frequency
+                // table nor standardises.
+                { assert strata.every { id -> score_command(reference_scores, id).contains('2 5 header-read list-variants') && !score_command(reference_scores, id).contains('no-mean-imputation') } },
+                { assert strata.every { id -> score_command(study_scores, id).contains('2 5 header-read no-mean-imputation list-variants') } },
+                { assert strata.every { id -> [reference_scores, study_scores].every { scores -> !score_command(scores, id).contains('--read-freq') && !score_command(scores, id).contains('variance-standardize') } } },
+                // Both strata hold more than 100 samples, so each takes the full target filters.
+                { assert workflow.trace.tasks().findAll { task -> task.name.contains('PLINK2_WRITESNPLIST_ANCESTRY (') }.size() == 2 },
+                { assert workflow.trace.tasks().findAll { task -> task.name.contains('PLINK2_WRITESNPLIST_ANCESTRY_SMALL (') }.isEmpty() },
+                // The tuning grid marks exactly one selected row per stratum.
+                { assert strata.every { id -> tuning[id].readLines().drop(1).count { line -> line.split('\t')[8] == 'TRUE' } == 1 } },
+                // The reference classifies itself perfectly in five-fold cross-validation.
                 { assert strata.every { id -> model[id].readLines().drop(1).collect { line -> line.split('\t') }.findAll { fields -> fields[0] == fields[1] }.sum { fields -> fields[2] as Integer } == 250 } },
                 // Exactly the planted outliers leave the stratum's label, each to the super-population it was
                 // drawn from; every other study sample is assigned the stratum's label.
@@ -293,7 +307,7 @@ nextflow_workflow {
                 { assert strata.every { id -> reference_scores[id].readLines().size() == 251 } },
                 // The two mind removals are not projected.
                 { assert strata.every { id -> study_scores[id].readLines().size() == 124 } },
-                // The reference classifies itself perfectly, leave-one-out.
+                // The reference classifies itself perfectly in five-fold cross-validation.
                 { assert strata.every { id -> model[id].readLines().drop(1).collect { line -> line.split('\t') }.findAll { fields -> fields[0] == fields[1] }.sum { fields -> fields[2] as Integer } == 250 } },
                 // Exactly the planted outliers leave the stratum's label, each to the super-population it was
                 // drawn from; every other study sample is assigned the stratum's label.
@@ -377,6 +391,9 @@ nextflow_workflow {
                 // decomposition's own pruned list.
                 { assert shared_markers.keySet() == ['study_csa'] as Set && reference_keep.keySet() == ['study_csa'] as Set },
                 { assert shared_markers.study_csa == prune_in.study_csa },
+                // The 12-sample stratum takes the missingness filter alone, the two large strata all three.
+                { assert workflow.trace.tasks().findAll { task -> task.name.contains('PLINK2_WRITESNPLIST_ANCESTRY (') }.collect { task -> task.name.tokenize('()').last() }.sort() == ['study_afr', 'study_eur'] },
+                { assert workflow.trace.tasks().findAll { task -> task.name.contains('PLINK2_WRITESNPLIST_ANCESTRY_SMALL (') }.collect { task -> task.name.tokenize('()').last() } == ['study_csa'] },
                 { assert reference_keep.study_csa.readLines().size() == 50 },
                 { assert reference_keep.study_csa.readLines().every { line -> line.split(' ')[1].startsWith('GIH_') || line.split(' ')[1].startsWith('PJL_') } },
                 { assert snapshot(workflow.out.shared_markers, workflow.out.reference_keep, workflow.out.prune_in, workflow.out.eigenval, workflow.out.assignment).match() },
@@ -455,7 +472,7 @@ nextflow_workflow {
                 // Under matched the shared markers are filtered and pruned on the 50 CSA reference samples,
                 // outside the same regions, over the same harmonised reference; the decomposition is unchanged.
                 { assert shared_markers.study_csa.fileName.toString() == 'study_csa.ancestry_matched.prune.in' },
-                { assert command.contains('--keep study_csa.reference_keep.txt') && command.contains('--exclude study_csa.ancestry.highld_exclude.txt') && command.contains('--maf 0.01 --geno 0.05') },
+                { assert command.contains('--keep study_csa.reference_keep.txt') && command.contains('--exclude study_csa.ancestry.highld_exclude.txt') && command.contains('--geno 0.02 --maf 0.01 --hwe 0.000001') },
                 { assert shared_markers.study_csa.readLines() != prune_in.study_csa.readLines() },
                 { assert snplist.study_csa.readLines().containsAll(shared_markers.study_csa.readLines()) },
                 { assert shared_markers.study_csa.readLines().intersect(highld_exclude.study_csa.readLines()).isEmpty() },

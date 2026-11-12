@@ -199,7 +199,7 @@
                     "type": "string",
                     "default": "matched",
                     "enum": ["pooled", "matched"],
-                    "description": "Which reference samples choose the `shared` marker set: `matched`, the reference samples of the stratum's super-population, on which the reference-side `--maf` and `--geno` filters, the long-range LD exclusion and `--indep-pairwise` are applied; or `pooled`, every reference sample, so that the shared markers are the ancestry decomposition's own filtered, pruned list.",
+                    "description": "Which reference samples choose the `shared` marker set: `matched`, the reference samples of the stratum's super-population, on which the ancestry-stage `--ancestry_maf`, `--ancestry_geno` and `--ancestry_hwe` filters, the long-range LD exclusion and `--indep-pairwise` are applied; or `pooled`, every reference sample, so that the shared markers are the ancestry decomposition's own filtered, pruned list.",
                     "help_text": "Only strata in the `shared` mode read this. Under `matched` the filters and pruning run on the reference samples whose `super_pop` in `--reference_pop_data` is the stratum's `ancestry`, over the merged, harmonised reference; plink2 refuses to prune fewer than 50 samples, so a stratum whose super-population has fewer than 50 reference samples uses the pooled panel instead, and its summary row records `pooled` with a note. The ancestry decomposition and projection use the pooled panel either way, and the heterozygosity baseline is the matched samples either way. The choice and the marker count of each stratum are recorded in `gwasqc_summary.tsv` and the MultiQC report.",
                     "fa_icon": "fas fa-layer-group"
                 },
@@ -317,6 +317,31 @@
                     "description": "Number of reference principal components computed with `--pca allele-wts` and projected onto both sample sets; the classifier uses all of them and the plots the first four.",
                     "help_text": "plink2 refuses `--pca` on fewer than 50 reference samples, and recommends its `approx` modifier, available through `ext.args` of `PLINK2_PCAWTS`, on panels far beyond 5000 samples.",
                     "fa_icon": "fas fa-project-diagram"
+                },
+                "ancestry_geno": {
+                    "type": "number",
+                    "default": 0.02,
+                    "minimum": 0,
+                    "maximum": 1,
+                    "description": "Maximum per-variant missing-call rate of the ancestry stage, applied to the study's QC'd variants before they are matched to the reference and to the reference samples before pruning.",
+                    "fa_icon": "fas fa-percentage"
+                },
+                "ancestry_maf": {
+                    "type": "number",
+                    "minimum": 0,
+                    "maximum": 0.5,
+                    "description": "Minor allele frequency threshold of the ancestry stage, applied with `--ancestry_geno`; defaults to `--maf`.",
+                    "help_text": "The study-side filter applies it only to a stratum of more than 100 samples after the mind filter, as the legacy ancestry script did; a smaller stratum is filtered on `--ancestry_geno` alone.",
+                    "fa_icon": "fas fa-percentage"
+                },
+                "ancestry_hwe": {
+                    "type": "number",
+                    "default": 1e-6,
+                    "minimum": 0,
+                    "maximum": 1,
+                    "description": "Hardy-Weinberg exact-test p-value threshold of the ancestry stage, applied with `--ancestry_geno`.",
+                    "help_text": "The study-side filter applies it only to a stratum of more than 100 samples after the mind filter; on the reference it is tested over the reference samples the markers are pruned on, the pooled panel or, for the shared marker set under `matched`, the stratum's super-population.",
+                    "fa_icon": "fas fa-percentage"
                 },
                 "ancestry_prob_threshold": {
                     "type": "number",

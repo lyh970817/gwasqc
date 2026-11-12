@@ -1,6 +1,6 @@
 # yaml-language-server: $schema=https://raw.githubusercontent.com/nf-core/modules/master/subworkflows/yaml-schema.json
 name: ancestry_inference
-description: Infer the ancestry of every sample of one PLINK fileset per stratum against a labelled reference panel, from the harmonisation of the stratum's QC'd variants with the reference variant tables by position and alleles, through the intersect, merge, rename and strand flip of the reference filesets and their filtering, pruning and decomposition, to the projection of reference and study samples and the assignment of each study sample to a super-population; for a stratum in the shared marker-set mode it also selects the ancestry-matched reference samples and the shared markers, pruned on the pooled or the matched reference samples
+description: Infer the ancestry of every sample of one PLINK fileset per stratum against a labelled reference panel, from the legacy ancestry-stage variant filters on the stratum's QC'd variants and their harmonisation with the reference variant tables by position and alleles, through the intersect, merge, rename and strand flip of the reference filesets and their filtering, pruning and decomposition, to the projection of reference and study samples and the assignment of each study sample to a super-population; for a stratum in the shared marker-set mode it also selects the ancestry-matched reference samples and the shared markers, pruned on the pooled or the matched reference samples
 keywords:
   - plink
   - ancestry
@@ -9,6 +9,7 @@ keywords:
   - population structure
   - quality control
 components:
+  - plink2/writesnplist
   - ancestry_harmonise
   - plink2/makebed
   - plink2/pmergelist
@@ -51,7 +52,7 @@ input:
       description: Number of principal components computed on the reference and projected
       structure: integer n_pcs
   - prob_threshold:
-      description: Posterior probability at or above which a study sample is assigned to its most probable super-population
+      description: Class probability at or above which a study sample is assigned to its most probable super-population
       structure: number prob_threshold
   - sd_filter:
       description: Standard deviations of the centroid rule that unassigns an assigned sample lying too far from its group on any component; 0 switches the rule off
@@ -62,7 +63,7 @@ input:
 output:
   - harmonisation:
       type: file
-      description: One row per QC'd study variant with the reference variant it was matched to, its class and the basis of the match (ID and position, position only, or ID only for a position mismatch)
+      description: One row per QC'd study variant that passes the ancestry-stage filters, with the reference variant it was matched to, its class and the basis of the match (ID and position, position only, or ID only for a position mismatch)
       structure: [map meta, path harmonisation]
       pattern: "*.ancestry_harmonisation.tsv"
       ontologies: []
@@ -164,7 +165,7 @@ output:
       ontologies: []
   - assignment:
       type: file
-      description: Per study sample, the assigned super-population, its status, the largest posterior, the centroid distance and every posterior
+      description: Per study sample, the assigned super-population, its status, the largest class probability, the centroid distance and every class probability
       structure: [map meta, path assignment]
       pattern: "*.ancestry_assignment.tsv"
       ontologies: []
@@ -176,9 +177,15 @@ output:
       ontologies: []
   - model:
       type: file
-      description: Leave-one-out confusion of the classifier on the reference samples
+      description: Five-fold cross-validated confusion of the classifier on the reference samples at the selected tuning, over every held-out prediction and over those reaching the probability threshold
       structure: [map meta, path model]
       pattern: "*.ancestry_model.tsv"
+      ontologies: []
+  - tuning:
+      type: file
+      description: The classifier's tuning grid with its cross-validated log-loss, accuracy and kappa, the selected alpha and lambda marked
+      structure: [map meta, path tuning]
+      pattern: "*.ancestry_model_tuning.tsv"
       ontologies: []
   - keep_lists:
       type: file
