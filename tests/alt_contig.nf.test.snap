@@ -4,9 +4,12 @@
             {
                 "ANCESTRY_ASSIGN": {
                     "r-base": "4.4.3",
+                    "r-caret": "7.0.1",
                     "r-data.table": "1.17.8",
                     "r-ggplot2": "3.5.2",
-                    "r-mass": "7.3.66"
+                    "r-glmnet": "4.1.10",
+                    "r-mlmetrics": "1.1.3",
+                    "r-proc": "1.19.0.1"
                 },
                 "ANCESTRY_HARMONISE": {
                     "r-base": "4.3.1"
@@ -14,10 +17,7 @@
                 "CONTIG_EXCLUDE": {
                     "gawk": "5.3.1"
                 },
-                "GENO_DECISIONS": {
-                    "r-base": "4.3.1"
-                },
-                "GENO_DECISIONS_LADDER": {
+                "GENO_DECISIONS_RUNG": {
                     "r-base": "4.3.1"
                 },
                 "HETEROZYGOSITY_PLOTS": {
@@ -39,7 +39,7 @@
                     "r-data.table": "1.17.8",
                     "r-ggplot2": "3.5.2"
                 },
-                "MIND_DECISIONS": {
+                "MIND_DECISIONS_RUNG": {
                     "r-base": "4.3.1"
                 },
                 "MISSINGNESS_LADDER": {
@@ -74,10 +74,10 @@
                 "PLINK2_MAKEKINGTABLE": {
                     "plink2": "2.0.0-a.6.9LM"
                 },
-                "PLINK2_MISSING_LADDER": {
+                "PLINK2_MISSING_RUNG_SAMPLES": {
                     "plink2": "2.0.0-a.6.9LM"
                 },
-                "PLINK2_MISSING_SAMPLES": {
+                "PLINK2_MISSING_RUNG_VARIANTS": {
                     "plink2": "2.0.0-a.6.9LM"
                 },
                 "PLINK2_MISSING_VARIANTS": {
@@ -96,6 +96,9 @@
                     "plink2": "2.0.0-a.6.9LM"
                 },
                 "PLINK2_WRITESNPLIST": {
+                    "plink2": "2.0.0-a.6.9LM"
+                },
+                "PLINK2_WRITESNPLIST_ANCESTRY": {
                     "plink2": "2.0.0-a.6.9LM"
                 },
                 "QC_SUMMARY": {
@@ -119,10 +122,10 @@
                     "nf-core/gwasqc": "v1.0.0dev"
                 }
             },
-            "gwasqc_summary.tsv:md5,deda133252fac6f686e73009edfef8c1",
+            "gwasqc_summary.tsv:md5,48adb731933dda9b5d7f4db583aa1258",
             "study_eur_alt.contig_exclude.txt:md5,e72b8b8ca4c23bff6d77463f8a3c10e4"
         ],
-        "timestamp": "2026-11-11T16:26:17.751135785",
+        "timestamp": "2026-11-12T08:10:20.30132827",
         "meta": {
             "nf-test": "0.9.5",
             "nextflow": "26.04.6"

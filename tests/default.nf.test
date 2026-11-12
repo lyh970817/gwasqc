@@ -48,7 +48,7 @@ nextflow_pipeline {
                 hwe: ['<id>.hardy', '<id>.hardy.x', '<id>.hwe_exclude.txt', '<id>.hwe_hist.pdf', '<id>.hwe_hist.png', '<id>.hwe_hist.tsv', '<id>.hwe_hist_window.pdf', '<id>.hwe_hist_window.png', '<id>.hwe_hist_window.tsv'],
                 sex_check: ['<id>.sex_check_hist.pdf', '<id>.sex_check_hist.png', '<id>.sex_check_hist.tsv', '<id>.sex_mismatch.tsv', '<id>.sex_mismatch_remove.txt', '<id>.sexcheck'],
                 relatedness: ['<id>.relatedness_hist.pdf', '<id>.relatedness_hist.png', '<id>.relatedness_hist.tsv', '<id>.relatedness_indiv.tsv', '<id>.relatedness_outliers.txt', '<id>.relatedness_pairs.tsv', '<id>.relatedness_remove.txt'],
-                ancestry: ['<id>.ancestry.eigenval', '<id>.ancestry.highld_exclude.txt', '<id>.ancestry.prune.in', '<id>.ancestry_AFR.keep', '<id>.ancestry_AMR.keep', '<id>.ancestry_CSA.keep', '<id>.ancestry_EAS.keep', '<id>.ancestry_EUR.keep', '<id>.ancestry_assignment.tsv', '<id>.ancestry_flip_update.txt', '<id>.ancestry_harmonisation.tsv', '<id>.ancestry_harmonisation_summary.tsv', '<id>.ancestry_harmonised.snplist', '<id>.ancestry_mismatch_remove.txt', '<id>.ancestry_model.tsv', '<id>.ancestry_name_update.txt', '<id>.ancestry_pc1_pc2.pdf', '<id>.ancestry_pc1_pc2.png', '<id>.ancestry_pc3_pc4.pdf', '<id>.ancestry_pc3_pc4.png', '<id>.ancestry_pca.tsv', '<id>.ancestry_reference_extract.snplist', '<id>.ancestry_summary.tsv'],
+                ancestry: ['<id>.ancestry.eigenval', '<id>.ancestry.highld_exclude.txt', '<id>.ancestry.prune.in', '<id>.ancestry_AFR.keep', '<id>.ancestry_AMR.keep', '<id>.ancestry_CSA.keep', '<id>.ancestry_EAS.keep', '<id>.ancestry_EUR.keep', '<id>.ancestry_assignment.tsv', '<id>.ancestry_flip_update.txt', '<id>.ancestry_harmonisation.tsv', '<id>.ancestry_harmonisation_summary.tsv', '<id>.ancestry_harmonised.snplist', '<id>.ancestry_mismatch_remove.txt', '<id>.ancestry_model.tsv', '<id>.ancestry_model_tuning.tsv', '<id>.ancestry_name_update.txt', '<id>.ancestry_pc1_pc2.pdf', '<id>.ancestry_pc1_pc2.png', '<id>.ancestry_pc3_pc4.pdf', '<id>.ancestry_pc3_pc4.png', '<id>.ancestry_pca.tsv', '<id>.ancestry_reference_extract.snplist', '<id>.ancestry_summary.tsv'],
             ]
             // The study mode adds the pruning stage; the shared mode adds the reference baseline files beside
             // the heterozygosity report and has no pruning stage.
@@ -68,7 +68,7 @@ nextflow_pipeline {
                 // The cross-stratum summary: one row per stratum in id order, every count consistent with the
                 // planted defects and with the lists and filesets it was counted from.
                 { assert summary_rows.drop(1).collect { fields -> fields[0] } == ['study_afr', 'study_csa', 'study_eur'] },
-                { assert summary.study_eur.subMap(['ancestry', 'samples_input', 'variants_input', 'variants_contig_removed', 'maf_threshold', 'variants_maf_removed', 'geno_threshold', 'variants_geno_removed', 'mind_threshold', 'samples_mind_removed', 'hwe_threshold', 'variants_hwe_removed']) == [ancestry: 'EUR', samples_input: '125', variants_input: '3962', variants_contig_removed: '0', maf_threshold: '0.01', variants_maf_removed: '8', geno_threshold: '0.05', variants_geno_removed: '24', mind_threshold: '0.05', samples_mind_removed: '2', hwe_threshold: '1e-10', variants_hwe_removed: '5'] },
+                { assert summary.study_eur.subMap(['ancestry', 'samples_input', 'variants_input', 'variants_contig_removed', 'maf_threshold', 'variants_maf_removed', 'missingness_mode', 'geno_threshold', 'variants_geno_removed', 'mind_threshold', 'samples_mind_removed', 'hwe_threshold', 'variants_hwe_removed']) == [ancestry: 'EUR', samples_input: '125', variants_input: '3962', variants_contig_removed: '0', maf_threshold: '0.01', variants_maf_removed: '8', missingness_mode: 'iterative', geno_threshold: '0.05', variants_geno_removed: '23', mind_threshold: '0.05', samples_mind_removed: '2', hwe_threshold: '1e-10', variants_hwe_removed: '5'] },
                 { assert summary.study_afr.subMap(['ancestry', 'samples_input', 'variants_input', 'variants_maf_removed', 'samples_mind_removed', 'variants_hwe_removed']) == [ancestry: 'AFR', samples_input: '125', variants_input: '3962', variants_maf_removed: '9', samples_mind_removed: '2', variants_hwe_removed: '5'] },
                 { assert large.every { id -> summary[id].subMap(['sex_check_problems', 'sex_removals', 'relatedness_duplicate_or_mz', 'relatedness_parent_offspring', 'relatedness_full_sibling', 'relatedness_removed', 'relatedness_removals', 'ancestry_unassigned', 'ancestry_mismatches', 'ancestry_removals']) == [sex_check_problems: '2', sex_removals: 'listed only', relatedness_duplicate_or_mz: '1', relatedness_parent_offspring: '1', relatedness_full_sibling: '1', relatedness_removed: '1', relatedness_removals: 'listed only', ancestry_unassigned: '0', ancestry_mismatches: '3', ancestry_removals: 'listed only'] } },
                 { assert large.every { id -> summary[id]["ancestry_n_${prefix(id)}".toString()] == '120' } },
@@ -111,8 +111,9 @@ nextflow_pipeline {
                 // Ancestry: the documented strand flips are the flip list and the ambiguous pairs are dropped,
                 // every reference variant matched by ID and position, nothing renamed, and the chromosome X
                 // and Y variants of the QC'd set have no reference counterpart; the reference classifies
-                // itself perfectly leave-one-out; exactly the planted outliers leave the stratum's label, each to
-                // the super-population it was drawn from, and every other projected sample keeps it.
+                // itself perfectly in five-fold cross-validation; exactly the planted outliers leave the
+                // stratum's label, each to the super-population it was drawn from, and every other projected
+                // sample keeps it.
                 { assert strata.every { id -> harmonisation(id).findAll { _variant, group -> group == 'flip' }.keySet().sort() == flipped.intersect(harmonisation(id).keySet()).sort() } },
                 { assert strata.every { id -> harmonisation(id).findAll { _variant, group -> group == 'ambiguous' }.keySet().sort() == ambiguous.intersect(harmonisation(id).keySet()).sort() } },
                 { assert strata.every { id -> lines("qc/${id}/ancestry/${id}.ancestry_harmonised.snplist").intersect(ambiguous).isEmpty() } },
@@ -125,13 +126,13 @@ nextflow_pipeline {
                 { assert assigned('study_csa').values().every { group -> group == 'CSA' } },
                 { assert large.every { id -> lines("qc/${id}/ancestry/${id}.ancestry_mismatch_remove.txt") == planted[id].keySet().collect { iid -> "${iid} ${iid}".toString() } } },
                 { assert large.every { id -> lines("qc/${id}/ancestry/${id}.ancestry_${prefix(id)}.keep").size() == assigned(id).size() - 3 } },
-                // Planted defects from the fixture README, for the large strata. Missingness in the legacy
-                // order: the two high-missingness samples fall, and the borderline one survives because its rate
-                // over the geno-retained variants drops below the threshold; the twenty planted variants fall at
-                // geno.
+                // Planted defects from the fixture README, for the large strata. Missingness on the legacy
+                // cumulative ladder up to call rate 95: the two high-missingness samples fall at the first
+                // rung, and the borderline one survives because its rate over the variants each rung keeps stays
+                // below that rung's threshold; the twenty planted variants fall at the first rung.
                 { assert large.every { id -> lines("qc/${id}/missingness/${id}.mind_remove.txt") == ["${prefix(id)}_S040 ${prefix(id)}_S040", "${prefix(id)}_S041 ${prefix(id)}_S041"] } },
                 { assert strata.every { id -> lines("qc/${id}/missingness/${id}.geno_exclude.txt").size() >= 20 } },
-                { assert strata.every { id -> lines("qc/${id}/missingness/${id}.missingness_ladder.tsv").size() == 11 } },
+                { assert strata.every { id -> lines("qc/${id}/missingness/${id}.missingness_ladder.tsv").size() == 21 } },
                 { assert large.every { id -> lines("qc/${id}/hwe/${id}.hwe_exclude.txt") == ['rs1667531', 'rs1668208', 'rs1668410', 'rs1668428', 'rs1668730'] } },
                 // In the 12-sample stratum one missing call is 8.3 % of the samples, so every variant the sparse
                 // sample misses falls at geno, while the sparse sample itself stays; the HWE plants are not

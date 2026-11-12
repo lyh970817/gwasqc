@@ -4,9 +4,12 @@
             {
                 "ANCESTRY_ASSIGN": {
                     "r-base": "4.4.3",
+                    "r-caret": "7.0.1",
                     "r-data.table": "1.17.8",
                     "r-ggplot2": "3.5.2",
-                    "r-mass": "7.3.66"
+                    "r-glmnet": "4.1.10",
+                    "r-mlmetrics": "1.1.3",
+                    "r-proc": "1.19.0.1"
                 },
                 "ANCESTRY_HARMONISE": {
                     "r-base": "4.3.1"
@@ -17,10 +20,7 @@
                 "CONTIG_EXCLUDE": {
                     "gawk": "5.3.1"
                 },
-                "GENO_DECISIONS": {
-                    "r-base": "4.3.1"
-                },
-                "GENO_DECISIONS_LADDER": {
+                "GENO_DECISIONS_RUNG": {
                     "r-base": "4.3.1"
                 },
                 "HETEROZYGOSITY_PLOTS": {
@@ -42,7 +42,7 @@
                     "r-data.table": "1.17.8",
                     "r-ggplot2": "3.5.2"
                 },
-                "MIND_DECISIONS": {
+                "MIND_DECISIONS_RUNG": {
                     "r-base": "4.3.1"
                 },
                 "MISSINGNESS_LADDER": {
@@ -86,10 +86,10 @@
                 "PLINK2_MAKEKINGTABLE": {
                     "plink2": "2.0.0-a.6.9LM"
                 },
-                "PLINK2_MISSING_LADDER": {
+                "PLINK2_MISSING_RUNG_SAMPLES": {
                     "plink2": "2.0.0-a.6.9LM"
                 },
-                "PLINK2_MISSING_SAMPLES": {
+                "PLINK2_MISSING_RUNG_VARIANTS": {
                     "plink2": "2.0.0-a.6.9LM"
                 },
                 "PLINK2_MISSING_VARIANTS": {
@@ -108,6 +108,12 @@
                     "plink2": "2.0.0-a.6.9LM"
                 },
                 "PLINK2_WRITESNPLIST": {
+                    "plink2": "2.0.0-a.6.9LM"
+                },
+                "PLINK2_WRITESNPLIST_ANCESTRY": {
+                    "plink2": "2.0.0-a.6.9LM"
+                },
+                "PLINK2_WRITESNPLIST_ANCESTRY_SMALL": {
                     "plink2": "2.0.0-a.6.9LM"
                 },
                 "QC_SUMMARY": {
@@ -137,7 +143,7 @@
                 "study_csa.qc.fam:md5,4871d83e3ba9e1e5e1f91135794c5810"
             ]
         ],
-        "timestamp": "2026-11-11T19:42:41.573029733",
+        "timestamp": "2026-11-12T08:22:04.484804114",
         "meta": {
             "nf-test": "0.9.5",
             "nextflow": "26.04.6"
