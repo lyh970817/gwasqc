@@ -58,6 +58,12 @@ output:
       structure: [map meta, path smiss]
       pattern: "*.smiss"
       ontologies: []
+  - smiss_maf:
+      type: file
+      description: plink2 sample-based missingness report over every MAF-passing variant, before the geno threshold, from the same run as the variant report; the legacy `_maf<maf>_check.imiss` that the duplicate rule compares
+      structure: [map meta, path smiss]
+      pattern: "*.smiss"
+      ontologies: []
   - geno_exclude:
       type: file
       description: Variants exceeding the geno threshold, one ID per line for plink2 --exclude

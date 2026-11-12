@@ -171,6 +171,7 @@ workflow PLINK_QC_FILTER_LISTS {
     maf_snplist        = PLINK2_WRITESNPLIST.out.snplist // channel: [ val(meta), path(snplist) ], over the standard chromosomes
     vmiss              = PLINK2_MISSING_VARIANTS.out.vmiss // channel: [ val(meta), path(vmiss) ], over the MAF-passing variants
     smiss              = PLINK2_MISSING_SAMPLES.out.smiss // channel: [ val(meta), path(smiss) ], over the geno-retained variants
+    smiss_maf          = PLINK2_MISSING_VARIANTS.out.smiss // channel: [ val(meta), path(smiss) ], over the MAF-passing variants, before the geno filter
     geno_exclude       = GENO_DECISIONS.out.variant_exclude // channel: [ val(meta), path(geno_exclude) ]
     mind_remove        = MIND_DECISIONS.out.sample_remove // channel: [ val(meta), path(mind_remove) ]
     missingness_ladder = MISSINGNESS_LADDER.out.ladder // channel: [ val(meta), path(ladder) ]

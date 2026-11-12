@@ -50,6 +50,7 @@ nextflow_workflow {
             def maf_snplist = by_id(workflow.out.maf_snplist)
             def geno_exclude = by_id(workflow.out.geno_exclude)
             def smiss = by_id(workflow.out.smiss)
+            def smiss_maf = by_id(workflow.out.smiss_maf)
             def hwe_exclude = by_id(workflow.out.hwe_exclude)
             def mind_remove = by_id(workflow.out.mind_remove)
             def ladder = by_id(workflow.out.missingness_ladder)
@@ -78,6 +79,13 @@ nextflow_workflow {
                 // The sample report is measured over the geno-retained variants: its largest OBS_CT is the
                 // MAF-passing count minus the geno exclusions.
                 { assert obs_ct(smiss.study_eur) == 3954 - 24 },
+                // The duplicate rule's report is the legacy `_maf<maf>_check.imiss`, measured over every
+                // MAF-passing variant before the geno filter, so its largest OBS_CT is the MAF-passing count and
+                // the borderline sample sits at its 0.0501 there.
+                { assert obs_ct(smiss_maf.study_eur) == 3954 },
+                { assert obs_ct(smiss_maf.study_afr) == 3953 },
+                { assert smiss_maf.study_eur.readLines().find { line -> line.split('\t')[1] == 'EUR_S042' }.split('\t')[4] as Double > 0.05 },
+                { assert smiss.study_eur.readLines().find { line -> line.split('\t')[1] == 'EUR_S042' }.split('\t')[4] as Double < 0.05 },
                 // One ladder row per call rate, 90 to 99, every rung applied from the base fileset.
                 { assert ladder.study_eur.readLines().size() == 11 },
                 { assert ladder.study_eur.readLines().drop(1).collect { line -> line.split('\t')[0] } == (90..99).collect { rate -> rate.toString() } },

@@ -30,6 +30,25 @@
                         "study_eur.relatedness_indiv.tsv:md5,d5f51b506234a057e08f1649e3976aea"
                     ]
                 ],
+                "indiv_hist_data": [
+                    [
+                        {
+                            "ancestry": "EUR",
+                            "id": "study_eur"
+                        },
+                        "study_eur.relatedness_indiv_hist.tsv:md5,81c1ba5414fcb016e9f6fe7e97f4ab35"
+                    ]
+                ],
+                "indiv_hist_plot": [
+                    [
+                        {
+                            "ancestry": "EUR",
+                            "id": "study_eur"
+                        },
+                        "study_eur.relatedness_indiv_hist.pdf:md5,d41d8cd98f00b204e9800998ecf8427e",
+                        "study_eur.relatedness_indiv_hist.png:md5,d41d8cd98f00b204e9800998ecf8427e"
+                    ]
+                ],
                 "outliers": [
                     [
                         {
@@ -62,7 +81,7 @@
                 ]
             }
         ],
-        "timestamp": "2026-09-21T11:13:22.461565699",
+        "timestamp": "2026-11-12T06:08:26.968028313",
         "meta": {
             "nf-test": "0.9.5",
             "nextflow": "26.04.6"
@@ -121,7 +140,7 @@
                         "id": "study_eur",
                         "ancestry": "EUR"
                     },
-                    "study_eur.relatedness_indiv.tsv:md5,8e06d9f1351fe9ebeeea9574f6041fc4"
+                    "study_eur.relatedness_indiv.tsv:md5,4f69e5d48957da8b6944be7aba1ac8ee"
                 ]
             ],
             [
@@ -139,7 +158,7 @@
                         "id": "study_eur",
                         "ancestry": "EUR"
                     },
-                    "study_eur.relatedness_outliers.txt:md5,f45e77f552f202a3c79b69f4719714b3"
+                    "study_eur.relatedness_outliers.txt:md5,d41d8cd98f00b204e9800998ecf8427e"
                 ]
             ],
             [
@@ -152,13 +171,22 @@
                 ]
             ],
             [
+                [
+                    {
+                        "id": "study_eur",
+                        "ancestry": "EUR"
+                    },
+                    "study_eur.relatedness_indiv_hist.tsv:md5,72ffdb8072b09a81a4be391a28f1d57f"
+                ]
+            ],
+            [
                 "versions.yml:md5,cea7467ee18327ede465aa96a466589f"
             ]
         ],
-        "timestamp": "2026-09-20T15:21:38.895267639",
+        "timestamp": "2026-11-12T06:04:51.057508295",
         "meta": {
             "nf-test": "0.9.5",
-            "nextflow": "26.04.4"
+            "nextflow": "26.04.6"
         }
     },
     "synthetic - bare ID1/ID2 columns and a pair at the filter bound": {
@@ -176,7 +204,7 @@
                     {
                         "id": "bare"
                     },
-                    "bare.relatedness_indiv.tsv:md5,e7897fc9614781f068bab699d34c3314"
+                    "bare.relatedness_indiv.tsv:md5,7511e7867cbe24b49eae65e2413cb14e"
                 ]
             ],
             [
@@ -196,7 +224,7 @@
                 ]
             ]
         ],
-        "timestamp": "2026-09-21T11:06:41.040742308",
+        "timestamp": "2026-11-12T06:06:58.917279109",
         "meta": {
             "nf-test": "0.9.5",
             "nextflow": "26.04.6"

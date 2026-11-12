@@ -157,8 +157,10 @@ workflow GWASQC {
     // SUBWORKFLOW: Sex check, heterozygosity and relatedness lists and reports, per stratum, on the marker
     // set its mode selects
     //
+    // The duplicate rule compares the sample missingness over the MAF-passing variants before the geno filter,
+    // the report the legacy chain compared.
     def ch_sample_qc_inputs = ch_strata_by_id
-        .join(PLINK_QC_FILTER_LISTS.out.smiss.map { meta, smiss -> [meta.id, smiss] }, by: 0, failOnDuplicate: true, failOnMismatch: true)
+        .join(PLINK_QC_FILTER_LISTS.out.smiss_maf.map { meta, smiss -> [meta.id, smiss] }, by: 0, failOnDuplicate: true, failOnMismatch: true)
         .map { _id, meta, bed, bim, fam, maf_snplist, geno_exclude, hwe_exclude, mind_remove, smiss ->
             [meta, bed, bim, fam, maf_snplist, [geno_exclude, hwe_exclude], mind_remove, smiss]
         }

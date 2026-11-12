@@ -145,6 +145,12 @@ The VCZ format route is deferred to its own issue, and pre-QC batch merging is o
   approximation of the foundation chain is withdrawn.
 - Relatedness is estimated with KING-robust kinship (`--make-king-table`) rather than the legacy plink1.9
   `--genome` PI_HAT, and the pairs are classified on KING's own inference boundaries.
+- The per-individual mean kinship is the legacy `IndividualIBD.r` statistic: the mean over every other sample,
+  read from the `--make-king` matrix plink2 writes in the pass of the pair table, and an individual is an
+  outlier at or above the cohort mean plus `--relatedness_indiv_sd` standard deviations. The duplicate rule
+  compares the sample missingness over the MAF-passing variants before the `--geno` filter, the legacy
+  `_check.imiss`.
+- The per-individual mean-kinship histogram (`<id>.relatedness_indiv_hist.*`) of the legacy chain is published.
 
 ### Fixed
 
