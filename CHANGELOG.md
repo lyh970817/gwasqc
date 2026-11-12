@@ -22,7 +22,7 @@ The VCZ format route is deferred to its own issue, and pre-QC batch merging is o
   performed in Groovy at ingress. Each row is quality-controlled independently and its `id` is the output
   prefix of every file it produces.
 - Foundation QC chain per stratum: a MAF keep-list, missingness statistics with the `geno` and `mind` decision
-  lists and the legacy 90 %–99 % call-rate ladder, Hardy-Weinberg statistics with an exclusion list, and a
+  lists from the legacy 90 %–99 % call-rate ladder, Hardy-Weinberg statistics with an exclusion list, and a
   single terminal `--make-bed` materialisation driven by the accumulated
   `--extract`/`--exclude`/`--keep`/`--remove` lists. Every statistic runs on the unfiltered fileset with the
   lists so far applied, so no intermediate fileset exists anywhere in the chain.
@@ -39,11 +39,13 @@ The VCZ format route is deferred to its own issue, and pre-QC batch merging is o
   the two share sit at different positions; every reference fileset restricted to the matched variants by its
   own IDs, one merged reference per stratum with the reference IDs renamed to the study's through
   `--update-name` and the flips applied through `--update-alleles` (the restrictions and the merge are the
-  route's only intermediate filesets, unpublished), `--maf` and `--geno` on the reference, long-range LD
-  exclusion before `--indep-pairwise`, `--freq counts` with `--pca allele-wts`, projection of reference and study samples with
-  plink2's documented `--score` recipe, and a linear discriminant classifier (MASS, equal priors) with a
-  posterior threshold and an optional centroid rule. Publishes the harmonisation tables and lists, the pruned
-  set, the eigenvalues, both projections, the assignment, summary and model tables, per-super-population
+  route's only intermediate filesets, unpublished), the legacy ancestry-stage filters (`ancestry_geno`,
+  `ancestry_maf`, `ancestry_hwe`) on the study's QC'd variants and on the reference, long-range LD exclusion
+  before `--indep-pairwise`, `--pca allele-wts`, the legacy `--score` projection of reference and study samples
+  (raw dosages, the reference mean-imputed and the study not), and the legacy classifier, a cross-validated
+  elastic-net multinomial regression (caret with glmnet) on the reference-scaled components, with a
+  class-probability threshold and an optional centroid rule. Publishes the harmonisation tables and lists, the
+  pruned set, the eigenvalues, both projections, the assignment, summary, model and tuning tables, per-super-population
   keep-lists, the mismatch removal list, and the PC1/PC2 and PC3/PC4 plots with their plot-data table.
 - Upstream-bound PLINK 2 atomic modules, each accepting a bed/bim/fam or pgen/pvar/psam fileset and the same
   four optional filter-list slots: `plink2/writesnplist`, `plink2/missing`, `plink2/hardy`,
@@ -61,12 +63,12 @@ The VCZ format route is deferred to its own issue, and pre-QC batch merging is o
   strata as rows, the mismatch and duplicate-pair tables across strata, the removal-gate section stating what
   `apply_sample_removals` did or would do, and the review figures of every stratum embedded as images.
 - Parameters: `input`, `outdir`; `genome_build`, `high_ld_regions`, `reference_panel`, `reference_pop_data`;
-  `maf`, `geno`, `mind`, `hwe`; `ld_window_size`, `ld_step_size`, `ld_r2`; `sex_check_max_female_xf`,
+  `maf`, `geno`, `mind`, `hwe`, `missingness_mode`; `ld_window_size`, `ld_step_size`, `ld_r2`; `sex_check_max_female_xf`,
   `sex_check_min_male_xf`, `sex_check_max_female_ycount`, `sex_check_min_male_ycount`, `king_table_filter`,
   `relatedness_indiv_sd`, `relatedness_po_ibs0_max`, `apply_sample_removals`, `sample_qc_marker_set`,
   `sample_qc_shared_reference`, `small_n_threshold`, `ld_min_retained_fraction`; `skip_ancestry`,
   `ancestry_ld_window_size`, `ancestry_ld_step_size`, `ancestry_ld_r2`, `ancestry_n_pcs`,
-  `ancestry_prob_threshold`, `ancestry_sd_filter`, `ancestry_remove_mismatched`.
+  `ancestry_geno`, `ancestry_maf`, `ancestry_hwe`, `ancestry_prob_threshold`, `ancestry_sd_filter`, `ancestry_remove_mismatched`.
 - Synthetic three-stratum fixture on the `gwasqc` branch of `nf-core/test-datasets`: two 125-sample strata
   with planted sex mismatches, a duplicate pair, parent-offspring and full-sibling pairs, high-missingness
   samples, Hardy-Weinberg violations, a long-range LD block, strand-flipped and strand-ambiguous variants and
@@ -83,7 +85,7 @@ The VCZ format route is deferred to its own issue, and pre-QC batch merging is o
   (`sample_qc_marker_set`, `sample_qc_markers`, `sample_qc_note`) and in a MultiQC section, and a `study`-mode
   stratum whose pruning kept fewer than `ld_min_retained_fraction` of its QC'd variants is noted.
 - Choice of the reference samples the `shared` marker set is filtered and pruned on
-  (`sample_qc_shared_reference`): `matched`, the default, reruns `--maf`, `--geno` and `--indep-pairwise`
+  (`sample_qc_shared_reference`): `matched`, the default, reruns the ancestry-stage `--maf`, `--geno` and `--hwe` and `--indep-pairwise`
   outside the long-range LD regions on the reference samples of the stratum's own super-population, published
   as `<id>.ancestry_matched.prune.in`; `pooled` takes the ancestry route's pruned markers over the whole panel.
   A super-population with fewer than 50 reference samples, below which plink2 refuses LD pruning and frequency
@@ -107,6 +109,9 @@ The VCZ format route is deferred to its own issue, and pre-QC batch merging is o
   also carries eight variants on seven GRCh38 alt and random contigs, against a copy of the reference panel
   that carries the same, with a pipeline test asserting that the copy's QC'd fileset and every published list
   and table equal the stratum's own.
+- `missing_block` fixture: a copy of the EUR stratum in which seven samples miss every call on chromosomes 1
+  and 2, on which the two missingness modes part: the single pass drops the 615 variants of the block and
+  keeps the samples, the iterative ladder removes the seven samples at its first rung and keeps the block.
 - Upstream-bound `plink2/freq` atom (`--freq`, with the `counts` modifier through `ext.args2`) and an optional
   `--read-freq` table on `plink2/het`; pipeline-owned `ancestry_reference_keep`, which lists the reference
   samples of a stratum's super-population from the population table as a `--keep` list.
@@ -139,10 +144,37 @@ The VCZ format route is deferred to its own issue, and pre-QC batch merging is o
   published: the pruned-in list, the classified pairs table and the ancestry plot-data table carry them. The
   process-wide default `publishDir` publishes nothing and each per-method-family config in `conf/modules/`
   opts its own processes in by scientific stage.
-- Missingness follows the legacy order exactly: the geno exclusion list is derived from one `--missing` run,
-  the sample report and the mind removal list from a second run with that list excluded, and each rung of the
-  call-rate ladder from its own run; plink2 writes `--missing` before it applies `--geno`, so the single-run
-  approximation of the foundation chain is withdrawn.
+- Missingness replicates the legacy GLAD pipeline's applied call-rate ladder by default
+  (`missingness_mode iterative`, `Iterative_Missingness.sh`): at each call rate from 90 % up to the call rate
+  1 - `geno` (95 % at the defaults), the variants and then the samples whose missing-call rate exceeds 1 - the
+  call rate are removed from what the previous step left. Each step is one `--missing` run over the original
+  fileset with the cumulative lists of the steps before it, because plink2 writes `--missing` before it
+  applies `--geno`; nothing is materialised. `geno` and `mind` must then be equal and a whole percentage from
+  0.01 to 0.10. `missingness_mode single` is the one pass of the canonical legacy script, `--geno` and then
+  `--mind` on the geno-retained variants, which was the only behaviour before. The ladder table is cumulative
+  in both modes and matches the legacy table: 20 rows, a variant and a sample step per call rate from 90 % to
+  99 % (`step`, `call_rate`, `filter`, `missing_threshold`, `variants_removed`, `variants_remaining`,
+  `samples_removed`, `samples_remaining`), in place of ten rows that applied each rate from the base fileset.
+  `gwasqc_summary.tsv` and the MultiQC filter table gain `missingness_mode`. On the first real stratum that
+  showed the difference, five samples sharing a block of some 105,000 missing variants cost the single pass
+  those variants, where the ladder removes the five samples.
+- The ancestry classifier is the legacy `ancestry_identifier.r` model in place of linear discriminant
+  analysis: `caret::train(method = 'glmnet', metric = 'logLoss')` with five-fold cross-validation on the
+  super-population labels, every component centred and scaled by the reference samples; there is no option
+  to keep the discriminant classifier, which on the first real run assigned 23 of 70 AMR samples to EUR where
+  the predecessor pipeline's glmnet model assigned them AMR. `<id>.ancestry_model.tsv` is now the five-fold cross-validated confusion
+  with a second count column at the probability threshold (`N_THRESHOLD`), and `<id>.ancestry_model_tuning.tsv`
+  is new. Two departures from the legacy script are recorded: the folds are drawn under a fixed seed, where
+  the legacy cross-validation was unseeded, and the threshold comparison is `>=` on unrounded probabilities,
+  where the legacy script compared three-decimal probabilities with `>`.
+- The ancestry projection follows the legacy recipe in place of plink2's documented one: `--score` on the raw
+  allele dosages with the `--pca allele-wts` weights, without `variance-standardize` and without `--read-freq`,
+  the reference samples mean-imputed and the study samples scored with `no-mean-imputation`.
+- The ancestry stage applies the legacy variant filters of its own: `ancestry_geno` (0.02), `ancestry_maf`
+  (default `maf`) and `ancestry_hwe` (1e-6) on the stratum's QC'd variants before harmonisation, all three for
+  a stratum of more than 100 samples after the mind removals and `ancestry_geno` alone otherwise, and all
+  three on the reference samples in the pruning runs, where the reference was filtered with `maf` and `geno`
+  and without a Hardy-Weinberg test before. The harmonisation table lists the study variants that pass them.
 - Relatedness is estimated with KING-robust kinship (`--make-king-table`) rather than the legacy plink1.9
   `--genome` PI_HAT, and the pairs are classified on KING's own inference boundaries.
 
@@ -170,8 +202,7 @@ The VCZ format route is deferred to its own issue, and pre-QC batch merging is o
 - `ancestry_harmonise` reads a `.pvar` through plink2's own bim mapping (A1 = ALT, A2 = REF), so a mixed
   bim/pvar input pair classifies its variants exactly as a bim/bim pair does.
 - The five base-R modules moved from frozen biocontainers to the Wave/Seqera container convention with lock
-  files, matching the rest of the pipeline, and `r-mass` is declared by `ancestry_assign` rather than being
-  relied on implicitly.
+  files, matching the rest of the pipeline.
 - The nf-test version used in CI is aligned with the development shell (0.9.5), so a version difference cannot
   change a test result between the two.
 - The contributing guide's tags and links resolve.
@@ -187,11 +218,15 @@ The VCZ format route is deferred to its own issue, and pre-QC batch merging is o
 | MultiQC      |             | 1.34          |
 | plink2       |             | 2.0.0a.6.9    |
 | r-base       |             | 4.3.1 / 4.4.3 |
+| r-caret      |             | 7.0-1         |
 | r-data.table |             | 1.17.8        |
 | r-ggplot2    |             | 3.5.2         |
-| r-mass       |             | 7.3-66        |
+| r-glmnet     |             | 4.1-10        |
+| r-mlmetrics  |             | 1.1.3         |
+| r-proc       |             | 1.19.0.1      |
 
 `r-base` is 4.3.1 in the base-R modules that load no library (`geno_decisions`, `mind_decisions`,
 `hwe_decisions`, `missingness_ladder`, `ancestry_harmonise`) and 4.4.3 in the modules that load `ggplot2` and
-`data.table`. `coreutils` is declared by no `environment.yml`: `stratum_report` and `qc_summary` invoke it from
+`data.table`. `r-caret`, `r-glmnet`, `r-mlmetrics` and `r-proc` belong to `ancestry_assign` alone, the last two
+because caret's `multiClassSummary` loads them. `coreutils` is declared by no `environment.yml`: `stratum_report` and `qc_summary` invoke it from
 the gawk image and report the version they find.

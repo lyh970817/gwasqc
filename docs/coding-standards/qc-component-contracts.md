@@ -268,17 +268,16 @@ header. Never merge the two roles into one file.
 - **[MUST]** A decision module's comparison against its threshold is documented in `meta.yml` with its exact
   boundary, because the boundary is policy and is not uniform across the pipeline. The live set is: strict `>` for
   the variant- and sample-missingness rates and the call-rate ladder
-  (`modules/local/geno_decisions/templates/geno_decisions.R:33`,
-  `modules/local/mind_decisions/templates/mind_decisions.R:38`,
-  `modules/local/missingness_ladder/templates/missingness_ladder.R:37-39`), which matches plink2's own `--geno`
-  and `--mind`; strict `<` for the Hardy-Weinberg p-value floor
+  (`modules/local/geno_decisions/templates/geno_decisions.R`,
+  `modules/local/mind_decisions/templates/mind_decisions.R`, which decide every rung of the ladder as well),
+  which matches plink2's own `--geno` and `--mind`; strict `<` for the Hardy-Weinberg p-value floor
   (`modules/local/hwe_decisions/templates/hwe_decisions.R`); inclusive `>=` for each KING degree lower bound
   (0.354, 0.177, 0.0884, 0.0442), as KING's inference table gives the degrees as closed intervals from
   2^-(d+1.5), and strict `>` for the mean-kinship outlier rule
   (`modules/local/relatedness_decisions/templates/relatedness_decisions.R`); inclusive `<=` for the
-  parent-offspring IBS0 bound; inclusive `>=` for the ancestry posterior threshold
-  (`modules/local/ancestry_assign/templates/ancestry_assign.R:100`); and strict `>` for the centroid rule
-  (`:113-117`).
+  parent-offspring IBS0 bound; inclusive `>=` for the ancestry class-probability threshold
+  (`modules/local/ancestry_assign/templates/ancestry_assign.R`, where the legacy script compared three-decimal
+  probabilities with a strict `>`); and strict `>` for the centroid rule (same file).
 - **[MUST]** Where a pipeline-owned boundary sits at the same value as a plink2 flag's boundary, the two must
   agree or the disagreement must be recorded, because a row plink2 reports at exactly its own boundary then falls
   outside the module's class. The live instance is `--king-table-filter`, which plink2 applies inclusively at
@@ -383,18 +382,25 @@ header. Never merge the two roles into one file.
   read as a pvar (`modules/local/ancestry_harmonise/tests/main.nf.test`); document the mapping at the interface
   rather than requiring one format.
 - **[MUST]** The allele-weight and allele-count tables of one `PLINK2_PCAWTS` run are a matched pair over one
-  filtered variant set, and a projection consumes both from the same run: the weight file's column layout is what
-  the `--score` column arguments address, and the count file is what `--read-freq` standardises against. Splitting
-  the two across runs silently changes the standardisation
-  (`modules/local/plink2/pcawts/main.nf:38-40`, `conf/modules/plink2.config:144-146`, `:156-160`).
-- **[MUST]** Two `--score` runs whose coordinates are to be compared take the same weight file, the same
-  `--read-freq` table, and the same modifiers, and differ only in the samples and the sample lists they receive
-  (`subworkflows/local/ancestry_inference/main.nf:133-139`, `conf/modules/plink2.config:155-166`).
+  filtered variant set, and a projection that standardises consumes both from the same run: the weight file's
+  column layout is what the `--score` column arguments address, and the count file is what `--read-freq`
+  standardises against. Splitting the two across runs silently changes the standardisation
+  (`modules/local/plink2/pcawts/main.nf`). The pipeline's own projection replicates the legacy recipe, which
+  standardises nothing, and so reads the weights alone (`conf/modules/plink2.config`, `PLINK2_PCAWTS` and the
+  score aliases).
+- **[MUST]** Two `--score` runs whose coordinates are to be compared take the same weight file and the same
+  column arguments. The pipeline's two runs differ in the samples, the sample lists and one modifier, as the
+  legacy script's did: the reference run mean-imputes a missing genotype and the study run carries
+  `no-mean-imputation` (`subworkflows/local/ancestry_inference/main.nf`, `conf/modules/plink2.config`,
+  `PLINK2_SCORE_REFERENCE` and `PLINK2_SCORE_STUDY`). No other difference between the two is permitted.
 - **[SHOULD]** A per-rung or per-scatter statistics table is not published; the gathered product is
-  (`conf/modules/plink2.config:44-48`, `conf/modules/qc_decisions.config:26-32`). A caller that gathers such
+  (`conf/modules/plink2.config`, `PLINK2_MISSING_RUNG_VARIANTS`); the one exception is the rung whose lists
+  and sample report are the applied ones under the iterative missingness mode, which its selector publishes
+  under the stratum's own names (`PLINK2_MISSING_RUNG_SAMPLES`; `conf/modules/qc_decisions.config`,
+  `GENO_DECISIONS_RUNG|MIND_DECISIONS_RUNG`). A caller that gathers such
   tables side by side gives them distinct basenames through `ext.prefix` and passes the ordering key alongside the
   files rather than parsing it back out of a filename
-  (`modules/local/missingness_ladder/main.nf:11-13`, `:28`).
+  (`modules/local/missingness_ladder/main.nf`, the `call_rates` input and the `rungs` variable).
 
 ## Plot and plot-data bundles
 
@@ -496,13 +502,14 @@ header. Never merge the two roles into one file.
   every plink2 atom emits its `.log` on a channel and no pattern matches it.
 - **[SHOULD]** Express "deliberately unpublished" one way per repository. There are two mechanisms and they are
   not interchangeable: an alias of a published base process must carry
-  `publishDir = [enabled: false]` (`conf/modules/plink2.config:177`, `conf/modules/qc_decisions.config:31`),
+  `publishDir = [enabled: false]` or re-point the publication (`conf/modules/plink2.config`,
+  `conf/modules/qc_decisions.config`),
   because the base selector would otherwise reach it, while a process no selector publishes is already suppressed
   by the process-wide default and needs nothing. State which case applies in the selector's comment rather than
   leaving a reader to work out whether an omission is deliberate: "deliberately unpublished as an alias of the
-  published X" for the first (`conf/modules/plink2.config`, `PLINK2_MAKEBED_REFERENCE`;
-  `conf/modules/qc_decisions.config`, `GENO_DECISIONS_LADDER`) and "unpublished by the process-wide default"
-  for the second (`conf/modules/plink2.config`, `PLINK2_MISSING_LADDER`, `PLINK2_MAKEKINGTABLE`,
+  published X" for the first (`conf/modules/plink2.config`, `PLINK2_MAKEBED_REFERENCE` and
+  `PLINK2_WRITESNPLIST_ANCESTRY`) and "unpublished by the process-wide default"
+  for the second (`conf/modules/plink2.config`, `PLINK2_MISSING_RUNG_VARIANTS`, `PLINK2_MAKEKINGTABLE`,
   `PLINK2_PMERGELIST` and the score aliases; `conf/modules/multiqc.config`, `STRATUM_REPORT`).
 - **[MUST]** Where a prefix must distinguish an alias's outputs in the same published directory, `ext.prefix`
   carries the distinguishing token and the module stays unaware of it: `${meta.id}.maf`, `${meta.id}.qc`,

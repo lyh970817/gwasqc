@@ -38,9 +38,21 @@
 
   > Wickham H. ggplot2: Elegant Graphics for Data Analysis. Springer-Verlag New York, 2016. ISBN 978-3-319-24277-4.
 
-- [MASS](https://www.stats.ox.ac.uk/pub/MASS4/)
+- [caret](https://topepo.github.io/caret/)
 
-  > Venables WN, Ripley BD. Modern Applied Statistics with S. Fourth Edition. Springer, New York, 2002. ISBN 0-387-95457-0.
+  > Kuhn M. Building Predictive Models in R Using the caret Package. J Stat Softw. 2008;28(5):1-26. doi: 10.18637/jss.v028.i05.
+
+- [glmnet](https://glmnet.stanford.edu/)
+
+  > Friedman J, Hastie T, Tibshirani R. Regularization Paths for Generalized Linear Models via Coordinate Descent. J Stat Softw. 2010;33(1):1-22. doi: 10.18637/jss.v033.i01.
+
+- [MLmetrics](https://github.com/yanyachen/MLmetrics)
+
+  > Yan Y. MLmetrics: Machine Learning Evaluation Metrics. R package.
+
+- [pROC](https://xrobin.github.io/pROC/)
+
+  > Robin X, Turck N, Hainard A, Tiberti N, Lisacek F, Sanchez JC, Müller M. pROC: an open-source package for R and S+ to analyze and compare ROC curves. BMC Bioinformatics. 2011;12:77. doi: 10.1186/1471-2105-12-77.
 
 ## Software packaging/containerisation tools
 
