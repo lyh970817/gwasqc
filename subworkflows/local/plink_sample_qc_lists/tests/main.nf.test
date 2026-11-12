@@ -49,6 +49,7 @@ nextflow_workflow {
                 input[1] = 0.05
                 input[2] = 0.05
                 input[3] = 1e-10
+                input[4] = 'iterative'
                 """
             }
         }
@@ -165,7 +166,7 @@ nextflow_workflow {
                 { assert command_of(workflow.out.reference_het, 'study_csa').contains('--keep') && command_of(workflow.out.reference_het, 'study_csa').contains('--read-freq study_csa.reference.afreq') },
                 { assert command_of(workflow.out.het, 'study_csa').contains('--extract study_csa.ancestry.prune.in') && command_of(workflow.out.het, 'study_csa').contains('--read-freq study_csa.reference.afreq') },
                 { assert command_of(workflow.out.kin0, 'study_csa').contains('--extract study_csa.ancestry.prune.in') },
-                { assert command_of(workflow.out.sexcheck, 'study_csa').contains('--extract study_csa.maf.snplist') && command_of(workflow.out.sexcheck, 'study_csa').contains('--exclude study_csa.geno_exclude.txt study_csa.hwe_exclude.txt') },
+                { assert command_of(workflow.out.sexcheck, 'study_csa').contains('--extract study_csa.maf.snplist') && command_of(workflow.out.sexcheck, 'study_csa').contains('--exclude study_csa.rung95.geno_exclude.txt study_csa.hwe_exclude.txt') },
                 { assert study.every { id -> command_of(workflow.out.sexcheck, id).contains("--extract ${id}.prune.in".toString()) } },
                 // The study report and the reference report of the shared stratum cover the same markers, and
                 // the histogram data carries both sources over the same bins.

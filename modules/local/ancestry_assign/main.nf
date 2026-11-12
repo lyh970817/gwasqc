@@ -4,8 +4,8 @@ process ANCESTRY_ASSIGN {
 
     conda "${moduleDir}/environment.yml"
     container "${workflow.containerEngine in ['singularity', 'apptainer'] && !task.ext.singularity_pull_docker_container
-        ? 'https://community-cr-prod.seqera.io/docker/registry/v2/blobs/sha256/ac/ac330e254aed1e019ded0a6140463199760e9ee8f1cf398670eb40ccee61ed14/data'
-        : 'community.wave.seqera.io/library/r-base_r-ggplot2_r-data.table:785e51271c23bbdc'}"
+        ? 'https://community-cr-prod.seqera.io/docker/registry/v2/blobs/sha256/c0/c095279e0fefe3b4d67140c4dfd1ebadeb50d298b9a0b1b850683519a20bfe59/data'
+        : 'community.wave.seqera.io/library/r-base_r-caret_r-data.table_r-ggplot2_pruned:92b4b923c841df0a'}"
 
     input:
     tuple val(meta), path(reference_scores), path(study_scores)
@@ -17,6 +17,7 @@ process ANCESTRY_ASSIGN {
     tuple val(meta), path("${prefix}.ancestry_assignment.tsv"), emit: assignment
     tuple val(meta), path("${prefix}.ancestry_summary.tsv"), emit: summary
     tuple val(meta), path("${prefix}.ancestry_model.tsv"), emit: model
+    tuple val(meta), path("${prefix}.ancestry_model_tuning.tsv"), emit: tuning
     tuple val(meta), path("${prefix}.ancestry_*.keep"), emit: keep_lists, optional: true
     tuple val(meta), path("${prefix}.ancestry_mismatch_remove.txt"), emit: sample_remove
     tuple val(meta), path("${prefix}.ancestry_pca.tsv"), emit: pca_data
@@ -52,12 +53,13 @@ process ANCESTRY_ASSIGN {
         header <- function(columns, file) writeLines(paste(columns, collapse = "\\t"), file)
         header(c(ids, "ASSIGNED", "STATUS", "MAX_PROB", "MAX_ABS_Z", paste0("PROB_", groups)), "${prefix}.ancestry_assignment.tsv")
         header(c("GROUP", "STATUS", "N_REFERENCE", "N_STUDY", "RULE"), "${prefix}.ancestry_summary.tsv")
-        header(c("OBSERVED", "PREDICTED", "N"), "${prefix}.ancestry_model.tsv")
+        header(c("OBSERVED", "PREDICTED", "N", "N_THRESHOLD"), "${prefix}.ancestry_model.tsv")
+        header(c("ALPHA", "LAMBDA", "LOGLOSS", "LOGLOSS_SD", "ACCURACY", "ACCURACY_SD", "KAPPA", "KAPPA_SD", "SELECTED"), "${prefix}.ancestry_model_tuning.tsv")
         for (group in groups) file.create(paste0("${prefix}.ancestry_", group, ".keep"))
         file.create("${prefix}.ancestry_mismatch_remove.txt")
         header(c(ids, "SOURCE", "POP", "SUPER_POP", "ASSIGNED", pcs), "${prefix}.ancestry_pca.tsv")
         for (stem in c("${prefix}.ancestry_pc1_pc2", "${prefix}.ancestry_pc3_pc4")) file.create(paste0(stem, c(".pdf", ".png")))
-        writeLines(c("\\"${task.process}\\":", paste0("    r-base: ", paste(R.version[["major"]], R.version[["minor"]], sep = ".")), paste0("    r-ggplot2: ", packageVersion("ggplot2")), paste0("    r-data.table: ", packageVersion("data.table")), paste0("    r-mass: ", packageVersion("MASS"))), "versions.yml")
+        writeLines(c("\\"${task.process}\\":", paste0("    r-base: ", paste(R.version[["major"]], R.version[["minor"]], sep = ".")), paste0("    r-ggplot2: ", packageVersion("ggplot2")), paste0("    r-data.table: ", packageVersion("data.table")), paste0("    r-caret: ", packageVersion("caret")), paste0("    r-glmnet: ", packageVersion("glmnet")), paste0("    r-mlmetrics: ", packageVersion("MLmetrics")), paste0("    r-proc: ", packageVersion("pROC"))), "versions.yml")
     '
     """
 }

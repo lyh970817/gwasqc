@@ -7,7 +7,7 @@
                         "id": "synthetic",
                         "ancestry": "A"
                     },
-                    "synthetic.ancestry_assignment.tsv:md5,1c75f021c8ebec4ab92a21e5af66b36b"
+                    "synthetic.ancestry_assignment.tsv:md5,a8e3ad03fd9dec764edfccab821e1f7c"
                 ]
             ],
             [
@@ -16,7 +16,7 @@
                         "id": "synthetic",
                         "ancestry": "A"
                     },
-                    "synthetic.ancestry_summary.tsv:md5,b007a9b98a938f0a13a1854da0cd25e7"
+                    "synthetic.ancestry_summary.tsv:md5,8efc80bf715b0ae039d0cf2f9a09761d"
                 ]
             ],
             [
@@ -25,7 +25,16 @@
                         "id": "synthetic",
                         "ancestry": "A"
                     },
-                    "synthetic.ancestry_model.tsv:md5,61739b822164ed7b94d1806c590ad771"
+                    "synthetic.ancestry_model.tsv:md5,ed9f47004a6fea4ed19c0bccfd7dc870"
+                ]
+            ],
+            [
+                [
+                    {
+                        "id": "synthetic",
+                        "ancestry": "A"
+                    },
+                    "synthetic.ancestry_model_tuning.tsv:md5,6d29d4351a865f5bc68f86c18c29e7c6"
                 ]
             ],
             [
@@ -62,13 +71,13 @@
                 ]
             ],
             [
-                "versions.yml:md5,6faeda8ae88a18c7ab909c38e91c7a6d"
+                "versions.yml:md5,794584b68c02164f588feb582dd75992"
             ]
         ],
-        "timestamp": "2026-09-20T20:24:07.783708962",
+        "timestamp": "2026-11-12T04:47:43.458385078",
         "meta": {
             "nf-test": "0.9.5",
-            "nextflow": "26.04.4"
+            "nextflow": "26.04.6"
         }
     },
     "synthetic - threshold and standard-deviation rule": {
@@ -79,7 +88,7 @@
                         "id": "synthetic",
                         "ancestry": "A"
                     },
-                    "synthetic.ancestry_assignment.tsv:md5,cf6d79440d63fb853a9f8514f53f7d48"
+                    "synthetic.ancestry_assignment.tsv:md5,7d1c9bb15fc9dd1b87ab16e190f0b76d"
                 ]
             ],
             [
@@ -88,7 +97,7 @@
                         "id": "synthetic",
                         "ancestry": "A"
                     },
-                    "synthetic.ancestry_summary.tsv:md5,7b1b60fb2dff72ac027e329ed7459796"
+                    "synthetic.ancestry_summary.tsv:md5,bd27c7a95053bfa400bf381524bfd44c"
                 ]
             ],
             [
@@ -116,10 +125,10 @@
                 ]
             ]
         ],
-        "timestamp": "2026-09-20T20:24:16.707334985",
+        "timestamp": "2026-11-12T04:48:38.95731902",
         "meta": {
             "nf-test": "0.9.5",
-            "nextflow": "26.04.4"
+            "nextflow": "26.04.6"
         }
     },
     "synthetic - stub": {
@@ -152,7 +161,7 @@
                             "ancestry": "A",
                             "id": "synthetic"
                         },
-                        "synthetic.ancestry_model.tsv:md5,aaaa4cf39bcc5ac603f4a20a9d0a2e81"
+                        "synthetic.ancestry_model.tsv:md5,53ca005eea3da4cc817978e070a953ee"
                     ]
                 ],
                 "pc1_pc2_plot": [
@@ -202,12 +211,21 @@
                         "synthetic.ancestry_summary.tsv:md5,7985a7e668e90e6a58f4775fd1b3fcd7"
                     ]
                 ],
+                "tuning": [
+                    [
+                        {
+                            "ancestry": "A",
+                            "id": "synthetic"
+                        },
+                        "synthetic.ancestry_model_tuning.tsv:md5,349d56a5201792393f30ae20b1bc0595"
+                    ]
+                ],
                 "versions": [
-                    "versions.yml:md5,6faeda8ae88a18c7ab909c38e91c7a6d"
+                    "versions.yml:md5,794584b68c02164f588feb582dd75992"
                 ]
             }
         ],
-        "timestamp": "2026-09-21T11:06:18.253629103",
+        "timestamp": "2026-11-12T04:50:27.997336923",
         "meta": {
             "nf-test": "0.9.5",
             "nextflow": "26.04.6"

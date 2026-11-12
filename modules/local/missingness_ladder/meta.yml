@@ -1,5 +1,5 @@
 name: missingness_ladder
-description: Assemble the legacy call-rate ladder of one stratum from the base plink2 --missing variant report and one per-rung sample report computed with that rung's variants excluded
+description: Assemble the cumulative legacy call-rate ladder of one stratum, a variant and a sample step per rung, from the cumulative exclusion and removal lists of its rungs
 keywords:
   - missingness
   - call rate
@@ -17,21 +17,33 @@ input:
           Groovy map describing the stratum.
           Expected keys:
             - id (string): Stratum identifier, used as the output prefix.
-    - vmiss:
+    - maf_snplist:
         type: file
-        description: plink2 variant-based missing-genotype report over the base variant set, with an F_MISS column
-        pattern: "*.vmiss"
+        description: The MAF keep-list the ladder starts from, one variant ID per line; its line count is the variant count before the first rung
+        pattern: "*.snplist"
         ontologies:
-          - edam: "http://edamontology.org/format_3475" # TSV
+          - edam: "http://edamontology.org/format_2330" # Text
+    - fam:
+        type: file
+        description: The stratum's sample table; its line count is the sample count before the first rung
+        pattern: "*.fam"
+        ontologies:
+          - edam: "http://edamontology.org/format_2330" # Text
     - call_rates:
         type: list
-        description: Call rates in percent, one per rung, aligned with smiss_files; the missing-call threshold of a rung is 1 minus its call rate
-    - smiss_files:
+        description: Call rates in percent, one per rung of the cumulative ladder, aligned with geno_excludes and mind_removes; a rung's missing-call threshold is 1 minus its call rate
+    - geno_excludes:
         type: file
-        description: One plink2 sample-based missing-genotype report per rung, computed with the variants that rung's geno threshold drops excluded; aligned with call_rates and named distinctly
-        pattern: "*.smiss"
+        description: One cumulative variant exclusion list per rung, every earlier rung's exclusions included, aligned with call_rates and named distinctly
+        pattern: "*.geno_exclude.txt"
         ontologies:
-          - edam: "http://edamontology.org/format_3475" # TSV
+          - edam: "http://edamontology.org/format_2330" # Text
+    - mind_removes:
+        type: file
+        description: One cumulative sample removal list per rung, every earlier rung's removals included, aligned with call_rates and named distinctly
+        pattern: "*.mind_remove.txt"
+        ontologies:
+          - edam: "http://edamontology.org/format_2330" # Text
 output:
   ladder:
     - - meta:
@@ -39,7 +51,7 @@ output:
           description: Metadata map propagated from input
       - "${prefix}.missingness_ladder.tsv":
           type: file
-          description: One row per call rate with the missing-call threshold it implies and the variants and samples removed and remaining when that threshold is applied from the base fileset, variants before samples
+          description: Two rows per rung in call-rate order, the variant step and then the sample step, with the columns step (the legacy Sample/SNP label, 90, 90/90, 90/91, 91/91, ...), call_rate, filter (geno or mind), missing_threshold, variants_removed, variants_remaining, samples_removed and samples_remaining; each step applied to what the previous step left
           pattern: "*.missingness_ladder.tsv"
           ontologies:
             - edam: "http://edamontology.org/format_3475" # TSV

@@ -1,6 +1,6 @@
 # yaml-language-server: $schema=https://raw.githubusercontent.com/nf-core/modules/master/subworkflows/yaml-schema.json
 name: plink_qc_filter_lists
-description: Derive the exclusion list of the variants on non-standard contigs, the MAF keep-list over the standard chromosomes, the geno and mind missingness decision lists in the legacy order with the call-rate ladder, and the Hardy-Weinberg exclusion list of one PLINK fileset per stratum from stats-only plink2 runs
+description: Derive the exclusion list of the variants on non-standard contigs, the MAF keep-list over the standard chromosomes, the geno and mind missingness decision lists, from the legacy cumulative call-rate ladder or from one geno-then-mind pass, with the ladder table, and the Hardy-Weinberg exclusion list of one PLINK fileset per stratum from stats-only plink2 runs
 keywords:
   - plink
   - quality control
@@ -15,6 +15,7 @@ components:
   - mind_decisions
   - missingness_ladder
   - missingness_plots
+  - missingness_rung
   - plink2/hardy
   - hwe_decisions
   - hwe_plots
@@ -25,14 +26,17 @@ input:
       pattern: "*.{bed,bim,fam}"
       ontologies: []
   - geno:
-      description: Variants whose missing-call rate exceeds this value are listed for exclusion
+      description: Variants whose missing-call rate exceeds this value are listed for exclusion; under `iterative` it names the last rung applied, the call rate 1 - geno, and must be a whole percentage from 0.01 to 0.10
       structure: number geno
   - mind:
-      description: Samples whose missing-call rate exceeds this value are listed for removal
+      description: Samples whose missing-call rate exceeds this value are listed for removal; under `iterative` it must equal geno
       structure: number mind
   - hwe:
       description: Variants whose Hardy-Weinberg exact-test p-value is below this value are listed for exclusion
       structure: number hwe
+  - missingness_mode:
+      description: How the missingness thresholds are applied, `iterative` (the legacy cumulative call-rate ladder, each rung's variant and then sample threshold applied to what the previous rung kept, up to the call rate 1 - geno) or `single` (geno over all samples, then mind over the geno-retained variants)
+      structure: string missingness_mode
 output:
   - contig_exclude:
       type: file
@@ -54,25 +58,25 @@ output:
       ontologies: []
   - smiss:
       type: file
-      description: plink2 sample-based missingness report over the MAF-passing variants that survive the geno threshold, as the legacy chain measured it
+      description: plink2 sample-based missingness report the applied mind list was last decided from; under `iterative` the report of the last applied rung, over the variants that rung keeps and without the samples earlier rungs removed, and under `single` over the MAF-passing variants that survive the geno threshold, all samples
       structure: [map meta, path smiss]
       pattern: "*.smiss"
       ontologies: []
   - geno_exclude:
       type: file
-      description: Variants exceeding the geno threshold, one ID per line for plink2 --exclude
+      description: The applied variant missingness exclusions, one ID per line for plink2 --exclude; under `iterative` the cumulative list of the rung at the call rate 1 - geno, under `single` the variants exceeding the geno threshold over all samples
       structure: [map meta, path geno_exclude]
       pattern: "*.geno_exclude.txt"
       ontologies: []
   - mind_remove:
       type: file
-      description: Samples exceeding the mind threshold over the geno-retained variants, one FID IID pair per line for plink2 --remove
+      description: The applied sample missingness removals, one FID IID pair per line for plink2 --remove; under `iterative` the cumulative list of the rung at the call rate 1 - geno, under `single` the samples exceeding the mind threshold over the geno-retained variants
       structure: [map meta, path mind_remove]
       pattern: "*.mind_remove.txt"
       ontologies: []
   - missingness_ladder:
       type: file
-      description: Call-rate ladder from 90 to 99 percent, one row per rate applied from the base fileset with geno before mind, from one --missing run per rung
+      description: The cumulative call-rate ladder from 90 to 99 percent in either mode, a variant and a sample row per rate, each step applied to what the step before it left, counted from the cumulative lists of the rungs
       structure: [map meta, path ladder]
       pattern: "*.missingness_ladder.tsv"
       ontologies: []
@@ -109,7 +113,7 @@ output:
       ontologies: []
   - smiss_hist_data:
       type: file
-      description: Histogram counts of the per-sample missing-call rate over the geno-retained variants, the data behind the plot
+      description: Histogram counts of the per-sample missing-call rate in the emitted sample report, the data behind the plot
       structure: [map meta, path smiss_hist]
       pattern: "*.smiss_hist.tsv"
       ontologies: []

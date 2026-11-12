@@ -37,7 +37,7 @@ nextflow_process {
         when {
             process {
                 """
-                input[0] = PLINK2_MISSING.out.smiss.map { meta, smiss -> [meta, smiss, 0.10] }
+                input[0] = PLINK2_MISSING.out.smiss.map { meta, smiss -> [meta, smiss, 0.10, []] }
                 """
             }
         }
@@ -56,7 +56,7 @@ nextflow_process {
         when {
             process {
                 """
-                input[0] = PLINK2_MISSING.out.smiss.map { meta, smiss -> [meta, smiss, 0.02] }
+                input[0] = PLINK2_MISSING.out.smiss.map { meta, smiss -> [meta, smiss, 0.02, []] }
                 """
             }
         }
@@ -79,7 +79,7 @@ nextflow_process {
                 // A missing required column is a failure, never an empty removal list.
                 def report = file("${workDir}/no_rate.smiss")
                 report.text = '#FID\\tIID\\tMISSING_CT\\tOBS_CT\\nS1\\tS1\\t0\\t3962\\n'
-                input[0] = [ [ id:'no_rate' ], report, 0.05 ]
+                input[0] = [ [ id:'no_rate' ], report, 0.05, [] ]
                 """
             }
         }
@@ -105,7 +105,7 @@ nextflow_process {
                     ['0002', '008', '1', '1000', '0.001'].join('\\t'),
                     ['0100', '0009', '500', '1000', '0.5'].join('\\t'),
                 ].join('\\n') + '\\n'
-                input[0] = [ [ id:'numeric' ], report, 0.05 ]
+                input[0] = [ [ id:'numeric' ], report, 0.05, [] ]
                 """
             }
         }
@@ -118,6 +118,34 @@ nextflow_process {
         }
     }
 
+    test("synthetic - carried list of an earlier rung") {
+
+        when {
+            process {
+                """
+                // A rung of the call-rate ladder: the report was computed without the carried samples, and the
+                // list written is the carried one followed by this rung's own removals.
+                def report = file("${workDir}/rung.smiss")
+                report.text = [
+                    ['#FID', 'IID', 'MISSING_CT', 'OBS_CT', 'F_MISS'].join('\\t'),
+                    ['F3', 'S3', '80', '1000', '0.08'].join('\\t'),
+                    ['F4', 'S4', '1', '1000', '0.001'].join('\\t'),
+                ].join('\\n') + '\\n'
+                def carried = file("${workDir}/rung90.mind_remove.txt")
+                carried.text = 'F1 S1\\nF2 S2\\n'
+                input[0] = [ [ id:'rung' ], report, 0.05, carried ]
+                """
+            }
+        }
+
+        then {
+            assertAll(
+                { assert process.success },
+                { assert path(process.out.sample_remove.get(0).get(1)).readLines() == ['F1 S1', 'F2 S2', 'F3 S3'] },
+            )
+        }
+    }
+
     test("study_eur - stub") {
 
         options "-stub"
@@ -125,7 +153,7 @@ nextflow_process {
         when {
             process {
                 """
-                input[0] = PLINK2_MISSING.out.smiss.map { meta, smiss -> [meta, smiss, 0.05] }
+                input[0] = PLINK2_MISSING.out.smiss.map { meta, smiss -> [meta, smiss, 0.05, []] }
                 """
             }
         }

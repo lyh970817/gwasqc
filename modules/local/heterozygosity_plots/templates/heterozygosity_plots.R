@@ -12,8 +12,9 @@
 #   <prefix>.het_sex_scatter.pdf/.png   the scatter, coloured by recorded sex
 #
 # Report only: no threshold is applied and no sample is listed. The two reports are joined explicitly on the
-# sample ID columns after their F columns are renamed apart; the legacy het_graphs.r merged on every shared
-# column, so its join ran through the statistic F itself and matched nothing but coincidences.
+# sample ID columns after their F columns are renamed apart, because both plink2 reports name their statistic
+# F. The legacy het_graphs.r merged a plink 1.9 `--ibc` report (FID, IID, NOMISS, Fhat1-3) with the sex
+# check, whose only shared columns were FID and IID, so its join was on the sample IDs as well.
 
 suppressPackageStartupMessages({
     library(data.table)

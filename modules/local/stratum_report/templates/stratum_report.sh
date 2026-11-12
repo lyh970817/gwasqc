@@ -24,6 +24,7 @@ maf=$(gawk -v value='!{maf}' 'BEGIN { printf "%g", value }')
 geno=$(gawk -v value='!{geno}' 'BEGIN { printf "%g", value }')
 mind=$(gawk -v value='!{mind}' 'BEGIN { printf "%g", value }')
 hwe=$(gawk -v value='!{hwe}' 'BEGIN { printf "%g", value }')
+missingness_mode='!{missingness_mode}'
 ld_min_retained_fraction=$(gawk -v value='!{ld_min_retained_fraction}' 'BEGIN { printf "%g", value }')
 sample_qc_marker_set='!{meta.sample_qc_marker_set}'
 sample_qc_shared_reference='!{sample_qc_shared_reference}'
@@ -95,6 +96,7 @@ add variants_contig_removed "$variants_contig_removed"
 add maf_threshold "$maf"
 add variants_maf_removed $((variants_input - variants_contig_removed - variants_after_maf))
 add variants_after_maf "$variants_after_maf"
+add missingness_mode "$missingness_mode"
 add geno_threshold "$geno"
 add variants_geno_removed "$variants_geno_removed"
 add variants_after_geno "$variants_after_geno"
@@ -250,20 +252,24 @@ variant_qc_description='Per stratum: the input fileset, the variants on contigs 
 sex_check_description='plink2 --check-sex after the pseudo-autosomal split, over the pruned set in study mode and over every QC-passing variant in shared mode. Its PROBLEM calls are the mismatches, tabled and listed for removal.'
 heterozygosity_description='Report only: the plink2 --het inbreeding coefficient F over the autosomal marker set of each stratum, the pruned set outside the long-range LD regions in study mode and the shared reference-pruned markers against the matched reference frequencies in shared mode. No threshold is applied and no sample is listed.'
 relatedness_description='KING-robust kinship over the same autosomal marker set, pairs at or above the table filter classified on KING boundaries. One member of each duplicate/MZ pair is listed for removal; the mean-kinship outliers are listed and never applied.'
-ancestry_description='Study samples projected onto the reference principal components and assigned by linear discriminant analysis. The samples not assigned to the stratum label are its mismatches.'
+ancestry_description='Study samples projected onto the reference principal components and assigned by the elastic-net multinomial classifier of the legacy pipeline, trained on the reference. The samples not assigned to the stratum label are its mismatches.'
 
 {
-    mqc_header gwasqc_variant_qc_ladder gwasqc_variant_qc 'Variant and sample filters' "$variant_qc_description" 'Missingness ladder' 'Each call rate applied from the base fileset, the variant threshold first and the sample threshold second, as the legacy iterative missingness did; one row per stratum and rate.'
+    mqc_header gwasqc_variant_qc_ladder gwasqc_variant_qc 'Variant and sample filters' "$variant_qc_description" 'Missingness ladder' 'The cumulative call-rate ladder of the legacy iterative missingness: at each call rate the variant threshold and then the sample threshold, both 1 - call rate, applied to what the previous step left; one row per stratum and step.'
     cat <<'EOF'
 # pconfig:
 #     no_violin: true
-#     col1_header: "Stratum and call rate"
+#     col1_header: "Stratum and step"
 # headers:
 #     stratum:
 #         title: "Stratum"
+#     step:
+#         title: "Sample/SNP"
 #     call_rate:
 #         title: "Call rate (%)"
 #         format: "{:.0f}"
+#     filter:
+#         title: "Filter"
 #     missing_threshold:
 #         title: "Missing-call threshold"
 #         format: "{:.2f}"
@@ -282,7 +288,7 @@ ancestry_description='Study samples projected onto the reference principal compo
 EOF
     gawk -F'\t' -v OFS='\t' -v stratum="$stratum" '
         NR == 1 { print "row", "stratum", $0; next }
-        { print stratum ":" $1 "%", stratum, $0 }
+        { print stratum ":" $1, stratum, $0 }
     ' "$ladder"
 } > "${prefix}.variant_qc_ladder_mqc.tsv"
 

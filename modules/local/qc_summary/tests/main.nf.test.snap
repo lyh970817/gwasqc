@@ -2,18 +2,18 @@
     "two strata": {
         "content": [
             [
-                "gwasqc_summary.tsv:md5,227e06a59436792e6409befcdb53a667"
+                "gwasqc_summary.tsv:md5,aa52749998d8a001a138e993f1e104b7"
             ],
             [
                 [
-                    "gwasqc_ancestry_summary_mqc.tsv:md5,ee8d50eaf5c592a274842f288c70c53d",
+                    "gwasqc_ancestry_summary_mqc.tsv:md5,c624a3cf737e96429420a6d899848592",
                     "gwasqc_heterozygosity_summary_mqc.tsv:md5,053dda5d5ea19198f3e47b3cc74a6c2e",
-                    "gwasqc_qc_summary_mqc.tsv:md5,8d58483dec5c009e6467e2c63f75c38d",
+                    "gwasqc_qc_summary_mqc.tsv:md5,05697df2759e37b97354eb3bf22ae01e",
                     "gwasqc_relatedness_summary_mqc.tsv:md5,01070e79d724bbccf7f4a8a65681b21b",
                     "gwasqc_sample_qc_markers_mqc.tsv:md5,c1c33fccbbdc7e1ac9267677d2f64f16",
-                    "gwasqc_sample_removals_mqc.tsv:md5,cb72141f00064d7541456470bb2f464d",
+                    "gwasqc_sample_removals_mqc.tsv:md5,f246adc46d4baa601b7c05fcceddc3db",
                     "gwasqc_sex_check_summary_mqc.tsv:md5,fcbea82a70254b9a4e6102b2253bc791",
-                    "gwasqc_variant_qc_filters_mqc.tsv:md5,0c324047db8a425fd6d6fa1c8cb62382"
+                    "gwasqc_variant_qc_filters_mqc.tsv:md5,c8dc19d241c680edebb01c57e61c2910"
                 ]
             ],
             [
@@ -24,7 +24,7 @@
                 ]
             ]
         ],
-        "timestamp": "2026-11-11T16:14:44.571146844",
+        "timestamp": "2026-11-12T06:44:36.672929392",
         "meta": {
             "nf-test": "0.9.5",
             "nextflow": "26.04.6"

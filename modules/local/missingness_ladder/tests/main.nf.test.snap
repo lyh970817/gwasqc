@@ -1,14 +1,24 @@
 {
-    "study_eur - stub": {
+    "synthetic - three cumulative rungs": {
         "content": [
             {
+                "0": [
+                    [
+                        {
+                            "id": "stratum"
+                        },
+                        "stratum.missingness_ladder.tsv:md5,7a14852da037edb1e69565a2e1e0edbf"
+                    ]
+                ],
+                "1": [
+                    "versions.yml:md5,1ddad68c76b7b0cdf93c16b6f944b93c"
+                ],
                 "ladder": [
                     [
                         {
-                            "ancestry": "EUR",
-                            "id": "study_eur"
+                            "id": "stratum"
                         },
-                        "study_eur.missingness_ladder.tsv:md5,6db4d75477a422eaf685abf58c479466"
+                        "stratum.missingness_ladder.tsv:md5,7a14852da037edb1e69565a2e1e0edbf"
                     ]
                 ],
                 "versions": [
@@ -16,31 +26,32 @@
                 ]
             }
         ],
-        "timestamp": "2026-09-20T14:52:29.983264756",
+        "timestamp": "2026-11-12T06:43:10.71568192",
         "meta": {
             "nf-test": "0.9.5",
-            "nextflow": "26.04.4"
+            "nextflow": "26.04.6"
         }
     },
-    "study_eur - rungs 90 and 99": {
+    "synthetic - stub": {
         "content": [
-            [
-                [
-                    {
-                        "id": "study_eur",
-                        "ancestry": "EUR"
-                    },
-                    "study_eur.missingness_ladder.tsv:md5,8460c5a2e7af897fcefe675239382e42"
+            {
+                "ladder": [
+                    [
+                        {
+                            "id": "stratum"
+                        },
+                        "stratum.missingness_ladder.tsv:md5,c78b2ad52a866dbc5d16d36dc72b6cc9"
+                    ]
+                ],
+                "versions": [
+                    "versions.yml:md5,1ddad68c76b7b0cdf93c16b6f944b93c"
                 ]
-            ],
-            [
-                "versions.yml:md5,1ddad68c76b7b0cdf93c16b6f944b93c"
-            ]
+            }
         ],
-        "timestamp": "2026-09-20T14:52:15.667648527",
+        "timestamp": "2026-11-12T06:31:14.273659126",
         "meta": {
             "nf-test": "0.9.5",
-            "nextflow": "26.04.4"
+            "nextflow": "26.04.6"
         }
     }
 }

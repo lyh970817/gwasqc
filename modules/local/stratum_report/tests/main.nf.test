@@ -37,7 +37,7 @@ nextflow_process {
                     write.call('test.geno_exclude.txt', 'v9\\n'),
                     write.call('test.mind_remove.txt', 'S6 S6\\n'),
                     write.call('test.hwe_exclude.txt', 'v8\\n'),
-                    write.call('test.missingness_ladder.tsv', 'call_rate\\tmissing_threshold\\tvariants_removed\\tvariants_remaining\\tsamples_removed\\tsamples_remaining\\n90\\t0.1\\t1\\t8\\t1\\t5\\n99\\t0.01\\t3\\t6\\t2\\t4\\n'),
+                    write.call('test.missingness_ladder.tsv', 'step\\tcall_rate\\tfilter\\tmissing_threshold\\tvariants_removed\\tvariants_remaining\\tsamples_removed\\tsamples_remaining\\n90\\t90\\tgeno\\t0.1\\t1\\t8\\t0\\t6\\n90/90\\t90\\tmind\\t0.1\\t0\\t8\\t1\\t5\\n'),
                     write.call('test.prune.in', (1..6).collect { i -> "v\${i}" }.join('\\n') + '\\n'),
                     write.call('test.highld_exclude.txt', 'v6\\n'),
                     [],
@@ -48,7 +48,7 @@ nextflow_process {
                     write.call('test.relatedness_pairs.tsv', 'FID1\\tIID1\\tFID2\\tIID2\\tNSNP\\tHETHET\\tIBS0\\tKINSHIP\\tDEGREE\\tRELATIONSHIP\\nS4\\tS4\\tS3\\tS3\\t5\\t0.3\\t0\\t0.5\\t0\\tduplicate_or_mz\\nS5\\tS5\\tS1\\tS1\\t5\\t0.2\\t0\\t0.25\\t1\\tparent_offspring\\nS5\\tS5\\tS2\\tS2\\t5\\t0.1\\t0.01\\t0.06\\t3\\tthird_degree\\n'),
                     write.call('test.relatedness_remove.txt', 'S4 S4\\n'),
                     write.call('test.relatedness_outliers.txt', 'S5 S5\\n'),
-                    write.call('test.ancestry_summary.tsv', 'GROUP\\tSTATUS\\tN_REFERENCE\\tN_STUDY\\tRULE\\nAFR\\tassigned\\t50\\t1\\tmax posterior >= 0.5\\nEUR\\tassigned\\t50\\t3\\tmax posterior >= 0.5\\nunassigned\\tbelow_threshold\\tNA\\t1\\tmax posterior < 0.5\\n'),
+                    write.call('test.ancestry_summary.tsv', 'GROUP\\tSTATUS\\tN_REFERENCE\\tN_STUDY\\tRULE\\nAFR\\tassigned\\t50\\t1\\tmax probability >= 0.5\\nEUR\\tassigned\\t50\\t3\\tmax probability >= 0.5\\nunassigned\\tbelow_threshold\\tNA\\t1\\tmax probability < 0.5\\n'),
                     write.call('test.ancestry_mismatch_remove.txt', 'S1 S1\\nS5 S5\\n'),
                     qc_bim,
                     qc_fam,
@@ -62,10 +62,11 @@ nextflow_process {
                 input[2] = 0.05
                 input[3] = 0.05
                 input[4] = 1e-10
-                input[5] = 0.05
-                input[6] = 'pooled'
-                input[7] = false
-                input[8] = true
+                input[5] = 'iterative'
+                input[6] = 0.05
+                input[7] = 'pooled'
+                input[8] = false
+                input[9] = true
                 """
             }
         }
@@ -81,7 +82,7 @@ nextflow_process {
                 // The two variants on alt contigs are counted from their exclusion list and are not MAF removals.
                 { assert summary_lines[0][0..5] == ['stratum', 'ancestry', 'samples_input', 'variants_input', 'variants_contig_removed', 'maf_threshold'] },
                 { assert summary.subMap(['stratum', 'ancestry', 'samples_input', 'variants_input', 'variants_contig_removed', 'maf_threshold', 'variants_maf_removed', 'variants_after_maf']) == [stratum: 'test', ancestry: 'EUR', samples_input: '6', variants_input: '12', variants_contig_removed: '2', maf_threshold: '0.01', variants_maf_removed: '1', variants_after_maf: '9'] },
-                { assert summary.subMap(['geno_threshold', 'variants_geno_removed', 'variants_after_geno', 'mind_threshold', 'samples_mind_removed', 'samples_after_mind']) == [geno_threshold: '0.05', variants_geno_removed: '1', variants_after_geno: '8', mind_threshold: '0.05', samples_mind_removed: '1', samples_after_mind: '5'] },
+                { assert summary.subMap(['missingness_mode', 'geno_threshold', 'variants_geno_removed', 'variants_after_geno', 'mind_threshold', 'samples_mind_removed', 'samples_after_mind']) == [missingness_mode: 'iterative', geno_threshold: '0.05', variants_geno_removed: '1', variants_after_geno: '8', mind_threshold: '0.05', samples_mind_removed: '1', samples_after_mind: '5'] },
                 { assert summary.subMap(['hwe_threshold', 'variants_hwe_removed', 'variants_after_hwe', 'variants_ld_pruned_in', 'variants_ld_pruned_out', 'variants_highld_excluded', 'variants_sample_checks']) == [hwe_threshold: '1e-10', variants_hwe_removed: '1', variants_after_hwe: '7', variants_ld_pruned_in: '6', variants_ld_pruned_out: '1', variants_highld_excluded: '1', variants_sample_checks: '5'] },
                 // Study mode: the check markers are the pruned autosomal set, and pruning that kept 6 of 7 is not noted.
                 { assert summary.sample_qc_shared_reference == 'NA' },
@@ -95,7 +96,7 @@ nextflow_process {
                 { assert summary.subMap(['samples_removed_under_gate', 'samples_removed', 'samples_final', 'variants_final']) == [samples_removed_under_gate: '5', samples_removed: '1', samples_final: '5', variants_final: '7'] },
                 { assert fragments.keySet().sort() == ['test.ancestry_plots_mqc.yaml', 'test.heterozygosity_plots_mqc.yaml', 'test.relatedness_pairs_mqc.tsv', 'test.relatedness_plots_mqc.yaml', 'test.sex_check_mismatches_mqc.tsv', 'test.sex_check_plots_mqc.yaml', 'test.variant_qc_ladder_mqc.tsv', 'test.variant_qc_plots_mqc.yaml'] },
                 { assert fragments['test.variant_qc_ladder_mqc.tsv'].readLines()[0] == '# id: gwasqc_variant_qc_ladder' },
-                { assert rows(fragments['test.variant_qc_ladder_mqc.tsv']).collect { fields -> fields[0..2] } == [['row', 'stratum', 'call_rate'], ['test:90%', 'test', '90'], ['test:99%', 'test', '99']] },
+                { assert rows(fragments['test.variant_qc_ladder_mqc.tsv']).collect { fields -> fields[0..2] } == [['row', 'stratum', 'step'], ['test:90', 'test', '90'], ['test:90/90', 'test', '90/90']] },
                 { assert rows(fragments['test.sex_check_mismatches_mqc.tsv']) == [['row', 'stratum', 'FID', 'IID', 'PEDSEX', 'SNPSEX', 'STATUS', 'F', 'YCOUNT', 'YRATE'], ['test:S2', 'test', 'S2', 'S2', '2', '1', 'PROBLEM', '0.99', '30', '1']] },
                 // Only the duplicate and first-degree pairs are tabled, and the listed duplicate member is named.
                 { assert rows(fragments['test.relatedness_pairs_mqc.tsv']) == [['row', 'stratum', 'IID1', 'IID2', 'KINSHIP', 'IBS0', 'RELATIONSHIP', 'REMOVED'], ['test:S4/S3', 'test', 'S4', 'S3', '0.5', '0', 'duplicate_or_mz', 'S4'], ['test:S5/S1', 'test', 'S5', 'S1', '0.25', '0', 'parent_offspring', 'none']] },
@@ -129,7 +130,7 @@ nextflow_process {
                     write.call('test.geno_exclude.txt', 'v9\\n'),
                     write.call('test.mind_remove.txt', 'S6 S6\\n'),
                     write.call('test.hwe_exclude.txt', 'v8\\n'),
-                    write.call('test.missingness_ladder.tsv', 'call_rate\\tmissing_threshold\\tvariants_removed\\tvariants_remaining\\tsamples_removed\\tsamples_remaining\\n90\\t0.1\\t1\\t8\\t1\\t5\\n'),
+                    write.call('test.missingness_ladder.tsv', 'step\\tcall_rate\\tfilter\\tmissing_threshold\\tvariants_removed\\tvariants_remaining\\tsamples_removed\\tsamples_remaining\\n90\\t90\\tgeno\\t0.1\\t1\\t8\\t0\\t6\\n'),
                     [],
                     [],
                     write.call('test.ancestry.prune.in', (1..4).collect { i -> "v\${i}" }.join('\\n') + '\\n'),
@@ -140,7 +141,7 @@ nextflow_process {
                     write.call('test.relatedness_pairs.tsv', 'FID1\\tIID1\\tFID2\\tIID2\\tNSNP\\tHETHET\\tIBS0\\tKINSHIP\\tDEGREE\\tRELATIONSHIP\\n'),
                     write.call('test.relatedness_remove.txt', ''),
                     write.call('test.relatedness_outliers.txt', ''),
-                    write.call('test.ancestry_summary.tsv', 'GROUP\\tSTATUS\\tN_REFERENCE\\tN_STUDY\\tRULE\\nEUR\\tassigned\\t50\\t5\\tmax posterior >= 0.5\\nunassigned\\tbelow_threshold\\tNA\\t0\\tmax posterior < 0.5\\n'),
+                    write.call('test.ancestry_summary.tsv', 'GROUP\\tSTATUS\\tN_REFERENCE\\tN_STUDY\\tRULE\\nEUR\\tassigned\\t50\\t5\\tmax probability >= 0.5\\nunassigned\\tbelow_threshold\\tNA\\t0\\tmax probability < 0.5\\n'),
                     write.call('test.ancestry_mismatch_remove.txt', ''),
                     write.call('test.qc.bim', (1..7).collect { i -> "1\\tv\${i}\\t0\\t\${i * 1000}\\tA\\tG" }.join('\\n') + '\\n'),
                     write.call('test.qc.fam', (1..5).collect { i -> "S\${i} S\${i} 0 0 1 -9" }.join('\\n') + '\\n'),
@@ -154,10 +155,11 @@ nextflow_process {
                 input[2] = 0.05
                 input[3] = 0.05
                 input[4] = 1e-10
-                input[5] = 0.05
-                input[6] = 'pooled'
-                input[7] = false
-                input[8] = true
+                input[5] = 'iterative'
+                input[6] = 0.05
+                input[7] = 'pooled'
+                input[8] = false
+                input[9] = true
                 """
             }
         }
@@ -199,7 +201,7 @@ nextflow_process {
                     write.call('test.geno_exclude.txt', 'v9\\n'),
                     write.call('test.mind_remove.txt', 'S6 S6\\n'),
                     write.call('test.hwe_exclude.txt', 'v8\\n'),
-                    write.call('test.missingness_ladder.tsv', 'call_rate\\tmissing_threshold\\tvariants_removed\\tvariants_remaining\\tsamples_removed\\tsamples_remaining\\n90\\t0.1\\t1\\t8\\t1\\t5\\n'),
+                    write.call('test.missingness_ladder.tsv', 'step\\tcall_rate\\tfilter\\tmissing_threshold\\tvariants_removed\\tvariants_remaining\\tsamples_removed\\tsamples_remaining\\n90\\t90\\tgeno\\t0.1\\t1\\t8\\t0\\t6\\n'),
                     [],
                     [],
                     write.call('test.ancestry.prune.in', (1..4).collect { i -> "v\${i}" }.join('\\n') + '\\n'),
@@ -210,7 +212,7 @@ nextflow_process {
                     write.call('test.relatedness_pairs.tsv', 'FID1\\tIID1\\tFID2\\tIID2\\tNSNP\\tHETHET\\tIBS0\\tKINSHIP\\tDEGREE\\tRELATIONSHIP\\n'),
                     write.call('test.relatedness_remove.txt', ''),
                     write.call('test.relatedness_outliers.txt', ''),
-                    write.call('test.ancestry_summary.tsv', 'GROUP\\tSTATUS\\tN_REFERENCE\\tN_STUDY\\tRULE\\nEUR\\tassigned\\t50\\t5\\tmax posterior >= 0.5\\nunassigned\\tbelow_threshold\\tNA\\t0\\tmax posterior < 0.5\\n'),
+                    write.call('test.ancestry_summary.tsv', 'GROUP\\tSTATUS\\tN_REFERENCE\\tN_STUDY\\tRULE\\nEUR\\tassigned\\t50\\t5\\tmax probability >= 0.5\\nunassigned\\tbelow_threshold\\tNA\\t0\\tmax probability < 0.5\\n'),
                     write.call('test.ancestry_mismatch_remove.txt', ''),
                     write.call('test.qc.bim', (1..7).collect { i -> "1\\tv\${i}\\t0\\t\${i * 1000}\\tA\\tG" }.join('\\n') + '\\n'),
                     write.call('test.qc.fam', (1..5).collect { i -> "S\${i} S\${i} 0 0 1 -9" }.join('\\n') + '\\n'),
@@ -224,10 +226,11 @@ nextflow_process {
                 input[2] = 0.05
                 input[3] = 0.05
                 input[4] = 1e-10
-                input[5] = 0.05
-                input[6] = 'matched'
-                input[7] = false
-                input[8] = true
+                input[5] = 'iterative'
+                input[6] = 0.05
+                input[7] = 'matched'
+                input[8] = false
+                input[9] = true
                 """
             }
         }
@@ -269,7 +272,7 @@ nextflow_process {
                     write.call('test.geno_exclude.txt', 'v9\\n'),
                     write.call('test.mind_remove.txt', 'S6 S6\\n'),
                     write.call('test.hwe_exclude.txt', 'v8\\n'),
-                    write.call('test.missingness_ladder.tsv', 'call_rate\\tmissing_threshold\\tvariants_removed\\tvariants_remaining\\tsamples_removed\\tsamples_remaining\\n90\\t0.1\\t1\\t8\\t1\\t5\\n'),
+                    write.call('test.missingness_ladder.tsv', 'step\\tcall_rate\\tfilter\\tmissing_threshold\\tvariants_removed\\tvariants_remaining\\tsamples_removed\\tsamples_remaining\\n90\\t90\\tgeno\\t0.1\\t1\\t8\\t0\\t6\\n'),
                     write.call('test.prune.in', 'v1\\n'),
                     write.call('test.highld_exclude.txt', ''),
                     [],
@@ -294,10 +297,11 @@ nextflow_process {
                 input[2] = 0.05
                 input[3] = 0.05
                 input[4] = 1e-10
-                input[5] = 0.2
-                input[6] = 'pooled'
-                input[7] = false
-                input[8] = true
+                input[5] = 'iterative'
+                input[6] = 0.2
+                input[7] = 'pooled'
+                input[8] = false
+                input[9] = true
                 """
             }
         }
@@ -331,7 +335,7 @@ nextflow_process {
                     write.call('test.geno_exclude.txt', 'v9\\n'),
                     write.call('test.mind_remove.txt', 'S6 S6\\n'),
                     write.call('test.hwe_exclude.txt', 'v8\\n'),
-                    write.call('test.missingness_ladder.tsv', 'call_rate\\tmissing_threshold\\tvariants_removed\\tvariants_remaining\\tsamples_removed\\tsamples_remaining\\n90\\t0.1\\t1\\t8\\t1\\t5\\n'),
+                    write.call('test.missingness_ladder.tsv', 'step\\tcall_rate\\tfilter\\tmissing_threshold\\tvariants_removed\\tvariants_remaining\\tsamples_removed\\tsamples_remaining\\n90\\t90\\tgeno\\t0.1\\t1\\t8\\t0\\t6\\n'),
                     write.call('test.prune.in', (1..6).collect { i -> "v\${i}" }.join('\\n') + '\\n'),
                     write.call('test.highld_exclude.txt', 'v6\\n'),
                     [],
@@ -356,10 +360,11 @@ nextflow_process {
                 input[2] = 0.05
                 input[3] = 0.05
                 input[4] = 1e-10
-                input[5] = 0.05
-                input[6] = 'pooled'
-                input[7] = true
+                input[5] = 'iterative'
+                input[6] = 0.05
+                input[7] = 'pooled'
                 input[8] = true
+                input[9] = true
                 """
             }
         }
@@ -425,10 +430,11 @@ nextflow_process {
                 input[2] = 0.05
                 input[3] = 0.05
                 input[4] = 1e-10
-                input[5] = 0.05
-                input[6] = 'pooled'
-                input[7] = false
-                input[8] = true
+                input[5] = 'iterative'
+                input[6] = 0.05
+                input[7] = 'pooled'
+                input[8] = false
+                input[9] = true
                 """
             }
         }

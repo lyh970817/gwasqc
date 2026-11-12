@@ -186,8 +186,9 @@ arm64, emulate_amd64, singularity, podman, shifter, charliecloud, apptainer, wav
 - **[MUST]** Use bare quoted process-name selectors by default (`withName: 'PLINK2_WRITESNPLIST'`), and
   distinguish call sites by **module alias** rather than by a fully-qualified `.*:SUBWORKFLOW:PROCESS` path,
   which appears nowhere in this repository: `PLINK2_MISSING_VARIANTS`, `PLINK2_MISSING_SAMPLES`,
-  `PLINK2_MISSING_LADDER`, `PLINK2_MAKEBED_REFERENCE`, `PLINK2_INDEPPAIRWISE_REFERENCE`,
-  `PLINK2_SCORE_REFERENCE`, `PLINK2_SCORE_STUDY`, `GENO_DECISIONS_LADDER`, `HIGHLD_EXCLUDE_REFERENCE`. An
+  `PLINK2_MISSING_RUNG_VARIANTS`, `PLINK2_MISSING_RUNG_SAMPLES`, `PLINK2_MAKEBED_REFERENCE`,
+  `PLINK2_INDEPPAIRWISE_REFERENCE`, `PLINK2_SCORE_REFERENCE`, `PLINK2_SCORE_STUDY`, `GENO_DECISIONS_RUNG`,
+  `MIND_DECISIONS_RUNG`, `PLINK2_WRITESNPLIST_ANCESTRY`, `HIGHLD_EXCLUDE_REFERENCE`. An
   alias carries the distinction into the trace and the work directory too. Always quote the selector — sarek
   has one unquoted bare symbol and it is inconsistent with every other line in the repo. A regex alternation
   of aliases (`'PLINK2_SCORE_REFERENCE|PLINK2_SCORE_STUDY'`) is the right form for a setting two aliases must
@@ -195,7 +196,8 @@ arm64, emulate_amd64, singularity, podman, shifter, charliecloud, apptainer, wav
 - **[MUST]** A selector matches a process **and every alias of it**, so one on the base name reaches each
   alias. An alias that must not inherit the base's publication re-points it or carries
   `publishDir = [enabled: false]`, and the comment at the selector says which case applies — live on
-  `PLINK2_MAKEBED_REFERENCE` and `GENO_DECISIONS_LADDER`.
+  `PLINK2_MAKEBED_REFERENCE`, which switches it off, and `GENO_DECISIONS_RUNG|MIND_DECISIONS_RUNG`, which
+  re-point it.
 - **[SHOULD]** Prefer ternaries inside `ext.args` / `ext.prefix` / `publishDir.enabled` closures over
   top-level `if (params.x) { }` blocks wrapping a `withName:` block. mag has zero such `if` blocks.
 - **[SHOULD]** `ext.prefix` as a static string for simple cases; as a closure interpolating the meta fields

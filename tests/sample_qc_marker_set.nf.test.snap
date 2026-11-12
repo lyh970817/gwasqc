@@ -5,10 +5,7 @@
                 "CONTIG_EXCLUDE": {
                     "gawk": "5.3.1"
                 },
-                "GENO_DECISIONS": {
-                    "r-base": "4.3.1"
-                },
-                "GENO_DECISIONS_LADDER": {
+                "GENO_DECISIONS_RUNG": {
                     "r-base": "4.3.1"
                 },
                 "HETEROZYGOSITY_PLOTS": {
@@ -27,7 +24,7 @@
                     "r-data.table": "1.17.8",
                     "r-ggplot2": "3.5.2"
                 },
-                "MIND_DECISIONS": {
+                "MIND_DECISIONS_RUNG": {
                     "r-base": "4.3.1"
                 },
                 "MISSINGNESS_LADDER": {
@@ -56,10 +53,10 @@
                 "PLINK2_MAKEKINGTABLE": {
                     "plink2": "2.0.0-a.6.9LM"
                 },
-                "PLINK2_MISSING_LADDER": {
+                "PLINK2_MISSING_RUNG_SAMPLES": {
                     "plink2": "2.0.0-a.6.9LM"
                 },
-                "PLINK2_MISSING_SAMPLES": {
+                "PLINK2_MISSING_RUNG_VARIANTS": {
                     "plink2": "2.0.0-a.6.9LM"
                 },
                 "PLINK2_MISSING_VARIANTS": {
@@ -89,9 +86,9 @@
                     "nf-core/gwasqc": "v1.0.0dev"
                 }
             },
-            "gwasqc_summary.tsv:md5,9727f9a39424d81a20d6bb035039ea9e"
+            "gwasqc_summary.tsv:md5,4b0d26acc9a2aa2400df4f65c133b781"
         ],
-        "timestamp": "2026-11-11T17:21:24.454964531",
+        "timestamp": "2026-11-12T09:31:02.05705038",
         "meta": {
             "nf-test": "0.9.5",
             "nextflow": "26.04.6"
@@ -102,9 +99,12 @@
             {
                 "ANCESTRY_ASSIGN": {
                     "r-base": "4.4.3",
+                    "r-caret": "7.0.1",
                     "r-data.table": "1.17.8",
                     "r-ggplot2": "3.5.2",
-                    "r-mass": "7.3.66"
+                    "r-glmnet": "4.1.10",
+                    "r-mlmetrics": "1.1.3",
+                    "r-proc": "1.19.0.1"
                 },
                 "ANCESTRY_HARMONISE": {
                     "r-base": "4.3.1"
@@ -115,10 +115,7 @@
                 "CONTIG_EXCLUDE": {
                     "gawk": "5.3.1"
                 },
-                "GENO_DECISIONS": {
-                    "r-base": "4.3.1"
-                },
-                "GENO_DECISIONS_LADDER": {
+                "GENO_DECISIONS_RUNG": {
                     "r-base": "4.3.1"
                 },
                 "HETEROZYGOSITY_PLOTS": {
@@ -137,7 +134,7 @@
                     "r-data.table": "1.17.8",
                     "r-ggplot2": "3.5.2"
                 },
-                "MIND_DECISIONS": {
+                "MIND_DECISIONS_RUNG": {
                     "r-base": "4.3.1"
                 },
                 "MISSINGNESS_LADDER": {
@@ -175,10 +172,10 @@
                 "PLINK2_MAKEKINGTABLE": {
                     "plink2": "2.0.0-a.6.9LM"
                 },
-                "PLINK2_MISSING_LADDER": {
+                "PLINK2_MISSING_RUNG_SAMPLES": {
                     "plink2": "2.0.0-a.6.9LM"
                 },
-                "PLINK2_MISSING_SAMPLES": {
+                "PLINK2_MISSING_RUNG_VARIANTS": {
                     "plink2": "2.0.0-a.6.9LM"
                 },
                 "PLINK2_MISSING_VARIANTS": {
@@ -197,6 +194,12 @@
                     "plink2": "2.0.0-a.6.9LM"
                 },
                 "PLINK2_WRITESNPLIST": {
+                    "plink2": "2.0.0-a.6.9LM"
+                },
+                "PLINK2_WRITESNPLIST_ANCESTRY": {
+                    "plink2": "2.0.0-a.6.9LM"
+                },
+                "PLINK2_WRITESNPLIST_ANCESTRY_SMALL": {
                     "plink2": "2.0.0-a.6.9LM"
                 },
                 "QC_SUMMARY": {
@@ -220,9 +223,9 @@
                     "nf-core/gwasqc": "v1.0.0dev"
                 }
             },
-            "gwasqc_summary.tsv:md5,957b5ffaf85e2bf789a871128d531eb3"
+            "gwasqc_summary.tsv:md5,ec885da974a9f048dffaf00f5e674fa9"
         ],
-        "timestamp": "2026-11-11T17:17:00.734314243",
+        "timestamp": "2026-11-12T09:06:46.231294678",
         "meta": {
             "nf-test": "0.9.5",
             "nextflow": "26.04.6"
@@ -233,9 +236,12 @@
             {
                 "ANCESTRY_ASSIGN": {
                     "r-base": "4.4.3",
+                    "r-caret": "7.0.1",
                     "r-data.table": "1.17.8",
                     "r-ggplot2": "3.5.2",
-                    "r-mass": "7.3.66"
+                    "r-glmnet": "4.1.10",
+                    "r-mlmetrics": "1.1.3",
+                    "r-proc": "1.19.0.1"
                 },
                 "ANCESTRY_HARMONISE": {
                     "r-base": "4.3.1"
@@ -246,10 +252,7 @@
                 "CONTIG_EXCLUDE": {
                     "gawk": "5.3.1"
                 },
-                "GENO_DECISIONS": {
-                    "r-base": "4.3.1"
-                },
-                "GENO_DECISIONS_LADDER": {
+                "GENO_DECISIONS_RUNG": {
                     "r-base": "4.3.1"
                 },
                 "HETEROZYGOSITY_PLOTS": {
@@ -268,7 +271,7 @@
                     "r-data.table": "1.17.8",
                     "r-ggplot2": "3.5.2"
                 },
-                "MIND_DECISIONS": {
+                "MIND_DECISIONS_RUNG": {
                     "r-base": "4.3.1"
                 },
                 "MISSINGNESS_LADDER": {
@@ -309,10 +312,10 @@
                 "PLINK2_MAKEKINGTABLE": {
                     "plink2": "2.0.0-a.6.9LM"
                 },
-                "PLINK2_MISSING_LADDER": {
+                "PLINK2_MISSING_RUNG_SAMPLES": {
                     "plink2": "2.0.0-a.6.9LM"
                 },
-                "PLINK2_MISSING_SAMPLES": {
+                "PLINK2_MISSING_RUNG_VARIANTS": {
                     "plink2": "2.0.0-a.6.9LM"
                 },
                 "PLINK2_MISSING_VARIANTS": {
@@ -331,6 +334,12 @@
                     "plink2": "2.0.0-a.6.9LM"
                 },
                 "PLINK2_WRITESNPLIST": {
+                    "plink2": "2.0.0-a.6.9LM"
+                },
+                "PLINK2_WRITESNPLIST_ANCESTRY": {
+                    "plink2": "2.0.0-a.6.9LM"
+                },
+                "PLINK2_WRITESNPLIST_ANCESTRY_SMALL": {
                     "plink2": "2.0.0-a.6.9LM"
                 },
                 "QC_SUMMARY": {
@@ -354,9 +363,9 @@
                     "nf-core/gwasqc": "v1.0.0dev"
                 }
             },
-            "gwasqc_summary.tsv:md5,417d94580efbf125771fe794424d0f0c"
+            "gwasqc_summary.tsv:md5,ff0499c4830c0f01e0709f85d297e814"
         ],
-        "timestamp": "2026-11-11T17:19:05.904144316",
+        "timestamp": "2026-11-12T09:16:31.251860849",
         "meta": {
             "nf-test": "0.9.5",
             "nextflow": "26.04.6"
@@ -367,9 +376,12 @@
             {
                 "ANCESTRY_ASSIGN": {
                     "r-base": "4.4.3",
+                    "r-caret": "7.0.1",
                     "r-data.table": "1.17.8",
                     "r-ggplot2": "3.5.2",
-                    "r-mass": "7.3.66"
+                    "r-glmnet": "4.1.10",
+                    "r-mlmetrics": "1.1.3",
+                    "r-proc": "1.19.0.1"
                 },
                 "ANCESTRY_HARMONISE": {
                     "r-base": "4.3.1"
@@ -377,10 +389,7 @@
                 "CONTIG_EXCLUDE": {
                     "gawk": "5.3.1"
                 },
-                "GENO_DECISIONS": {
-                    "r-base": "4.3.1"
-                },
-                "GENO_DECISIONS_LADDER": {
+                "GENO_DECISIONS_RUNG": {
                     "r-base": "4.3.1"
                 },
                 "HETEROZYGOSITY_PLOTS": {
@@ -402,7 +411,7 @@
                     "r-data.table": "1.17.8",
                     "r-ggplot2": "3.5.2"
                 },
-                "MIND_DECISIONS": {
+                "MIND_DECISIONS_RUNG": {
                     "r-base": "4.3.1"
                 },
                 "MISSINGNESS_LADDER": {
@@ -437,10 +446,10 @@
                 "PLINK2_MAKEKINGTABLE": {
                     "plink2": "2.0.0-a.6.9LM"
                 },
-                "PLINK2_MISSING_LADDER": {
+                "PLINK2_MISSING_RUNG_SAMPLES": {
                     "plink2": "2.0.0-a.6.9LM"
                 },
-                "PLINK2_MISSING_SAMPLES": {
+                "PLINK2_MISSING_RUNG_VARIANTS": {
                     "plink2": "2.0.0-a.6.9LM"
                 },
                 "PLINK2_MISSING_VARIANTS": {
@@ -459,6 +468,12 @@
                     "plink2": "2.0.0-a.6.9LM"
                 },
                 "PLINK2_WRITESNPLIST": {
+                    "plink2": "2.0.0-a.6.9LM"
+                },
+                "PLINK2_WRITESNPLIST_ANCESTRY": {
+                    "plink2": "2.0.0-a.6.9LM"
+                },
+                "PLINK2_WRITESNPLIST_ANCESTRY_SMALL": {
                     "plink2": "2.0.0-a.6.9LM"
                 },
                 "QC_SUMMARY": {
@@ -482,9 +497,9 @@
                     "nf-core/gwasqc": "v1.0.0dev"
                 }
             },
-            "gwasqc_summary.tsv:md5,ec244cbcb180fad590d9f80ca8809586"
+            "gwasqc_summary.tsv:md5,4b278ad8c904283e4083eaee3408d84a"
         ],
-        "timestamp": "2026-11-11T17:13:47.500804009",
+        "timestamp": "2026-11-12T08:52:55.209765634",
         "meta": {
             "nf-test": "0.9.5",
             "nextflow": "26.04.6"

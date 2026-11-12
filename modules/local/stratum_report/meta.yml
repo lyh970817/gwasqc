@@ -67,7 +67,7 @@ input:
           - edam: "http://edamontology.org/format_2330" # Text
     - ladder:
         type: file
-        description: Call-rate ladder table with a header row, as written by missingness_ladder; its first column names the rung
+        description: Cumulative call-rate ladder table with a header row, as written by missingness_ladder; its first column names the step
         pattern: "*.missingness_ladder.tsv"
         ontologies:
           - edam: "http://edamontology.org/format_3475" # TSV
@@ -189,6 +189,9 @@ input:
   - hwe:
       type: float
       description: Hardy-Weinberg p-value threshold, recorded in the row
+  - missingness_mode:
+      type: string
+      description: How the missingness thresholds were applied, `iterative` or `single`, recorded in the row
   - ld_min_retained_fraction:
       type: float
       description: Fraction of the QC'd variants below which study-mode LD pruning is noted as collapsed in the row; strict less-than

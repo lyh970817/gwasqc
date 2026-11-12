@@ -1,15 +1,18 @@
 // Infer the ancestry of every sample of one PLINK fileset per stratum against a labelled reference panel: the
-// stratum's QC'd variants are matched to the reference by position and alleles on the variant tables alone,
-// each reference fileset is restricted to the matched variants by its own IDs, the intersects are merged,
-// renamed to the stratum's IDs and flipped onto its strand, the merged reference is filtered, pruned and
-// decomposed, reference and study samples are projected onto its components with one weight file, and a
-// classifier trained on the reference labels assigns every study sample a super-population. For the strata
-// whose sample checks take the shared marker set, the route also selects the reference samples of the
-// stratum's super-population and, when the shared markers are to be chosen on them, prunes those samples.
+// stratum's QC'd variants that pass the ancestry stage's own variant filters are matched to the reference by
+// position and alleles on the variant tables alone, each reference fileset is restricted to the matched
+// variants by its own IDs, the intersects are merged, renamed to the stratum's IDs and flipped onto its
+// strand, the merged reference is filtered, pruned and decomposed, reference and study samples are projected
+// onto its components with one weight file, and a classifier trained on the reference labels assigns every
+// study sample a super-population. For the strata whose sample checks take the shared marker set, the route
+// also selects the reference samples of the stratum's super-population and, when the shared markers are to be
+// chosen on them, prunes those samples.
 // Pipeline-owned: the R modules carry the harmonisation and assignment policy, so this is not an upstream
 // candidate.
 
 // MODULE: Local to the pipeline
+include { PLINK2_WRITESNPLIST as PLINK2_WRITESNPLIST_ANCESTRY       } from '../../../modules/local/plink2/writesnplist/main'
+include { PLINK2_WRITESNPLIST as PLINK2_WRITESNPLIST_ANCESTRY_SMALL } from '../../../modules/local/plink2/writesnplist/main'
 include { ANCESTRY_HARMONISE                                     } from '../../../modules/local/ancestry_harmonise/main'
 include { PLINK2_MAKEBED as PLINK2_MAKEBED_REFERENCE             } from '../../../modules/local/plink2/makebed/main'
 include { PLINK2_PMERGELIST                                      } from '../../../modules/local/plink2/pmergelist/main'
@@ -33,7 +36,7 @@ workflow ANCESTRY_INFERENCE {
     ld_step_size // value: --indep-pairwise step, in variants
     ld_r2 // value: --indep-pairwise r-squared threshold
     n_pcs // value: number of principal components computed and projected
-    prob_threshold // value: posterior probability at or above which a study sample is assigned
+    prob_threshold // value: class probability at or above which a study sample is assigned
     sd_filter // value: standard deviations of the centroid rule, 0 when the rule is off
     shared_reference // value: `pooled` or `matched`, the reference samples the shared marker set is filtered and pruned on; a matched group below 50 samples falls back to `pooled`
 
@@ -41,22 +44,55 @@ workflow ANCESTRY_INFERENCE {
 
     // plink2 refuses LD pruning and frequency estimates below this many samples
     def min_matched_reference_samples = 50
+    // The legacy ancestry script applied its full target QC (`--geno`, `--maf` and `--hwe`) only to a target
+    // of more than this many samples, and `--geno` alone otherwise
+    def ancestry_target_qc_min_samples = 100
 
-    // The study fileset is never materialised: its QC'd variant set reaches the reference as the filter
-    // chain's lists, and its samples are projected from the original fileset with the pruned list. The
+    // The study fileset is never materialised: its QC'd variant set reaches the reference as a keep-list,
+    // the filter chain's lists narrowed by the ancestry stage's own filters, and its samples are projected
+    // from the original fileset with the pruned list. The
     // reference is materialised twice, and only the reference: once per fileset restricted to the matched
     // variants, because plink2 applies `--extract` only after `--pmerge-list` has concatenated its inputs in
     // full (verified on 2.0.0a.6.9), and once merged, renamed and flipped, because pruning, the decomposition
     // and the reference projection all read that one fileset.
 
     //
-    // MODULE: Harmonisation of the stratum's QC'd variants with the reference variant tables, by position and
-    // alleles; stops when the ID-shared variants disagree on position, the signature of a build mismatch
+    // MODULE: The ancestry stage's own variant filters on the study, as a keep-list of the QC'd variants
+    //
+    // The legacy ancestry script re-filtered its QC'd target with `--write-snplist` at the ancestry
+    // thresholds, all three for a target of more than 100 samples and the variant missingness alone for a
+    // smaller one; the thresholds reach plink2 through ext.args. The sample count is the stratum's after the
+    // mind removals, the samples the legacy target fileset held.
+    def ch_target_qc = ch_genotypes.branch { _meta, _bed, _bim, fam, _extract, _exclude, remove ->
+        full: fam.countLines() - (remove ? remove.countLines() : 0) > ancestry_target_qc_min_samples
+        small: true
+    }
+
+    PLINK2_WRITESNPLIST_ANCESTRY(
+        ch_target_qc.full.map { meta, bed, bim, fam, extract, exclude, remove -> [meta, bed, bim, fam, extract, exclude, [], remove] }
+    )
+
+    PLINK2_WRITESNPLIST_ANCESTRY_SMALL(
+        ch_target_qc.small.map { meta, bed, bim, fam, extract, exclude, remove -> [meta, bed, bim, fam, extract, exclude, [], remove] }
+    )
+
+    def ch_target_snplist_by_id = PLINK2_WRITESNPLIST_ANCESTRY.out.snplist
+        .mix(PLINK2_WRITESNPLIST_ANCESTRY_SMALL.out.snplist)
+        .map { meta, snplist -> [meta.id, snplist] }
+
+    //
+    // MODULE: Harmonisation of the stratum's ancestry-filtered variants with the reference variant tables, by
+    // position and alleles; stops when the ID-shared variants disagree on position, the signature of a build
+    // mismatch
     //
     // [ [ bim, ... ] ], every reference variant table in name order, wrapped so that `combine` keeps it one slot
     def ch_reference_bims = ch_reference.map { _meta, _bed, bim, _fam -> bim }.toSortedList { bim_a, bim_b -> bim_a.name <=> bim_b.name }.map { bims -> [bims] }
     ANCESTRY_HARMONISE(
-        ch_genotypes.combine(ch_reference_bims).map { meta, _bed, bim, _fam, extract, exclude, _remove, reference_bims -> [meta, bim, extract, exclude, reference_bims] },
+        ch_genotypes
+            .map { meta, _bed, bim, _fam, _extract, exclude, _remove -> [meta.id, meta, bim, exclude] }
+            .join(ch_target_snplist_by_id, by: 0, failOnDuplicate: true, failOnMismatch: true)
+            .combine(ch_reference_bims)
+            .map { _id, meta, bim, exclude, target_snplist, reference_bims -> [meta, bim, target_snplist, exclude, reference_bims] },
         genome_build,
     )
 
@@ -134,7 +170,7 @@ workflow ANCESTRY_INFERENCE {
     // `pooled` the shared markers are the pruned list of the decomposition, filtered and pruned on every
     // reference sample; under `matched` the same filters, the same long-range LD exclusion and the same
     // pruning run on the matched samples alone, a stats-only run over the merged reference, because plink2
-    // computes `--maf` and `--geno` over the `--keep` subset and applies them before `--indep-pairwise`
+    // computes `--maf`, `--geno` and `--hwe` over the `--keep` subset and applies them before `--indep-pairwise`
     // (verified on 2.0.0a.6.9). The decomposition keeps the pooled panel either way.
     def ch_shared_merged_by_id = ch_merged_by_id.filter { _id, meta, _pgen, _pvar, _psam -> meta.sample_qc_marker_set == 'shared' }
 
@@ -189,8 +225,8 @@ workflow ANCESTRY_INFERENCE {
     def ch_pruned_reference_by_id = ch_merged_by_id.join(PLINK2_INDEPPAIRWISE_REFERENCE.out.prune_in.map { meta, prune_in -> [meta.id, prune_in] }, by: 0, failOnDuplicate: true, failOnMismatch: true)
 
     //
-    // MODULE: Principal components of the pruned reference with per-allele weights and the allele counts of
-    // the same variants; the weight-file layout reaches plink2 through ext.args2
+    // MODULE: Principal components of the pruned reference with per-allele weights; the weight-file layout
+    // reaches plink2 through ext.args2, and the allele counts the atom writes beside the weights are not read
     //
     PLINK2_PCAWTS(
         ch_pruned_reference_by_id.map { _id, meta, pgen, pvar, psam, prune_in -> [meta, pgen, pvar, psam, prune_in, [], [], []] },
@@ -199,19 +235,19 @@ workflow ANCESTRY_INFERENCE {
 
     def ch_projection_by_id = PLINK2_PCAWTS.out.allele_weights
         .map { meta, allele_weights -> [meta.id, allele_weights] }
-        .join(PLINK2_PCAWTS.out.acount.map { meta, acount -> [meta.id, acount] }, by: 0, failOnDuplicate: true, failOnMismatch: true)
 
     //
-    // MODULE: Projection of the reference samples and of the study samples with the same weights, the same
-    // reference allele counts and the same modifiers, so that the two sets of coordinates share one scale;
-    // the mind removals apply to the study run and no other sample list does
+    // MODULE: Projection of the reference samples and of the study samples with the same weights, as the
+    // legacy script projected them: raw allele dosages, no frequency table, the reference mean-imputed and
+    // the study not; the classifier then scales both by the reference coordinates. The mind removals apply to
+    // the study run and no other sample list does
     //
     PLINK2_SCORE_REFERENCE(
-        ch_pruned_reference_by_id.join(ch_projection_by_id, by: 0, failOnDuplicate: true, failOnMismatch: true).map { _id, meta, pgen, pvar, psam, prune_in, allele_weights, acount -> [meta, pgen, pvar, psam, prune_in, [], [], [], allele_weights, acount] }
+        ch_pruned_reference_by_id.join(ch_projection_by_id, by: 0, failOnDuplicate: true, failOnMismatch: true).map { _id, meta, pgen, pvar, psam, prune_in, allele_weights -> [meta, pgen, pvar, psam, prune_in, [], [], [], allele_weights, []] }
     )
 
     PLINK2_SCORE_STUDY(
-        ch_genotypes_by_id.join(PLINK2_INDEPPAIRWISE_REFERENCE.out.prune_in.map { meta, prune_in -> [meta.id, prune_in] }, by: 0, failOnDuplicate: true, failOnMismatch: true).join(ch_projection_by_id, by: 0, failOnDuplicate: true, failOnMismatch: true).map { _id, meta, bed, bim, fam, _extract, _exclude, remove, prune_in, allele_weights, acount -> [meta, bed, bim, fam, prune_in, [], [], remove, allele_weights, acount] }
+        ch_genotypes_by_id.join(PLINK2_INDEPPAIRWISE_REFERENCE.out.prune_in.map { meta, prune_in -> [meta.id, prune_in] }, by: 0, failOnDuplicate: true, failOnMismatch: true).join(ch_projection_by_id, by: 0, failOnDuplicate: true, failOnMismatch: true).map { _id, meta, bed, bim, fam, _extract, _exclude, remove, prune_in, allele_weights -> [meta, bed, bim, fam, prune_in, [], [], remove, allele_weights, []] }
     )
 
     //
@@ -246,6 +282,7 @@ workflow ANCESTRY_INFERENCE {
     assignment            = ANCESTRY_ASSIGN.out.assignment // channel: [ val(meta), path(assignment) ]
     summary               = ANCESTRY_ASSIGN.out.summary // channel: [ val(meta), path(summary) ]
     model                 = ANCESTRY_ASSIGN.out.model // channel: [ val(meta), path(model) ]
+    tuning                = ANCESTRY_ASSIGN.out.tuning // channel: [ val(meta), path(tuning) ]
     keep_lists            = ANCESTRY_ASSIGN.out.keep_lists // channel: [ val(meta), [ path(keep), ... ] ]
     mismatch_remove       = ANCESTRY_ASSIGN.out.sample_remove // channel: [ val(meta), path(mismatch_remove) ]
     pca_data              = ANCESTRY_ASSIGN.out.pca_data // channel: [ val(meta), path(pca_data) ]

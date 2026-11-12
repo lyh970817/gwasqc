@@ -68,18 +68,29 @@ Decided 2026-09-20 with the foundation milestone of the legacy port; the tuple c
 - **[MUST]** Decision lists are derived from published statistics by pipeline-owned modules that take their
   thresholds as explicit inputs; a threshold reaches a plink2 atom only as native optional behaviour through
   `ext.args`. Comparisons are strict, as plink2's own `--geno`, `--mind`, `--maf` and `--hwe` are.
-- **[MUST]** Missingness follows the legacy order exactly, and does so with lists because plink2 writes the
-  `--missing` report before it applies `--geno` (verified on 2.0.0a.6.9: `--geno 0.10 --missing` reports every
-  variant; `--mind` is applied before the report). One `--missing` run over the MAF-passing variants yields the
-  variant report and, from it, the geno exclusion list; a second run with that list under `--exclude` yields
-  the sample report over the geno-retained variants and, from it, the mind removal list. A sample's rate is
-  therefore measured over the variants that survive geno, as the legacy `--geno` then `--mind` filesets
-  measured it, and a sample at the threshold over all variants can survive once its missing calls in excluded
-  variants no longer count.
-- The call-rate ladder, 90 % to 99 %, applies each rate from the base fileset, geno then mind, as the legacy
-  `Iterative_Missingness.sh` did: per rung, the geno exclusion list at that rate is derived from the base
-  variant report, one `--missing` run with that list under `--exclude` yields the rung's sample report, and the
-  table records the variants and samples each rung removes and leaves. Ten stats-only runs, no fileset.
+- **[MUST]** Missingness is list-driven, because plink2 writes the `--missing` report before it applies
+  `--geno` (verified on 2.0.0a.6.9: `--geno 0.10 --missing` reports every variant; `--mind` is applied before
+  the report). A variant missingness threshold therefore never reaches plink2: it becomes an exclusion list
+  first, and the next report is measured with that list under `--exclude`.
+- **[MUST]** The default, `missingness_mode iterative`, is the cumulative call-rate ladder the legacy GLAD
+  variant applied (`Iterative_Missingness.sh 90 99 1`, of which `full_pipe_GLAD_variant.sh` carried rung 95
+  forward): for each call rate r from 90 to 99, the variants and then the samples whose missing-call rate
+  exceeds 1 - r/100 are removed from what the previous rung kept. Per rung, one `--missing` run over the
+  MAF-passing variants with the previous rung's exclusion and removal lists yields the variant report and,
+  from it, the rung's cumulative exclusion list (the previous list followed by its own variants); a second run
+  with that list yields the sample report and the rung's cumulative removal list. `MISSINGNESS_RUNG` is that
+  pair of runs and decisions, included once per rung under its own alias because each rung starts from the
+  previous rung's lists; twenty stats-only runs, no fileset. The applied lists are those of the rung at the
+  call rate 1 - `geno`, which ingress requires to be a whole percentage from 90 to 99 with `mind` equal to
+  `geno`, and the published sample report is that rung's. _(decided 2026-11-12: the cohort's operational QC
+  ran the GLAD variant, so it is the specification where the two legacy drivers differ)_
+- **[MUST]** `missingness_mode single` is the one pass of the canonical `full_pipe.sh`: one `--missing` run
+  over the MAF-passing variants yields the variant report and the geno exclusion list; a second run with that
+  list under `--exclude` yields the sample report over the geno-retained variants and the mind removal list.
+- **[MUST]** The ladder table is cumulative in both modes, as the legacy table scraped from the rung logs
+  was: twenty rows, the variant step and the sample step of each rung from 90 to 99, each counting what the
+  step removed from what the step before it left, labelled with the legacy `Sample/SNP` label. Every number
+  is a line count of a rung's list, so under `iterative` the rows up to the applied rung are the applied path.
 - **[MUST]** The sample QC chain runs on a marker set chosen per stratum, and the choice is made once, after the
   mind list exists, and carried as `meta.sample_qc_marker_set`: `study` or `shared` as forced, and under
   `auto` `shared` for a stratum with fewer than `small_n_threshold` samples after the mind filter. The
@@ -97,7 +108,7 @@ Decided 2026-09-20 with the foundation milestone of the legacy port; the tuple c
   11-sample legacy stratum kept 0.5 %); nothing is re-decided.
 - **[MUST]** In the `shared` mode nothing is pruned on the study side. Heterozygosity and KING relatedness run on
   a marker set the ancestry route builds from the harmonised merged reference, outside the long-range LD
-  regions and on the autosomes, chosen by `sample_qc_shared_reference`: `matched` (the default, issue #5) reruns `--maf`, `--geno` and `--indep-pairwise` in one stats-only run on
+  regions and on the autosomes, chosen by `sample_qc_shared_reference`: `matched` (the default, issue #5) reruns the ancestry-stage `--maf`, `--geno` and `--hwe` and `--indep-pairwise` in one stats-only run on
   the reference samples of the stratum's super-population (`--keep`, verified on 2.0.0a.6.9 to compute the
   filters over the kept samples and to equal the two-step extract-then-prune). The pooled filters therefore
   sit on the pruning run, not on the restriction, so that a matched set is not pre-restricted by them. The
@@ -130,11 +141,18 @@ Decided 2026-09-20 with the ancestry milestone of the legacy port.
   or one per chromosome, and its population table a schema-declared TSV of `FID`, `IID`, `pop` and
   `super_pop`; the `super_pop` labels are the classifier's groups and the vocabulary of the samplesheet
   `ancestry` column. No reference path or population list is hardcoded anywhere.
-- **[MUST]** The stratum reaches the reference as its QC'd variant set, the filter chain's lists, not as a
-  separate target QC: the legacy `nrow(fam) > 100` switch, which dropped the MAF and HWE filters on small
-  targets, chose which filters to _compute_, and the pipeline has computed them for every stratum before
-  ancestry runs. The study fileset is never materialised; its samples are projected from the original fileset
-  with the pruned list under `--extract` and the mind removals under `--remove`, and no other sample list.
+- **[MUST]** The ancestry stage applies its own variant filters, as the legacy `ancestry_identifier.r` did
+  under the GLAD driver (`--geno 0.02 --maf $maf --hwe 0.000001`): `ancestry_geno`, `ancestry_maf` (null takes
+  `maf`) and `ancestry_hwe`. They are not redundant with the filter chain: the missingness threshold is
+  stricter than the chain's, and the Hardy-Weinberg threshold is far looser than the chain's 1e-10, so both
+  remove QC'd variants. On the study they are one stats-only `--write-snplist` run over the QC'd variants and
+  the post-mind samples, with all three filters for a stratum of more than 100 samples after the mind
+  removals and `--geno` alone otherwise, the legacy `nrow(fam) > 100` switch; the two cases are two aliases
+  of the atom, because the filters reach it through `ext.args`. The resulting keep-list, not the filter
+  chain's lists, is what harmonisation matches to the reference. The study fileset is never materialised; its
+  samples are projected from the original fileset with the pruned list under `--extract` and the mind
+  removals under `--remove`, and no other sample list. _(decided 2026-11-12; replaces the 2026-09-20 rule
+  that treated the target QC as already computed by the filter chain)_
 - **[MUST]** Harmonisation runs on the variant tables, before any genotype is read, and is by normalised
   chromosome, position and alleles, independent of the IDs: a `chr` prefix is dropped and `X`, `Y`, `XY`, `MT`
   read as `23` to `26`; A/T and C/G pairs are dropped even when the alleles agree; a study ID repeated among the
@@ -155,19 +173,36 @@ Decided 2026-09-20 with the ancestry milestone of the legacy port.
   fileset. The rename belongs to the merge, not to the restriction, and the flip list is keyed by the study
   IDs: plink2 applies `--update-name` before `--extract` and keys `--update-alleles` by the new IDs, alone and
   under `--pmerge-list` (verified on 2.0.0a.6.9). Neither fileset is published and neither is filtered. The
-  reference-side filters are the pipeline's `--maf` and `--geno` on the pruning run, never `--hwe`: on a pooled
-  multi-population panel that test measures population structure.
+  reference-side filters are the same three ancestry-stage thresholds, `--geno`, `--maf` and `--hwe`, over
+  every reference sample, as the legacy script applied them to each per-chromosome reference fileset; they
+  sit on the pruning run rather than on the restriction, which is equivalent for per-variant tests over the
+  same samples and leaves the matched shared-marker run free to compute them over its own samples. The
+  Hardy-Weinberg test on a pooled multi-population panel removes variants that differ between the groups;
+  that is the legacy behaviour and is replicated, not corrected.
 - **[MUST]** The flip list is exactly what `--update-alleles` applies to the reference, and nothing else is
   changed. The long-range LD and non-autosomal exclusion is applied to the merged reference before
   `--indep-pairwise`, as the legacy ancestry branch ordered the two.
-- **[MUST]** Projection follows the plink2 recipe: `--freq counts` and `--pca allele-wts vcols=chrom,ref,alt`
-  in one run over the pruned reference, then one `--score <weights> 2 5 header-read no-mean-imputation
-variance-standardize` with `--read-freq` of those counts for the reference samples and for the study samples
-  alike, so that both sets of coordinates share one scale and the study is standardised with the reference's
-  frequencies rather than its own.
-- **[MUST]** Assignment is linear discriminant analysis on the projected reference coordinates with equal group
-  priors; a study sample is assigned when its largest posterior reaches `ancestry_prob_threshold` and is
-  otherwise unassigned, and the optional centroid rule (`ancestry_sd_filter`, off by default) unassigns rather
+- **[MUST]** Projection follows the legacy recipe, not plink2's documented one: `--pca allele-wts
+vcols=chrom,ref,alt` over the pruned reference (the `vcols` put the ID in column 2, the weighted allele in
+  column 5 and the weights from column 6, the columns the legacy `2 5` and `--score-col-nums 6-` addressed), then `--score
+<weights> 2 5 header-read` for the reference samples, whose missing genotypes plink2 mean-imputes from the
+  reference's own frequencies, and `--score <weights> 2 5 header-read no-mean-imputation` for the study
+  samples; no `variance-standardize`, no `--read-freq`, and the `_AVG` columns are the coordinates. The
+  `.acount` the `plink2/pcawts` atom writes beside the weights is unused here. The two sets of coordinates are
+  brought onto one scale by the classifier, not by plink2.
+- **[MUST]** Assignment is the legacy classifier and nothing else: every component is centred and scaled by
+  the mean and standard deviation of all scored reference samples, for reference and study alike, and
+  `caret::train(method = 'glmnet', metric = 'logLoss')` with five-fold cross-validation, class probabilities,
+  saved final predictions and `multiClassSummary` fits the `super_pop` labels of the population table (the
+  legacy super-population keep lists; `pop` only labels the plots) on every component. The study takes the
+  class probabilities of the final model at its selected lambda. Three departures are recorded and no other
+  is permitted: a fixed seed before `train`, because the legacy cross-validation was unseeded and one input
+  must give one model; the inclusive `>=` at `ancestry_prob_threshold` on unrounded probabilities, where the
+  legacy script compared three-decimal probabilities with `>` (owner decision); and the optional centroid
+  rule (`ancestry_sd_filter`, off by default), which the legacy script reported without applying. A fit that
+  stops fails the task with caret's and glmnet's messages; a warning is relayed to the task log and the fit
+  is used, as the legacy script used it. A study sample is assigned when its largest class probability
+  reaches the threshold and is otherwise unassigned, and the centroid rule unassigns rather
   than relabels. Every count the summary reports names the rule that produced it. The mismatch removal list
   holds the study samples not assigned to the stratum's `ancestry`, the unassigned included, and joins the
   terminal `--remove` under `apply_sample_removals` when `ancestry_remove_mismatched` holds; a stratum label

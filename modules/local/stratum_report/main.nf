@@ -18,6 +18,7 @@ process STRATUM_REPORT {
     val geno
     val mind
     val hwe
+    val missingness_mode
     val ld_min_retained_fraction
     val sample_qc_shared_reference
     val apply_sample_removals
@@ -51,7 +52,7 @@ process STRATUM_REPORT {
     stub:
     prefix = task.ext.prefix ?: "${meta.id}"
     """
-    printf 'stratum\\tancestry\\tsamples_input\\tvariants_input\\tvariants_contig_removed\\tsample_qc_marker_set\\tsamples_final\\tvariants_final\\n' > ${prefix}.qc_summary.tsv
+    printf 'stratum\\tancestry\\tsamples_input\\tvariants_input\\tvariants_contig_removed\\tmissingness_mode\\tsample_qc_marker_set\\tsamples_final\\tvariants_final\\n' > ${prefix}.qc_summary.tsv
     printf '# id: gwasqc_variant_qc_ladder\\n# plot_type: table\\nrow\\tstratum\\tcall_rate\\n' > ${prefix}.variant_qc_ladder_mqc.tsv
     printf 'id: gwasqc_variant_qc_plots_${meta.id}\\nplot_type: image\\ndata: ""\\n' > ${prefix}.variant_qc_plots_mqc.yaml
     """

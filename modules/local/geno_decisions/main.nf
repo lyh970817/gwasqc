@@ -9,8 +9,9 @@ process GENO_DECISIONS {
 
     input:
     // The threshold is tuple-local so that one stratum can be listed at several thresholds, as the call-rate
-    // ladder does.
-    tuple val(meta), path(vmiss), val(geno)
+    // ladder does. `carried_exclude` is the list of an earlier rung of the ladder, whose variants the report
+    // was computed without, or `[]`.
+    tuple val(meta), path(vmiss), val(geno), path(carried_exclude)
 
     output:
     tuple val(meta), path("${prefix}.geno_exclude.txt"), emit: variant_exclude
@@ -22,14 +23,16 @@ process GENO_DECISIONS {
     task.ext.when == null || task.ext.when
 
     script:
-    // `prefix` must remain visible to the output declarations above; the template reads it too.
+    // `prefix` must remain visible to the output declarations above; the template reads it too, and
+    // `carried_exclude_file`, empty when no list is carried.
     prefix = task.ext.prefix ?: "${meta.id}"
+    carried_exclude_file = carried_exclude ? carried_exclude.toString() : ''
     template('geno_decisions.R')
 
     stub:
     prefix = task.ext.prefix ?: "${meta.id}"
     """
-    touch ${prefix}.geno_exclude.txt
+    ${carried_exclude ? "cat ${carried_exclude} > ${prefix}.geno_exclude.txt" : "touch ${prefix}.geno_exclude.txt"}
     printf '"%s":\\n    r-base: %s\\n' '${task.process}' "\$(Rscript -e 'cat(paste(R.version[["major"]], R.version[["minor"]], sep = "."))')" > versions.yml
     """
 }

@@ -9,20 +9,32 @@ include { PLINK2_MISSING as PLINK2_MISSING_VARIANTS } from '../../../modules/loc
 include { GENO_DECISIONS                            } from '../../../modules/local/geno_decisions/main'
 include { PLINK2_MISSING as PLINK2_MISSING_SAMPLES  } from '../../../modules/local/plink2/missing/main'
 include { MIND_DECISIONS                            } from '../../../modules/local/mind_decisions/main'
-include { GENO_DECISIONS as GENO_DECISIONS_LADDER   } from '../../../modules/local/geno_decisions/main'
-include { PLINK2_MISSING as PLINK2_MISSING_LADDER   } from '../../../modules/local/plink2/missing/main'
 include { MISSINGNESS_LADDER                        } from '../../../modules/local/missingness_ladder/main'
 include { MISSINGNESS_PLOTS                         } from '../../../modules/local/missingness_plots/main'
 include { PLINK2_HARDY                              } from '../../../modules/local/plink2/hardy/main'
 include { HWE_DECISIONS                             } from '../../../modules/local/hwe_decisions/main'
 include { HWE_PLOTS                                 } from '../../../modules/local/hwe_plots/main'
 
+// SUBWORKFLOW: Local to the pipeline, one alias per rung of the call-rate ladder, because each rung starts from
+// the previous rung's lists and a process or subworkflow runs once per alias
+include { MISSINGNESS_RUNG as MISSINGNESS_RUNG_90 } from '../missingness_rung/main'
+include { MISSINGNESS_RUNG as MISSINGNESS_RUNG_91 } from '../missingness_rung/main'
+include { MISSINGNESS_RUNG as MISSINGNESS_RUNG_92 } from '../missingness_rung/main'
+include { MISSINGNESS_RUNG as MISSINGNESS_RUNG_93 } from '../missingness_rung/main'
+include { MISSINGNESS_RUNG as MISSINGNESS_RUNG_94 } from '../missingness_rung/main'
+include { MISSINGNESS_RUNG as MISSINGNESS_RUNG_95 } from '../missingness_rung/main'
+include { MISSINGNESS_RUNG as MISSINGNESS_RUNG_96 } from '../missingness_rung/main'
+include { MISSINGNESS_RUNG as MISSINGNESS_RUNG_97 } from '../missingness_rung/main'
+include { MISSINGNESS_RUNG as MISSINGNESS_RUNG_98 } from '../missingness_rung/main'
+include { MISSINGNESS_RUNG as MISSINGNESS_RUNG_99 } from '../missingness_rung/main'
+
 workflow PLINK_QC_FILTER_LISTS {
     take:
     ch_genotypes // channel: [ val(meta), path(bed), path(bim), path(fam) ]
-    geno // value: maximum per-variant missing-call rate
-    mind // value: maximum per-sample missing-call rate
+    geno // value: maximum per-variant missing-call rate; under `iterative`, the last rung applied, 1 - its call rate
+    mind // value: maximum per-sample missing-call rate; under `iterative`, equal to geno
     hwe // value: Hardy-Weinberg exact-test p-value floor
+    missingness_mode // value: `iterative`, the cumulative call-rate ladder applied up to the call rate 1 - geno, or `single`, geno and then mind applied once
 
     main:
 
@@ -67,70 +79,110 @@ workflow PLINK_QC_FILTER_LISTS {
     )
 
     //
-    // MODULE: geno exclusion list from the variant report
+    // SUBWORKFLOW: The call-rate ladder, 90 % to 99 %, cumulative as the legacy Iterative_Missingness.sh ran
+    // it: each rung applies its variant threshold and then its sample threshold, both 1 - call rate, to what
+    // the previous rung kept, and its lists are the cumulative exclusions and removals so far
     //
-    GENO_DECISIONS(
-        PLINK2_MISSING_VARIANTS.out.vmiss.map { meta, vmiss -> [meta, vmiss, geno] }
-    )
+    def ch_ladder_start = ch_maf_genotypes_by_id.map { _id, meta, bed, bim, fam, snplist -> [meta, bed, bim, fam, snplist, [], []] }
+    MISSINGNESS_RUNG_90(ch_ladder_start, 90)
+    MISSINGNESS_RUNG_91(MISSINGNESS_RUNG_90.out.lists, 91)
+    MISSINGNESS_RUNG_92(MISSINGNESS_RUNG_91.out.lists, 92)
+    MISSINGNESS_RUNG_93(MISSINGNESS_RUNG_92.out.lists, 93)
+    MISSINGNESS_RUNG_94(MISSINGNESS_RUNG_93.out.lists, 94)
+    MISSINGNESS_RUNG_95(MISSINGNESS_RUNG_94.out.lists, 95)
+    MISSINGNESS_RUNG_96(MISSINGNESS_RUNG_95.out.lists, 96)
+    MISSINGNESS_RUNG_97(MISSINGNESS_RUNG_96.out.lists, 97)
+    MISSINGNESS_RUNG_98(MISSINGNESS_RUNG_97.out.lists, 98)
+    MISSINGNESS_RUNG_99(MISSINGNESS_RUNG_98.out.lists, 99)
 
-    def ch_geno_exclude_by_id = GENO_DECISIONS.out.variant_exclude.map { meta, geno_exclude -> [meta.id, geno_exclude] }
-
-    //
-    // MODULE: Sample missingness over the geno-retained variants
-    //
-    def ch_missing_samples_inputs = ch_maf_genotypes_by_id
-        .join(ch_geno_exclude_by_id, by: 0, failOnDuplicate: true, failOnMismatch: true)
-        .map { _id, meta, bed, bim, fam, snplist, geno_exclude -> [meta, bed, bim, fam, snplist, geno_exclude, [], []] }
-
-    PLINK2_MISSING_SAMPLES(ch_missing_samples_inputs)
-
-    //
-    // MODULE: mind removal list from the sample report
-    //
-    MIND_DECISIONS(
-        PLINK2_MISSING_SAMPLES.out.smiss.map { meta, smiss -> [meta, smiss, mind] }
-    )
-
-    //
-    // MODULE: Call-rate ladder, 90 % to 99 %: per rung, the geno exclusion list at that rate from the base
-    // variant report, then the sample report with that list excluded, gathered into one table
-    //
-    // The rung joins the metadata only while the per-rung runs need a distinct identity; the gathered table
-    // carries the stratum metadata again.
     def ladder_call_rates = (90..99).toList()
+    def ch_rung_lists = MISSINGNESS_RUNG_90.out.lists
+        .mix(MISSINGNESS_RUNG_91.out.lists, MISSINGNESS_RUNG_92.out.lists, MISSINGNESS_RUNG_93.out.lists, MISSINGNESS_RUNG_94.out.lists)
+        .mix(MISSINGNESS_RUNG_95.out.lists, MISSINGNESS_RUNG_96.out.lists, MISSINGNESS_RUNG_97.out.lists, MISSINGNESS_RUNG_98.out.lists)
+        .mix(MISSINGNESS_RUNG_99.out.lists)
+    def ch_rung_smiss = MISSINGNESS_RUNG_90.out.smiss
+        .mix(MISSINGNESS_RUNG_91.out.smiss, MISSINGNESS_RUNG_92.out.smiss, MISSINGNESS_RUNG_93.out.smiss, MISSINGNESS_RUNG_94.out.smiss)
+        .mix(MISSINGNESS_RUNG_95.out.smiss, MISSINGNESS_RUNG_96.out.smiss, MISSINGNESS_RUNG_97.out.smiss, MISSINGNESS_RUNG_98.out.smiss)
+        .mix(MISSINGNESS_RUNG_99.out.smiss)
 
-    def ch_ladder_geno_inputs = PLINK2_MISSING_VARIANTS.out.vmiss
-        .combine(channel.fromList(ladder_call_rates))
-        .map { meta, vmiss, call_rate -> [meta + [call_rate: call_rate], vmiss, (100 - call_rate) / 100] }
-
-    GENO_DECISIONS_LADDER(ch_ladder_geno_inputs)
-
-    def ch_ladder_missing_inputs = GENO_DECISIONS_LADDER.out.variant_exclude
-        .map { meta, geno_exclude -> [meta.id, meta, geno_exclude] }
-        .combine(ch_maf_genotypes_by_id, by: 0)
-        .map { _id, meta, geno_exclude, _meta_stratum, bed, bim, fam, snplist -> [meta, bed, bim, fam, snplist, geno_exclude, [], []] }
-
-    PLINK2_MISSING_LADDER(ch_ladder_missing_inputs)
-
-    def ch_ladder_inputs = PLINK2_MISSING_LADDER.out.smiss
-        .map { meta, smiss -> [groupKey(meta.id, ladder_call_rates.size()), [meta.call_rate, smiss]] }
+    //
+    // MODULE: The ladder table, one geno and one mind row per rung, counted from the rungs' cumulative lists
+    //
+    // The rung joins the metadata only while the rungs need a distinct identity; the gathered table carries the
+    // stratum metadata again.
+    def ch_ladder_inputs = ch_rung_lists
+        .map { meta, _bed, _bim, _fam, _maf_snplist, geno_exclude, mind_remove -> [groupKey(meta.id, ladder_call_rates.size()), [meta.call_rate, geno_exclude, mind_remove]] }
         .groupTuple(by: 0)
         .map { key, rungs ->
-            // [ id, [ call_rate, ... ], [ smiss, ... ] ], both lists in call-rate order
+            // [ id, [ call_rate, ... ], [ geno_exclude, ... ], [ mind_remove, ... ] ], all in call-rate order
             def ordered = rungs.toSorted { rung -> rung[0] }
-            [key.getGroupTarget(), ordered.collect { rung -> rung[0] }, ordered.collect { rung -> rung[1] }]
+            [key.getGroupTarget(), ordered.collect { rung -> rung[0] }, ordered.collect { rung -> rung[1] }, ordered.collect { rung -> rung[2] }]
         }
-        .join(PLINK2_MISSING_VARIANTS.out.vmiss.map { meta, vmiss -> [meta.id, meta, vmiss] }, by: 0, failOnDuplicate: true, failOnMismatch: true)
-        .map { _id, call_rates, smiss_files, meta, vmiss -> [meta, vmiss, call_rates, smiss_files] }
+        .join(ch_maf_genotypes_by_id, by: 0, failOnDuplicate: true, failOnMismatch: true)
+        .map { _id, call_rates, geno_excludes, mind_removes, meta, _bed, _bim, fam, snplist -> [meta, snplist, fam, call_rates, geno_excludes, mind_removes] }
 
     MISSINGNESS_LADDER(ch_ladder_inputs)
+
+    //
+    // The applied missingness lists and the sample report they were decided from
+    //
+    def ch_geno_exclude = channel.empty()
+    def ch_mind_remove = channel.empty()
+    def ch_smiss = channel.empty()
+    if (missingness_mode == 'single') {
+        //
+        // MODULE: geno exclusion list from the variant report
+        //
+        GENO_DECISIONS(
+            PLINK2_MISSING_VARIANTS.out.vmiss.map { meta, vmiss -> [meta, vmiss, geno, []] }
+        )
+
+        //
+        // MODULE: Sample missingness over the geno-retained variants
+        //
+        def ch_missing_samples_inputs = ch_maf_genotypes_by_id
+            .join(GENO_DECISIONS.out.variant_exclude.map { meta, geno_exclude -> [meta.id, geno_exclude] }, by: 0, failOnDuplicate: true, failOnMismatch: true)
+            .map { _id, meta, bed, bim, fam, snplist, geno_exclude -> [meta, bed, bim, fam, snplist, geno_exclude, [], []] }
+
+        PLINK2_MISSING_SAMPLES(ch_missing_samples_inputs)
+
+        //
+        // MODULE: mind removal list from the sample report
+        //
+        MIND_DECISIONS(
+            PLINK2_MISSING_SAMPLES.out.smiss.map { meta, smiss -> [meta, smiss, mind, []] }
+        )
+
+        ch_geno_exclude = GENO_DECISIONS.out.variant_exclude
+        ch_mind_remove = MIND_DECISIONS.out.sample_remove
+        ch_smiss = PLINK2_MISSING_SAMPLES.out.smiss
+    }
+    else {
+        // The rung whose call rate is 1 - geno; ingress has checked that geno equals mind and names a rung.
+        // The stratum's own metadata is restored, so the rung never leaks past the ladder.
+        def applied_call_rate = Math.round(100 * (1 - (geno as double))) as int
+        def ch_stratum_meta_by_id = ch_genotypes.map { meta, _bed, _bim, _fam -> [meta.id, meta] }
+        def ch_applied_by_id = ch_rung_lists
+            .filter { meta, _bed, _bim, _fam, _maf_snplist, _geno_exclude, _mind_remove -> meta.call_rate == applied_call_rate }
+            .map { meta, _bed, _bim, _fam, _maf_snplist, geno_exclude, mind_remove -> [meta.id, geno_exclude, mind_remove] }
+            .join(ch_stratum_meta_by_id, by: 0, failOnDuplicate: true, failOnMismatch: true)
+        ch_geno_exclude = ch_applied_by_id.map { _id, geno_exclude, _mind_remove, meta -> [meta, geno_exclude] }
+        ch_mind_remove = ch_applied_by_id.map { _id, _geno_exclude, mind_remove, meta -> [meta, mind_remove] }
+        ch_smiss = ch_rung_smiss
+            .filter { meta, _smiss -> meta.call_rate == applied_call_rate }
+            .map { meta, smiss -> [meta.id, smiss] }
+            .join(ch_stratum_meta_by_id, by: 0, failOnDuplicate: true, failOnMismatch: true)
+            .map { _id, smiss, meta -> [meta, smiss] }
+    }
+
+    def ch_geno_exclude_by_id = ch_geno_exclude.map { meta, geno_exclude -> [meta.id, geno_exclude] }
 
     //
     // MODULE: Missingness histograms with the thresholds marked, and the ladder as a table image
     //
     def ch_missingness_plot_inputs = PLINK2_MISSING_VARIANTS.out.vmiss
         .map { meta, vmiss -> [meta.id, meta, vmiss] }
-        .join(PLINK2_MISSING_SAMPLES.out.smiss.map { meta, smiss -> [meta.id, smiss] }, by: 0, failOnDuplicate: true, failOnMismatch: true)
+        .join(ch_smiss.map { meta, smiss -> [meta.id, smiss] }, by: 0, failOnDuplicate: true, failOnMismatch: true)
         .join(MISSINGNESS_LADDER.out.ladder.map { meta, ladder -> [meta.id, ladder] }, by: 0, failOnDuplicate: true, failOnMismatch: true)
         .map { _id, meta, vmiss, smiss, ladder -> [meta, vmiss, smiss, ladder] }
 
@@ -145,7 +197,7 @@ workflow PLINK_QC_FILTER_LISTS {
     //
     def ch_hardy_inputs = ch_maf_genotypes_by_id
         .join(ch_geno_exclude_by_id, by: 0, failOnDuplicate: true, failOnMismatch: true)
-        .join(MIND_DECISIONS.out.sample_remove.map { meta, mind_remove -> [meta.id, mind_remove] }, by: 0, failOnDuplicate: true, failOnMismatch: true)
+        .join(ch_mind_remove.map { meta, mind_remove -> [meta.id, mind_remove] }, by: 0, failOnDuplicate: true, failOnMismatch: true)
         .map { _id, meta, bed, bim, fam, snplist, geno_exclude, mind_remove -> [meta, bed, bim, fam, snplist, geno_exclude, [], mind_remove] }
 
     PLINK2_HARDY(ch_hardy_inputs)
@@ -170,9 +222,9 @@ workflow PLINK_QC_FILTER_LISTS {
     contig_exclude     = CONTIG_EXCLUDE.out.variant_exclude // channel: [ val(meta), path(contig_exclude) ]
     maf_snplist        = PLINK2_WRITESNPLIST.out.snplist // channel: [ val(meta), path(snplist) ], over the standard chromosomes
     vmiss              = PLINK2_MISSING_VARIANTS.out.vmiss // channel: [ val(meta), path(vmiss) ], over the MAF-passing variants
-    smiss              = PLINK2_MISSING_SAMPLES.out.smiss // channel: [ val(meta), path(smiss) ], over the geno-retained variants
-    geno_exclude       = GENO_DECISIONS.out.variant_exclude // channel: [ val(meta), path(geno_exclude) ]
-    mind_remove        = MIND_DECISIONS.out.sample_remove // channel: [ val(meta), path(mind_remove) ]
+    smiss              = ch_smiss // channel: [ val(meta), path(smiss) ], the report the applied mind list was decided from, over the geno-retained variants
+    geno_exclude       = ch_geno_exclude // channel: [ val(meta), path(geno_exclude) ], the applied variant missingness exclusions
+    mind_remove        = ch_mind_remove // channel: [ val(meta), path(mind_remove) ], the applied sample missingness removals
     missingness_ladder = MISSINGNESS_LADDER.out.ladder // channel: [ val(meta), path(ladder) ]
     hardy              = PLINK2_HARDY.out.hardy // channel: [ val(meta), path(hardy) ]
     hardy_x            = PLINK2_HARDY.out.hardy_x // channel: [ val(meta), path(hardy_x) ], optional

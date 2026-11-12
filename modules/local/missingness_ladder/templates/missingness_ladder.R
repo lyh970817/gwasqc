@@ -1,77 +1,70 @@
 #!/usr/bin/env Rscript
-# Assemble the call-rate ladder of one stratum: for each call rate, the variants the geno threshold at that
-# rate drops from the base variant report, and the samples the mind threshold at the same rate then drops from
-# the per-rung sample report, which was computed with exactly those variants excluded.
+# Assemble the cumulative call-rate ladder of one stratum from the lists of its rungs: at each call rate the
+# variant threshold and then the sample threshold, both 1 - call rate, were applied to what the previous rung
+# kept, and each rung's exclusion and removal lists are cumulative.
 #
 # One file is written:
 #
-#   <prefix>.missingness_ladder.tsv   one row per call rate: the missing-call threshold it implies, the
-#                                     variants removed and remaining, the samples removed and remaining
+#   <prefix>.missingness_ladder.tsv   two rows per rung, the variant step and then the sample step, each with
+#                                     the legacy Sample/SNP label, the call rate, the filter, the missing-call
+#                                     threshold, and the variants and samples it removed and left
 #
-# Every rung starts from the base fileset, geno before mind, as the legacy Iterative_Missingness.sh applied
-# each threshold; the per-rung sample rates are measured over the variants that rung keeps, which is why one
-# `--missing` run per rung feeds this script rather than one report for all rungs. "Exceeds" is strict, as
-# plink2 `--geno` and `--mind` compare, and the threshold is rounded to the two decimals the rate implies so
-# that a rate printed at exactly the boundary compares the way plink2 compares it. Base R only, for the reason
-# given in geno_decisions.R.
+# This is the table the legacy pipeline scraped from the logs of Iterative_Missingness.sh, which applied every
+# rung to the previous rung's fileset, geno before mind: its labels name the sample and the variant call rate
+# of the fileset each step produced, `90` for the first variant step and `90/90`, `90/91`, `91/91`, ... after
+# it. Every number is a line count of a decision list; nothing is re-decided. Base R only, for the reason given
+# in geno_decisions.R.
 
-vmiss_file <- "${vmiss}"
+maf_snplist_file <- "${maf_snplist}"
+fam_file <- "${fam}"
 rungs <- "${rungs}"
 prefix <- "${prefix}"
 process_name <- "${task.process}"
 
-# Sample and variant IDs are read as text: an all-numeric ID such as 007 would otherwise be parsed as 7 and
-# no longer match the fileset it came from.
-id_column_names <- c("FID", "IID", "FID1", "IID1", "FID2", "IID2", "ID1", "ID2", "ID")
-read_plink2_report <- function(path) {
-    header <- strsplit(readLines(path, n = 1L), "\\t", fixed = TRUE)[[1]]
-    report <- read.table(
-        path,
-        header = TRUE,
-        sep = "\\t",
-        colClasses = ifelse(sub("^#", "", header) %in% id_column_names, "character", NA),
-        comment.char = "",
-        quote = "",
-        check.names = FALSE,
-        stringsAsFactors = FALSE
-    )
-    names(report) <- sub("^#", "", names(report))
-    report
+line_count <- function(path) {
+    length(readLines(path))
 }
 
-exceeds <- function(rates, threshold) {
-    !is.na(rates) & rates > threshold
-}
+variants_start <- line_count(maf_snplist_file)
+samples_start <- line_count(fam_file)
 
-# A missing column is a failure, not an empty ladder: indexing an absent name would count nothing with exit 0.
-missing_rates <- function(path) {
-    report <- read_plink2_report(path)
-    if (!"F_MISS" %in% names(report)) {
-        stop(sprintf("the missingness report %s must carry an F_MISS column; found: %s", path, paste(names(report), collapse = ", ")), call. = FALSE)
-    }
-    as.numeric(report[["F_MISS"]])
-}
+rung_fields <- lapply(strsplit(rungs, " ", fixed = TRUE)[[1]], function(rung) strsplit(rung, "=", fixed = TRUE)[[1]])
+rung_fields <- rung_fields[order(vapply(rung_fields, function(fields) as.integer(fields[[1]]), integer(1)))]
 
-variant_rates <- missing_rates(vmiss_file)
-
-rows <- lapply(strsplit(rungs, " ", fixed = TRUE)[[1]], function(rung) {
-    fields <- strsplit(rung, "=", fixed = TRUE)[[1]]
+rows <- list()
+variants_excluded <- 0L
+samples_removed_so_far <- 0L
+previous_call_rate <- NA_integer_
+for (fields in rung_fields) {
     call_rate <- as.integer(fields[[1]])
     threshold <- round(1 - call_rate / 100, 2)
-    sample_rates <- missing_rates(fields[[2]])
-    variants_removed <- sum(exceeds(variant_rates, threshold))
-    samples_removed <- sum(exceeds(sample_rates, threshold))
-    data.frame(
+    geno_excluded <- line_count(fields[[2]])
+    mind_removed <- line_count(fields[[3]])
+    rows[[length(rows) + 1L]] <- data.frame(
+        step = if (is.na(previous_call_rate)) as.character(call_rate) else paste0(previous_call_rate, "/", call_rate),
         call_rate = call_rate,
+        filter = "geno",
         missing_threshold = threshold,
-        variants_removed = variants_removed,
-        variants_remaining = length(variant_rates) - variants_removed,
-        samples_removed = samples_removed,
-        samples_remaining = length(sample_rates) - samples_removed
+        variants_removed = geno_excluded - variants_excluded,
+        variants_remaining = variants_start - geno_excluded,
+        samples_removed = 0L,
+        samples_remaining = samples_start - samples_removed_so_far
     )
-})
+    rows[[length(rows) + 1L]] <- data.frame(
+        step = paste0(call_rate, "/", call_rate),
+        call_rate = call_rate,
+        filter = "mind",
+        missing_threshold = threshold,
+        variants_removed = 0L,
+        variants_remaining = variants_start - geno_excluded,
+        samples_removed = mind_removed - samples_removed_so_far,
+        samples_remaining = samples_start - mind_removed
+    )
+    variants_excluded <- geno_excluded
+    samples_removed_so_far <- mind_removed
+    previous_call_rate <- call_rate
+}
 ladder <- do.call(rbind, rows)
-ladder <- ladder[order(ladder[["call_rate"]]), ]
 write.table(
     ladder,
     paste0(prefix, ".missingness_ladder.tsv"),

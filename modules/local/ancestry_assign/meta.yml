@@ -1,10 +1,10 @@
 name: ancestry_assign
-description: Assign the study samples of one stratum to reference super-populations from projected principal components with linear discriminant analysis on the labelled reference, write the keep-lists, the mismatch removal list, the assignment, summary and model tables, and draw the projection with the study samples highlighted above the reference populations
+description: Assign the study samples of one stratum to reference super-populations from projected principal components with a cross-validated elastic-net multinomial classifier trained on the labelled reference, write the keep-lists, the mismatch removal list, the assignment, summary, model and tuning tables, and draw the projection with the study samples highlighted above the reference populations
 keywords:
   - ancestry
   - principal components
   - classification
-  - linear discriminant analysis
+  - elastic net
   - genotype
   - quality control
   - plot
@@ -21,10 +21,22 @@ tools:
       description: Fast tabular data handling for R
       homepage: https://r-datatable.com/
       documentation: https://rdatatable.gitlab.io/data.table/
-  - r-mass:
-      description: Modern Applied Statistics with S, the R package supplying linear discriminant analysis; an import of ggplot2 and therefore pinned by the same lock file
-      homepage: https://www.stats.ox.ac.uk/pub/MASS4/
-      documentation: https://cran.r-project.org/package=MASS
+  - r-caret:
+      description: Classification and regression training for R; tunes the classifier by cross-validation
+      homepage: https://topepo.github.io/caret/
+      documentation: https://cran.r-project.org/package=caret
+  - r-glmnet:
+      description: Lasso and elastic-net regularised generalised linear models; fits the multinomial classifier
+      homepage: https://glmnet.stanford.edu/
+      documentation: https://cran.r-project.org/package=glmnet
+  - r-mlmetrics:
+      description: Machine-learning evaluation metrics; loaded by caret's multiClassSummary for the log-loss
+      homepage: https://github.com/yanyachen/MLmetrics
+      documentation: https://cran.r-project.org/package=MLmetrics
+  - r-proc:
+      description: ROC curve analysis; loaded by caret's multiClassSummary
+      homepage: https://xrobin.github.io/pROC/
+      documentation: https://cran.r-project.org/package=pROC
 input:
   - - meta:
         type: map
@@ -53,7 +65,7 @@ input:
         - edam: "http://edamontology.org/format_3475" # TSV
   - prob_threshold:
       type: float
-      description: A study sample is assigned to the super-population of its largest posterior probability when that probability is at least this value, and is unassigned otherwise
+      description: A study sample is assigned to the super-population of its largest class probability when that probability is at least this value, and is unassigned otherwise
   - sd_filter:
       type: float
       description: When positive, an assigned study sample whose coordinate on any component lies more than this many standard deviations from its group's reference mean becomes unassigned; zero switches the rule off
@@ -84,8 +96,18 @@ output:
           description: Metadata map propagated from input
       - "${prefix}.ancestry_model.tsv":
           type: file
-          description: Leave-one-out cross-validated confusion of the classifier on the reference samples, one row per observed and predicted group pair
+          description: Five-fold cross-validated confusion of the classifier on the reference samples at the selected tuning, one row per observed and predicted group pair; N counts every held-out prediction and N_THRESHOLD those whose largest class probability reaches prob_threshold
           pattern: "*.ancestry_model.tsv"
+          ontologies:
+            - edam: "http://edamontology.org/format_3475" # TSV
+  tuning:
+    - - meta:
+          type: map
+          description: Metadata map propagated from input
+      - "${prefix}.ancestry_model_tuning.tsv":
+          type: file
+          description: The tuning grid, one row per alpha and lambda, with its five-fold cross-validated log-loss, accuracy and kappa and their standard deviations; SELECTED marks the pair of lowest log-loss that the final model uses
+          pattern: "*.ancestry_model_tuning.tsv"
           ontologies:
             - edam: "http://edamontology.org/format_3475" # TSV
   keep_lists:
@@ -173,14 +195,14 @@ maintainers:
 containers:
   conda:
     linux/amd64:
-      lock_file: "modules/local/ancestry_assign/.conda-lock/linux_amd64-bd-785e51271c23bbdc_1.txt"
+      lock_file: "modules/local/ancestry_assign/.conda-lock/linux_amd64-bd-92b4b923c841df0a_1.txt"
   docker:
     linux/amd64:
-      build_id: "bd-785e51271c23bbdc_1"
-      name: "community.wave.seqera.io/library/r-base_r-ggplot2_r-data.table:785e51271c23bbdc"
-      scan_id: "sc-940f534e023f3133_1"
+      build_id: "bd-92b4b923c841df0a_1"
+      name: "community.wave.seqera.io/library/r-base_r-caret_r-data.table_r-ggplot2_pruned:92b4b923c841df0a"
+      scan_id: "sc-b28daf64c664ef2f_1"
   singularity:
     linux/amd64:
-      build_id: "bd-0012f1154a886ee6_1"
-      name: "oras://community.wave.seqera.io/library/r-base_r-ggplot2_r-data.table:0012f1154a886ee6"
-      https: "https://community-cr-prod.seqera.io/docker/registry/v2/blobs/sha256/ac/ac330e254aed1e019ded0a6140463199760e9ee8f1cf398670eb40ccee61ed14/data"
+      build_id: "bd-6bf58222eec03f3f_1"
+      name: "oras://community.wave.seqera.io/library/r-base_r-caret_r-data.table_r-ggplot2_pruned:6bf58222eec03f3f"
+      https: "https://community-cr-prod.seqera.io/docker/registry/v2/blobs/sha256/c0/c095279e0fefe3b4d67140c4dfd1ebadeb50d298b9a0b1b850683519a20bfe59/data"
