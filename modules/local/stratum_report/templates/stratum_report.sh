@@ -10,7 +10,7 @@
 #   <prefix>.qc_summary.tsv                     one header row and one row of counts for the stratum, with the
 #                                               marker set of its sample checks and a note when study-mode
 #                                               pruning collapsed
-#   <prefix>.variant_qc_ladder_mqc.tsv          the call-rate ladder, one MultiQC row per rung
+#   <prefix>.variant_qc_ladder_mqc.tsv          the call-rate ladder, one MultiQC row per step
 #   <prefix>.sex_check_mismatches_mqc.tsv       the sex mismatch table, one row per sample; absent when empty
 #   <prefix>.relatedness_pairs_mqc.tsv          the duplicate/MZ and first-degree pairs; absent when empty
 #   <prefix>.<stage>_plots_mqc.yaml             the stage's figures embedded as one MultiQC image section, for

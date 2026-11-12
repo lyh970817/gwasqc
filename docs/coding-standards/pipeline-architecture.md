@@ -130,7 +130,8 @@ Decided 2026-09-20 with the foundation milestone of the legacy port; the tuple c
   removal list holds one member of each duplicate/MZ pair, the one with the higher missing-call rate over the
   MAF-passing variants before the geno filter (the legacy `_check.imiss`), and the mean-kinship outlier list,
   taken over every other sample from the KING matrix written in the table's pass, is published without ever
-  being applied. Under
+  being applied. That missingness is the sample report of the one `--missing` run over the MAF-passing
+  variants and every sample, so it is the same under both missingness modes and is never a rung's report. Under
   `apply_sample_removals`, the sex-mismatch, relatedness and ancestry mismatch removal lists join the mind list
   in the terminal `--remove`; every sample decision is a removal list, so the gate is one union at one slot and
   `--keep` stays empty.

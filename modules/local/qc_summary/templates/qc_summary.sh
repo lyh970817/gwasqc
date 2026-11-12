@@ -86,9 +86,9 @@ relatedness_parent_offspring	Parent-offspring	First-degree pairs with IBS0 at or
 relatedness_full_sibling	Full sibling	First-degree pairs with IBS0 above the parent-offspring bound	{:,.0f}
 relatedness_second_degree	Second degree	Pairs with kinship between 0.0884 and 0.177	{:,.0f}
 relatedness_third_degree	Third degree	Pairs with kinship between 0.0442 and 0.0884	{:,.0f}
-relatedness_removed	Duplicates listed	One member of each duplicate/MZ pair, the one with the higher missing-call rate	{:,.0f}
+relatedness_removed	Duplicates listed	One member of each duplicate/MZ pair, the one with the higher missing-call rate over the MAF-passing variants before the geno filter	{:,.0f}
 relatedness_removals	Duplicate list	Whether the duplicate list was applied to the QC'd fileset
-relatedness_outliers	Kinship outliers	Samples whose mean kinship lies above the cohort mean by the configured standard deviations; listed, never applied	{:,.0f}
+relatedness_outliers	Kinship outliers	Samples at or above mean + N SD of the per-individual mean kinship over all pairs, N being the configured number of standard deviations; listed, never applied	{:,.0f}
 ancestry_unassigned	Unassigned	Study samples whose largest class probability did not reach the threshold, or that the centroid rule unassigned	{:,.0f}
 ancestry_mismatches	Ancestry mismatches	Study samples not assigned to the stratum's label, the unassigned included	{:,.0f}
 ancestry_removals	Ancestry list	Whether the ancestry mismatch list was applied to the QC'd fileset

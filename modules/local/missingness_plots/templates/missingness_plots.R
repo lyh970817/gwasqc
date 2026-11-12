@@ -107,7 +107,8 @@ for (y_limit in c(100, 5000, 600000)) {
 }
 invisible(dev.off())
 
-# Per-sample missingness over the geno-retained variants, against the mind threshold.
+# Per-sample missingness in the applied sample report, over the variants the applied geno list keeps, against
+# the mind threshold.
 sample_bins <- histogram_bins(as.numeric(read_plink2_report(smiss_file)[["F_MISS"]]), mind_threshold)
 fwrite(sample_bins, paste0(prefix, ".smiss_hist.tsv"), sep = "\\t")
 write_panels(
@@ -115,9 +116,13 @@ write_panels(
     paste0(prefix, ".smiss_hist")
 )
 
-# The call-rate ladder as a table image: one header row and one row per rung.
+# The call-rate ladder as a table image: one header row and one row per step, the variant and then the sample
+# step of each rung. The page widens with the number of columns, so that a header keeps the room it had in the
+# six-column table.
 column_labels <- c(
+    step = "Sample/SNP",
     call_rate = "Call rate (%)",
+    filter = "Filter",
     missing_threshold = "Missing-call threshold",
     variants_removed = "Variants removed",
     variants_remaining = "Variants remaining",
@@ -135,14 +140,15 @@ table_plot <- ggplot(cells, aes(x = column, y = -row, label = label)) +
     geom_tile(aes(fill = header), colour = "grey60", width = 1, height = 1) +
     geom_text(aes(fontface = ifelse(header, "bold", "plain")), size = 3) +
     scale_fill_manual(values = c(`TRUE` = "grey85", `FALSE` = "white"), guide = "none") +
-    labs(title = paste(prefix, "call-rate ladder"), subtitle = "each rate applied from the base fileset, variants before samples") +
+    labs(title = paste(prefix, "call-rate ladder"), subtitle = "cumulative: each step applied to what the step before it left, variants before samples at each call rate") +
     theme_void() +
     theme(plot.title = element_text(hjust = 0.5), plot.subtitle = element_text(hjust = 0.5))
 table_height <- 0.35 * (nrow(ladder) + 1) + 1.5
-pdf(paste0(prefix, ".missingness_ladder.pdf"), width = 10, height = table_height)
+table_width <- max(10, length(columns) * 10 / 6)
+pdf(paste0(prefix, ".missingness_ladder.pdf"), width = table_width, height = table_height)
 print(table_plot)
 invisible(dev.off())
-png(paste0(prefix, ".missingness_ladder.png"), width = 2000, height = 200 * table_height, res = 200)
+png(paste0(prefix, ".missingness_ladder.png"), width = 200 * table_width, height = 200 * table_height, res = 200)
 print(table_plot)
 invisible(dev.off())
 
