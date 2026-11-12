@@ -1,5 +1,5 @@
 name: relatedness_decisions
-description: Classify the sample pairs of one stratum from a plink2 --make-king-table report, list one member of every duplicate or monozygotic pair for removal, flag mean-kinship outliers and draw the kinship histogram
+description: Classify the sample pairs of one stratum from a plink2 --make-king-table report, list one member of every duplicate or monozygotic pair for removal, flag mean-kinship outliers from the --make-king matrix of the same pairs and draw the pair and per-individual kinship histograms
 keywords:
   - relatedness
   - kinship
@@ -33,21 +33,26 @@ input:
         pattern: "*.kin0"
         ontologies:
           - edam: "http://edamontology.org/format_3475" # TSV
+    - king:
+        type: file
+        description: plink2 --make-king matrix of the same pass as the report, in the lower-triangle shape without diagonal and the 4-byte float encoding (`--make-king triangle bin4`); the module stops when its size does not match the samples of the ID file. Each sample's mean kinship over every other sample is read from it one row at a time
+        pattern: "*.king.bin"
+        ontologies: []
+    - king_id:
+        type: file
+        description: plink2 --make-king sample ID file of the matrix, with an IID and optionally an FID column; it names the samples the report describes, in matrix order
+        pattern: "*.king.id"
+        ontologies:
+          - edam: "http://edamontology.org/format_3475" # TSV
     - smiss:
         type: file
-        description: plink2 --missing sample report of the same fileset with an IID, optionally an FID, and an F_MISS column; it names every sample and supplies the missing-call rate the duplicate rule compares
+        description: plink2 --missing sample report with an IID, optionally an FID, and an F_MISS column, supplying the missing-call rate the duplicate rule compares; the legacy basis is the report over the MAF-passing variants before the geno filter
         pattern: "*.smiss"
         ontologies:
           - edam: "http://edamontology.org/format_3475" # TSV
-    - mind_remove:
-        type: file
-        description: Optional list of the samples removed before the kinship report was computed, one FID IID pair or bare IID per line; use `[]` when none was removed
-        pattern: "*"
-        ontologies:
-          - edam: "http://edamontology.org/format_2330" # Text
   - indiv_sd:
       type: float
-      description: An individual whose mean kinship over all other samples lies strictly above the cohort mean plus this many standard deviations is an outlier
+      description: An individual whose mean kinship over all other samples lies at or above the cohort mean plus this many standard deviations is an outlier
   - po_ibs0_max:
       type: float
       description: A first-degree pair whose IBS0 proportion is at or below this value is classified parent-offspring, above it full sibling
@@ -68,7 +73,7 @@ output:
           description: Metadata map propagated from input
       - "${prefix}.relatedness_indiv.tsv":
           type: file
-          description: Per sample, the number of reported pairs it is in, its mean kinship over all other samples and whether it is an outlier
+          description: Per sample of the matrix, in matrix order, the number of reported pairs it is in, its mean kinship over all other samples read from the matrix, and whether it is an outlier
           pattern: "*.relatedness_indiv.tsv"
           ontologies:
             - edam: "http://edamontology.org/format_3475" # TSV
@@ -116,6 +121,32 @@ output:
           type: file
           description: The full-range histogram as an image
           pattern: "*.relatedness_hist.png"
+          ontologies:
+            - edam: "http://edamontology.org/format_3603" # PNG
+  indiv_hist_data:
+    - - meta:
+          type: map
+          description: Metadata map propagated from input
+      - "${prefix}.relatedness_indiv_hist.tsv":
+          type: file
+          description: Counts of samples per cell of mean kinship, on the cells R's hist() chooses for a request of 100 as the legacy IndvIBD_Hist.r drew them; the data the per-individual histogram is drawn from
+          pattern: "*.relatedness_indiv_hist.tsv"
+          ontologies:
+            - edam: "http://edamontology.org/format_3475" # TSV
+  indiv_hist_plot:
+    - - meta:
+          type: map
+          description: Metadata map propagated from input
+      - "${prefix}.relatedness_indiv_hist.pdf":
+          type: file
+          description: Histogram of the per-individual mean kinship, with the outlier threshold and count in the subtitle
+          pattern: "*.relatedness_indiv_hist.pdf"
+          ontologies:
+            - edam: "http://edamontology.org/format_3508" # PDF
+      - "${prefix}.relatedness_indiv_hist.png":
+          type: file
+          description: The same histogram as an image
+          pattern: "*.relatedness_indiv_hist.png"
           ontologies:
             - edam: "http://edamontology.org/format_3603" # PNG
   versions:

@@ -1,6 +1,6 @@
 # yaml-language-server: $schema=https://raw.githubusercontent.com/nf-core/modules/master/modules/meta-schema.json
 name: "plink2_makekingtable"
-description: Estimate the KING-robust kinship coefficient of every sample pair of a PLINK 1 or PLINK 2 fileset and write the pairs as a table, after any variant and sample filter lists are applied
+description: Estimate the KING-robust kinship coefficient of every sample pair of a PLINK 1 or PLINK 2 fileset and write the pairs as a table, and optionally as a matrix in the same pass, after any variant and sample filter lists are applied
 keywords:
   - plink2
   - king
@@ -68,6 +68,23 @@ output:
           type: file
           description: Pairwise KING-robust kinship table over the autosomal variants that pass the filters, one sample pair per line with the variant count, het-het and IBS0 proportions and the kinship coefficient; restricted to pairs above a minimum kinship when `--king-table-filter` is passed through `ext.args`
           pattern: "*.kin0"
+          ontologies:
+            - edam: "http://edamontology.org/format_3475" # TSV
+  king:
+    - - meta:
+          type: map
+          description: |
+            Groovy map containing fileset metadata
+            e.g. `[ id:'study_eur' ]`
+      - "${prefix}.king{,.zst,.bin}":
+          type: file
+          description: KING-robust kinship matrix of every sample pair over the same variants and samples as the table, written in the same pass only when `--make-king` is passed through `ext.args`; its modifiers select the shape (`square`, `square0` or the default `triangle`) and the encoding, which names the file `.king` (text), `.king.zst` (`zs`) or `.king.bin` (`bin`, `bin4`)
+          pattern: "*.{king,king.zst,king.bin}"
+          ontologies: []
+      - "${prefix}.king.id":
+          type: file
+          description: Sample IDs of the matrix rows and columns, in matrix order, with a header line; written with the matrix
+          pattern: "*.king.id"
           ontologies:
             - edam: "http://edamontology.org/format_3475" # TSV
   log:

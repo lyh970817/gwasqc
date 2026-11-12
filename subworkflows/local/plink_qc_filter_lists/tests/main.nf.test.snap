@@ -266,6 +266,22 @@
                         "study_eur.smiss_hist.png:md5,d41d8cd98f00b204e9800998ecf8427e"
                     ]
                 ],
+                "smiss_maf": [
+                    [
+                        {
+                            "ancestry": "AFR",
+                            "id": "study_afr"
+                        },
+                        "study_afr.smiss:md5,d41d8cd98f00b204e9800998ecf8427e"
+                    ],
+                    [
+                        {
+                            "ancestry": "EUR",
+                            "id": "study_eur"
+                        },
+                        "study_eur.smiss:md5,d41d8cd98f00b204e9800998ecf8427e"
+                    ]
+                ],
                 "vmiss": [
                     [
                         {
@@ -314,6 +330,22 @@
                         },
                         "study_eur.vmiss_hist.pdf:md5,d41d8cd98f00b204e9800998ecf8427e",
                         "study_eur.vmiss_hist.png:md5,d41d8cd98f00b204e9800998ecf8427e"
+                    ]
+                ],
+                "vmiss_hist_ylim_plot": [
+                    [
+                        {
+                            "ancestry": "AFR",
+                            "id": "study_afr"
+                        },
+                        "study_afr.vmiss_hist_ylim.pdf:md5,d41d8cd98f00b204e9800998ecf8427e"
+                    ],
+                    [
+                        {
+                            "ancestry": "EUR",
+                            "id": "study_eur"
+                        },
+                        "study_eur.vmiss_hist_ylim.pdf:md5,d41d8cd98f00b204e9800998ecf8427e"
                     ]
                 ]
             }
@@ -517,6 +549,22 @@
                             "id": "study_eur"
                         },
                         "study_eur.smiss_hist.tsv:md5,902c4c81c13d10b03114cbfe8708cb1c"
+                    ]
+                ],
+                "smiss_maf": [
+                    [
+                        {
+                            "ancestry": "AFR",
+                            "id": "study_afr"
+                        },
+                        "study_afr.smiss:md5,151fb604f83220fc679b9f851407f9b7"
+                    ],
+                    [
+                        {
+                            "ancestry": "EUR",
+                            "id": "study_eur"
+                        },
+                        "study_eur.smiss:md5,3226482e5392f56ee289f39220e9408c"
                     ]
                 ],
                 "vmiss": [

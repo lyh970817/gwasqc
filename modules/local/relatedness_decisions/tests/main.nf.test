@@ -11,9 +11,28 @@ nextflow_process {
 
     // The gwasqc fixture stratum plants a duplicate pair (EUR_S020/EUR_S021, identical genotypes), a
     // parent-offspring pair (EUR_S030/EUR_S031) and a full-sib pair (EUR_S032/EUR_S033); the setup computes the
-    // kinship table above the third-degree bound and the missingness report the duplicate rule reads.
+    // kinship table above the third-degree bound with the matrix of every pair in the same pass, the
+    // missingness report the duplicate rule reads, and the unfiltered table that the per-individual means are
+    // checked against.
     setup {
         run("PLINK2_MAKEKINGTABLE") {
+            script "../../plink2/makekingtable/main.nf"
+            process {
+                """
+                input[0] = [
+                    [ id:'study_eur', ancestry:'EUR' ],
+                    file(params.pipelines_testdata_base_path + 'data/gwasqc/genotypes/study_eur.bed', checkIfExists: true),
+                    file(params.pipelines_testdata_base_path + 'data/gwasqc/genotypes/study_eur.bim', checkIfExists: true),
+                    file(params.pipelines_testdata_base_path + 'data/gwasqc/genotypes/study_eur.fam', checkIfExists: true),
+                    [],
+                    [],
+                    [],
+                    [],
+                ]
+                """
+            }
+        }
+        run("PLINK2_MAKEKINGTABLE", alias: "PLINK2_MAKEKINGTABLE_ALL") {
             script "../../plink2/makekingtable/main.nf"
             process {
                 """
@@ -54,7 +73,7 @@ nextflow_process {
         when {
             process {
                 """
-                input[0] = PLINK2_MAKEKINGTABLE.out.kin0.join(PLINK2_MISSING.out.smiss).map { meta, kin0, smiss -> [meta, kin0, smiss, []] }
+                input[0] = PLINK2_MAKEKINGTABLE.out.kin0.join(PLINK2_MAKEKINGTABLE.out.king).join(PLINK2_MISSING.out.smiss).map { meta, kin0, king, king_id, smiss -> [meta, kin0, king, king_id, smiss] }
                 input[1] = 3
                 input[2] = 0.005
                 """
@@ -66,6 +85,7 @@ nextflow_process {
             def relationship = pairs.drop(1).collectEntries { fields -> [([fields[1], fields[3]].sort().join('/')): fields[9]] }
             def indiv = path(process.out.indiv.get(0).get(1)).readLines().collect { line -> line.split('\t').toList() }
             def outliers = indiv.drop(1).findAll { fields -> fields[4] == 'TRUE' }.collect { fields -> fields[1] }
+            def indiv_hist = path(process.out.indiv_hist_data.get(0).get(1)).readLines().drop(1).collect { line -> line.split('\t').toList() }
             assertAll(
                 { assert process.success },
                 { assert pairs[0] == ['FID1', 'IID1', 'FID2', 'IID2', 'NSNP', 'HETHET', 'IBS0', 'KINSHIP', 'DEGREE', 'RELATIONSHIP'] },
@@ -79,23 +99,33 @@ nextflow_process {
                 { assert path(process.out.sample_remove.get(0).get(1)).readLines() == ['EUR_S020 EUR_S020'] },
                 { assert indiv[0] == ['FID', 'IID', 'N_PAIRS_REPORTED', 'MEAN_KINSHIP', 'OUTLIER'] },
                 { assert indiv.size() == 126 },
-                { assert outliers.containsAll(['EUR_S020', 'EUR_S021']) },
+                // The table holds only the pairs at or above the filter, so fewer pairs are reported than exist.
+                { assert indiv.drop(1).sum { fields -> fields[2] as Integer } < 125 * 124 },
+                // The mean over every pair is dominated by the unrelated pairs' slightly negative kinship, so one
+                // strongly negative sample widens the SD and no sample of the fixture reaches mean + 3 SD; the
+                // planted duplicates still stand above the cohort mean, and the flag is checked against the
+                // bound in the unfiltered-table test.
+                { assert indiv.drop(1).findAll { fields -> fields[1] in ['EUR_S020', 'EUR_S021'] }.every { fields -> (fields[3] as Double) > indiv.drop(1).sum { other -> other[3] as Double } / 125 } },
                 { assert path(process.out.outliers.get(0).get(1)).readLines() == outliers.collect { iid -> "${iid} ${iid}".toString() } },
                 { assert path(process.out.hist_data.get(0).get(1)).readLines().size() == 101 },
                 { assert path(process.out.hist_plot.get(0).get(1)).size() > 0 },
-                { assert snapshot(process.out.pairs, process.out.indiv, process.out.sample_remove, process.out.outliers, process.out.hist_data, process.out.versions).match() },
+                // The per-individual histogram counts every sample once.
+                { assert indiv_hist.collect { fields -> fields[2] as Integer }.sum() == 125 },
+                { assert path(process.out.indiv_hist_plot.get(0).get(1)).size() > 0 },
+                { assert path(process.out.indiv_hist_plot.get(0).get(2)).size() > 0 },
+                { assert snapshot(process.out.pairs, process.out.indiv, process.out.sample_remove, process.out.outliers, process.out.hist_data, process.out.indiv_hist_data, process.out.versions).match() },
             )
         }
     }
 
-    test("study_eur - duplicate member removed upstream") {
+    test("study_eur - means equal the means over the unfiltered table") {
 
         when {
             process {
                 """
-                def removed = file('removed_upstream.txt')
-                removed.text = 'EUR_S040 EUR_S040\\nEUR_S041 EUR_S041\\n'
-                input[0] = PLINK2_MAKEKINGTABLE.out.kin0.join(PLINK2_MISSING.out.smiss).map { meta, kin0, smiss -> [meta, kin0, smiss, removed] }
+                // The unfiltered table (every pair) stands in as the pair table, beside the matrix of the same
+                // pass: the oracle for the means is that table, which the task keeps staged beside its outputs.
+                input[0] = PLINK2_MAKEKINGTABLE_ALL.out.kin0.join(PLINK2_MAKEKINGTABLE.out.king).join(PLINK2_MISSING.out.smiss).map { meta, kin0, king, king_id, smiss -> [meta, kin0, king, king_id, smiss] }
                 input[1] = 3
                 input[2] = 0.005
                 """
@@ -103,13 +133,98 @@ nextflow_process {
         }
 
         then {
-            def indiv = path(process.out.indiv.get(0).get(1)).readLines().drop(1).collect { line -> line.split('\t')[1] }
+            def indiv = path(process.out.indiv.get(0).get(1)).readLines().collect { line -> line.split('\t').toList() }
+            // The mean of each sample over every pair of the unfiltered table, the legacy PI_HAT statistic with
+            // KING kinship in its place.
+            def all_pairs = path(process.out.indiv.get(0).get(1)).parent.resolve('study_eur.kin0').readLines().drop(1).collect { line -> line.split('\t').toList() }
+            def full_sums = [:].withDefault { 0d }
+            all_pairs.each { fields ->
+                full_sums[fields[1]] += fields[7] as Double
+                full_sums[fields[3]] += fields[7] as Double
+            }
+            def means = indiv.drop(1).collect { fields -> fields[3] as Double }
+            def threshold = means.sum() / means.size() + 3 * Math.sqrt(means.collect { value -> (value - means.sum() / means.size()) ** 2 }.sum() / (means.size() - 1))
             assertAll(
                 { assert process.success },
-                // The removed samples leave the per-individual table and the denominator of the mean.
-                { assert indiv.size() == 123 },
-                { assert !indiv.contains('EUR_S040') },
-                { assert snapshot(process.out.indiv, process.out.sample_remove, process.out.outliers).match() },
+                { assert all_pairs.size() == 125 * 124 / 2 },
+                { assert indiv.drop(1).every { fields -> fields[2] == '124' } },
+                // Every sample's mean is its mean over all 124 other samples; the matrix holds 4-byte floats
+                // and the table six significant digits.
+                { assert indiv.drop(1).every { fields -> Math.abs((fields[3] as Double) - full_sums[fields[1]] / 124) < 1e-6 } },
+                // The flag is the inclusive bound mean + 3 SD over the samples' means.
+                { assert indiv.drop(1).every { fields -> (fields[4] == 'TRUE') == ((fields[3] as Double) >= threshold) } },
+            )
+        }
+    }
+
+    test("synthetic - matrix row means and the inclusive outlier bound") {
+
+        when {
+            process {
+                """
+                // Four samples whose lower-triangle matrix gives S1-S3 a mean of 0 and S4 a mean of 0.25: the
+                // cohort mean is 0.0625 and the SD 0.125, so at 1.5 SD the bound is exactly 0.25, which S4
+                // reaches and is flagged at. The values are exact in 4-byte floats. S5 is in the missingness
+                // report but was removed before the kinship pass, so it is absent from the matrix and the table.
+                def king = file("${workDir}/matrix.king.bin")
+                def buffer = java.nio.ByteBuffer.allocate(4 * 6).order(java.nio.ByteOrder.LITTLE_ENDIAN)
+                [-0.125f, -0.125f, -0.125f, 0.25f, 0.25f, 0.25f].each { value -> buffer.putFloat(value) }
+                java.nio.file.Files.write(king, buffer.array())
+                def kingId = file("${workDir}/matrix.king.id")
+                kingId.text = '#IID\\nS1\\nS2\\nS3\\nS4\\n'
+                def kin0 = file("${workDir}/matrix.kin0")
+                kin0.text = [
+                    ['#IID1', 'IID2', 'NSNP', 'HETHET', 'IBS0', 'KINSHIP'].join('\\t'),
+                    ['S4', 'S1', '3600', '0.2', '0.02', '0.25'].join('\\t'),
+                    ['S4', 'S2', '3600', '0.2', '0.02', '0.25'].join('\\t'),
+                    ['S4', 'S3', '3600', '0.2', '0.02', '0.25'].join('\\t'),
+                ].join('\\n') + '\\n'
+                def smiss = file("${workDir}/matrix.smiss")
+                smiss.text = ['#IID\\tMISSING_CT\\tOBS_CT\\tF_MISS', 'S1\\t0\\t3600\\t0', 'S2\\t0\\t3600\\t0', 'S3\\t0\\t3600\\t0', 'S4\\t0\\t3600\\t0', 'S5\\t3600\\t3600\\t1'].join('\\n') + '\\n'
+                input[0] = [ [ id:'matrix' ], kin0, king, kingId, smiss ]
+                input[1] = 1.5
+                input[2] = 0.005
+                """
+            }
+        }
+
+        then {
+            def indiv = path(process.out.indiv.get(0).get(1)).readLines().collect { line -> line.split('\t').toList() }
+            assertAll(
+                { assert process.success },
+                { assert indiv[0] == ['IID', 'N_PAIRS_REPORTED', 'MEAN_KINSHIP', 'OUTLIER'] },
+                // Below the table's pairs, S1-S3 are reported once each, yet their means count every pair.
+                { assert indiv.drop(1).collect { fields -> [fields[0], fields[1], fields[2] as Double, fields[3]] } == [['S1', '1', 0d, 'FALSE'], ['S2', '1', 0d, 'FALSE'], ['S3', '1', 0d, 'FALSE'], ['S4', '3', 0.25d, 'TRUE']] },
+                { assert path(process.out.outliers.get(0).get(1)).readLines() == ['S4'] },
+            )
+        }
+    }
+
+    test("synthetic - matrix of the wrong shape fails") {
+
+        when {
+            process {
+                """
+                // A square matrix of three samples where the lower triangle is expected.
+                def king = file("${workDir}/square.king.bin")
+                java.nio.file.Files.write(king, java.nio.ByteBuffer.allocate(4 * 9).array())
+                def kingId = file("${workDir}/square.king.id")
+                kingId.text = '#IID\\nS1\\nS2\\nS3\\n'
+                def kin0 = file("${workDir}/square.kin0")
+                kin0.text = '#IID1\\tIID2\\tNSNP\\tHETHET\\tIBS0\\tKINSHIP\\nS2\\tS1\\t3600\\t0.35\\t0\\t0.5\\n'
+                def smiss = file("${workDir}/square.smiss")
+                smiss.text = '#IID\\tMISSING_CT\\tOBS_CT\\tF_MISS\\nS1\\t0\\t3600\\t0\\nS2\\t0\\t3600\\t0\\nS3\\t0\\t3600\\t0\\n'
+                input[0] = [ [ id:'square' ], kin0, king, kingId, smiss ]
+                input[1] = 3
+                input[2] = 0.005
+                """
+            }
+        }
+
+        then {
+            assertAll(
+                { assert process.failed },
+                { assert process.errorReport.contains('the kinship matrix must be the lower triangle of 3 samples') },
             )
         }
     }
@@ -135,7 +250,14 @@ nextflow_process {
                     ['S3', '0', '3600', '0'].join('\\t'),
                     ['S4', '0', '3600', '0'].join('\\t'),
                 ].join('\\n') + '\\n'
-                input[0] = [ [ id:'bare' ], kin0, smiss, [] ]
+                // The lower-triangle matrix of the same pairs, rows S2, S3 and S4, unreported pairs at zero.
+                def king = file("${workDir}/bare.king.bin")
+                def buffer = java.nio.ByteBuffer.allocate(4 * 6).order(java.nio.ByteOrder.LITTLE_ENDIAN)
+                [0.5f, 0.0442f, 0f, 0f, 0f, 0f].each { value -> buffer.putFloat(value) }
+                java.nio.file.Files.write(king, buffer.array())
+                def kingId = file("${workDir}/bare.king.id")
+                kingId.text = '#IID\\nS1\\nS2\\nS3\\nS4\\n'
+                input[0] = [ [ id:'bare' ], kin0, king, kingId, smiss ]
                 input[1] = 3
                 input[2] = 0.005
                 """
@@ -169,7 +291,7 @@ nextflow_process {
                 // A missing required column is a failure, never an all-unrelated classification.
                 def kin0 = file("${workDir}/no_kinship.kin0")
                 kin0.text = '#FID1\\tIID1\\tFID2\\tIID2\\tNSNP\\tHETHET\\tIBS0\\nS2\\tS2\\tS1\\tS1\\t3600\\t0.35\\t0\\n'
-                input[0] = PLINK2_MISSING.out.smiss.map { meta, smiss -> [meta, kin0, smiss, []] }
+                input[0] = PLINK2_MAKEKINGTABLE.out.king.join(PLINK2_MISSING.out.smiss).map { meta, king, king_id, smiss -> [meta, kin0, king, king_id, smiss] }
                 input[1] = 3
                 input[2] = 0.005
                 """
@@ -191,7 +313,7 @@ nextflow_process {
                 """
                 // Sample IDs that are all digits must come back byte for byte in every list and table. 0001/007
                 // and 0002/008 are a duplicate pair, 0002/008 carrying the higher missing-call rate, and 0003/009
-                // was removed upstream.
+                // was removed upstream, so it is in the missingness report but not in the matrix.
                 def kin0 = file("${workDir}/numeric.kin0")
                 kin0.text = [
                     ['#FID1', 'IID1', 'FID2', 'IID2', 'NSNP', 'HETHET', 'IBS0', 'KINSHIP'].join('\\t'),
@@ -204,9 +326,14 @@ nextflow_process {
                     ['0002', '008', '20', '3600', '0.0056'].join('\\t'),
                     ['0003', '009', '0', '3600', '0'].join('\\t'),
                 ].join('\\n') + '\\n'
-                def mindRemove = file("${workDir}/numeric.mind_remove.txt")
-                mindRemove.text = '0003 009\\n'
-                input[0] = [ [ id:'numeric' ], kin0, smiss, mindRemove ]
+                // The matrix covers the two samples left after the upstream removal.
+                def king = file("${workDir}/numeric.king.bin")
+                def buffer = java.nio.ByteBuffer.allocate(4).order(java.nio.ByteOrder.LITTLE_ENDIAN)
+                buffer.putFloat(0.5f)
+                java.nio.file.Files.write(king, buffer.array())
+                def kingId = file("${workDir}/numeric.king.id")
+                kingId.text = '#FID\\tIID\\n0001\\t007\\n0002\\t008\\n'
+                input[0] = [ [ id:'numeric' ], kin0, king, kingId, smiss ]
                 input[1] = 3
                 input[2] = 0.005
                 """
@@ -233,7 +360,7 @@ nextflow_process {
         when {
             process {
                 """
-                input[0] = PLINK2_MAKEKINGTABLE.out.kin0.join(PLINK2_MISSING.out.smiss).map { meta, kin0, smiss -> [meta, kin0, smiss, []] }
+                input[0] = PLINK2_MAKEKINGTABLE.out.kin0.join(PLINK2_MAKEKINGTABLE.out.king).join(PLINK2_MISSING.out.smiss).map { meta, kin0, king, king_id, smiss -> [meta, kin0, king, king_id, smiss] }
                 input[1] = 3
                 input[2] = 0.005
                 """

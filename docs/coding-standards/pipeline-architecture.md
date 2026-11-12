@@ -128,7 +128,9 @@ Decided 2026-09-20 with the foundation milestone of the legacy port; the tuple c
 - **[MUST]** Sex mismatches are plink2's own `PROBLEM` calls, tabled with the report's header and listed for
   removal. Heterozygosity is report-only. Relatedness pairs are classified on KING's inference boundaries; the
   removal list holds one member of each duplicate/MZ pair, the one with the higher missing-call rate over the
-  geno-retained variants, and the mean-kinship outlier list is published without ever being applied. Under
+  MAF-passing variants before the geno filter (the legacy `_check.imiss`), and the mean-kinship outlier list,
+  taken over every other sample from the KING matrix written in the table's pass, is published without ever
+  being applied. Under
   `apply_sample_removals`, the sex-mismatch, relatedness and ancestry mismatch removal lists join the mind list
   in the terminal `--remove`; every sample decision is a removal list, so the gate is one union at one slot and
   `--keep` stays empty.

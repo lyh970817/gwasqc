@@ -20,7 +20,7 @@ include { RELATEDNESS_DECISIONS              } from '../../../modules/local/rela
 
 workflow PLINK_SAMPLE_QC_LISTS {
     take:
-    ch_genotypes // channel: [ val(meta), path(bed), path(bim), path(fam), path(extract), [ path(exclude), ... ], path(remove), path(smiss) ]; meta.sample_qc_marker_set is `study` or `shared`
+    ch_genotypes // channel: [ val(meta), path(bed), path(bim), path(fam), path(extract), [ path(exclude), ... ], path(remove), path(smiss) ]; meta.sample_qc_marker_set is `study` or `shared`; smiss is the sample missingness over the MAF-passing variants before the geno filter, the duplicate rule's basis
     ch_reference // channel: [ val(meta), path(shared_markers), path(pgen), path(pvar), path(psam), path(reference_keep) ], one item per stratum in shared mode: the shared marker list, the merged reference fileset and the reference samples of the stratum's super-population, all from the ancestry route
     high_ld_regions // value: path to the BED of long-range LD regions
     ld_window_size // value: --indep-pairwise window, in variants
@@ -145,17 +145,20 @@ workflow PLINK_SAMPLE_QC_LISTS {
     HETEROZYGOSITY_PLOTS(ch_het_plot_inputs)
 
     //
-    // MODULE: KING kinship table on the same autosomal set; the kinship filter reaches plink2 through ext.args
+    // MODULE: KING kinship table on the same autosomal set, and the matrix of every pair in the same pass; the
+    // kinship filter and the matrix request reach plink2 through ext.args
     //
     PLINK2_MAKEKINGTABLE(ch_study_autosomal_inputs.mix(ch_shared_king_inputs))
 
     //
-    // MODULE: Pair classification, duplicate removal list, mean-kinship outliers and kinship histogram
+    // MODULE: Pair classification, duplicate removal list, mean-kinship outliers over the matrix, and the pair
+    // and per-individual kinship histograms
     //
     def ch_relatedness_inputs = PLINK2_MAKEKINGTABLE.out.kin0
         .map { meta, kin0 -> [meta.id, meta, kin0] }
-        .join(ch_genotypes.map { meta, _bed, _bim, _fam, _extract, _exclude, remove, smiss -> [meta.id, smiss, remove] }, by: 0, failOnDuplicate: true, failOnMismatch: true)
-        .map { _id, meta, kin0, smiss, remove -> [meta, kin0, smiss, remove] }
+        .join(PLINK2_MAKEKINGTABLE.out.king.map { meta, king, king_id -> [meta.id, king, king_id] }, by: 0, failOnDuplicate: true, failOnMismatch: true)
+        .join(ch_genotypes.map { meta, _bed, _bim, _fam, _extract, _exclude, _remove, smiss -> [meta.id, smiss] }, by: 0, failOnDuplicate: true, failOnMismatch: true)
+        .map { _id, meta, kin0, king, king_id, smiss -> [meta, kin0, king, king_id, smiss] }
 
     RELATEDNESS_DECISIONS(
         ch_relatedness_inputs,
@@ -184,4 +187,5 @@ workflow PLINK_SAMPLE_QC_LISTS {
     relatedness_remove    = RELATEDNESS_DECISIONS.out.sample_remove // channel: [ val(meta), path(relatedness_remove) ]
     relatedness_outliers  = RELATEDNESS_DECISIONS.out.outliers // channel: [ val(meta), path(outliers) ]
     relatedness_hist_plot = RELATEDNESS_DECISIONS.out.hist_plot // channel: [ val(meta), path(pdf), path(png) ]
+    relatedness_indiv_hist_plot = RELATEDNESS_DECISIONS.out.indiv_hist_plot // channel: [ val(meta), path(pdf), path(png) ]
 }

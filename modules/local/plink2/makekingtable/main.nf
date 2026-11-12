@@ -12,6 +12,9 @@ process PLINK2_MAKEKINGTABLE {
 
     output:
     tuple val(meta), path("${prefix}.kin0"), emit: kin0
+    // plink2 writes the kinship matrix of the same pairs in the same pass when `ext.args` adds `--make-king`;
+    // the matrix file is named by the encoding the flag's modifiers select.
+    tuple val(meta), path("${prefix}.king{,.zst,.bin}"), path("${prefix}.king.id"), emit: king, optional: true
     tuple val(meta), path("${prefix}.log"), emit: log
     tuple val("${task.process}"), val("plink2"), eval("plink2 --version 2>&1 | sed 's/^PLINK v//; s/ 64.*\$//'"), emit: versions_plink2, topic: versions
 
@@ -43,9 +46,17 @@ process PLINK2_MAKEKINGTABLE {
     """
 
     stub:
+    def args = task.ext.args ?: ''
     prefix = task.ext.prefix ?: "${meta.id}"
+    // The matrix is stubbed only when `ext.args` requests it, under the name its encoding modifier selects.
+    def arg_tokens = args.tokenize()
+    def king_flag = arg_tokens.indexOf('--make-king')
+    def king_modifiers = king_flag < 0 ? null : arg_tokens.drop(king_flag + 1).takeWhile { token -> !token.startsWith('--') }
+    def king_suffix = king_modifiers == null ? null : king_modifiers.any { modifier -> modifier in ['bin', 'bin4'] } ? '.king.bin' : 'zs' in king_modifiers ? '.king.zst' : '.king'
+    def king_stub = king_suffix ? "touch ${prefix}${king_suffix}\n    touch ${prefix}.king.id" : ''
     """
     touch ${prefix}.kin0
+    ${king_stub}
     touch ${prefix}.log
     """
 }

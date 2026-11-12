@@ -76,6 +76,7 @@ Every number in the summary is a line count of a published decision list, a row 
   - `<id>.missingness_ladder.pdf`, `<id>.missingness_ladder.png`: The ladder rendered as a table image.
   - `<id>.vmiss_hist.tsv`: Counts of variants in 100 bins of `F_MISS` (`bin_start`, `bin_end`, `count`) from zero to the larger of the largest rate and `--geno`, the data behind the histogram.
   - `<id>.vmiss_hist.pdf`, `<id>.vmiss_hist.png`: Histogram of the per-variant missing-call rate, counts on a linear and on a log scale side by side, with `--geno` as a dashed line.
+  - `<id>.vmiss_hist_ylim.pdf`: The legacy `missingness_histograms.r` figures of the per-variant missing-call rate, R's `hist(F_MISS, 100)` with the y axis limited to 100, 5000 and 600000, one page each, so the tail can be read under the peak at zero.
   - `<id>.smiss_hist.tsv`: Counts of samples in 100 bins of `F_MISS` from zero to the larger of the largest rate and `--mind`, the data behind the histogram.
   - `<id>.smiss_hist.pdf`, `<id>.smiss_hist.png`: Histogram of the per-sample missing-call rate in the same two panels, with `--mind` as a dashed line.
 - `qc/<id>/hwe/`
@@ -146,11 +147,13 @@ Heterozygosity is report-only: no threshold is applied and no sample is listed. 
 
 - `qc/<id>/relatedness/`
   - `<id>.relatedness_pairs.tsv`: The [plink2 `--make-king-table`](https://www.cog-genomics.org/plink/2.0/distance#make_king) KING-robust kinship table over the same autosomal marker set as the heterozygosity report, restricted to pairs at or above `--king_table_filter`, with every column of the report (`FID1`, `IID1`, `FID2`, `IID2`, `NSNP`, `HETHET`, `IBS0`, `KINSHIP`) and `DEGREE` and `RELATIONSHIP` per pair, on KING's inference boundaries taken as inclusive lower bounds: `duplicate_or_mz` at kinship 0.354 or above, `parent_offspring` or `full_sibling` from 0.177 up to it depending on IBS0 against `--relatedness_po_ibs0_max`, `second_degree` from 0.0884 and `third_degree` from 0.0442, so a pair reported at exactly the default `--king_table_filter` is third-degree.
-  - `<id>.relatedness_indiv.tsv`: Per sample, the number of reported pairs, the mean kinship over all other samples (unreported pairs count as zero) and whether it is an outlier at `--relatedness_indiv_sd` standard deviations above the cohort mean.
-  - `<id>.relatedness_remove.txt`: One member of each duplicate/MZ pair, the one with the higher missing-call rate over the geno-retained variants (a tie drops the ID that sorts later), as `FID IID` pairs; applied only under `--apply_sample_removals`.
+  - `<id>.relatedness_indiv.tsv`: Per sample, the number of pairs in the kinship table, the mean kinship over every other sample of the stratum and whether it is an outlier, at or above the cohort mean plus `--relatedness_indiv_sd` standard deviations. The mean is read from the [plink2 `--make-king`](https://www.cog-genomics.org/plink/2.0/distance#make_king) lower-triangle matrix that plink2 writes in the same pass as the table, so it covers every pair and not only the pairs at or above `--king_table_filter`.
+  - `<id>.relatedness_remove.txt`: One member of each duplicate/MZ pair, the one with the higher missing-call rate over the MAF-passing variants before the `--geno` filter, as in the legacy `_maf<maf>_check.imiss` (a tie drops the ID that sorts later), as `FID IID` pairs; applied only under `--apply_sample_removals`.
   - `<id>.relatedness_outliers.txt`: The mean-kinship outliers as `FID IID` pairs; published, never applied.
   - `<id>.relatedness_hist.tsv`: Counts of reported pairs in 100 bins of kinship (`bin_start`, `bin_end`, `count`), the data behind the histogram.
   - `<id>.relatedness_hist.pdf`, `<id>.relatedness_hist.png`: Histogram of the reported kinship coefficients; the PDF adds a page zoomed to a count of 100.
+  - `<id>.relatedness_indiv_hist.tsv`: Counts of samples per bin of per-sample mean kinship (`bin_start`, `bin_end`, `count`), on the cells R's `hist(breaks = 100)` chooses, the data behind the histogram.
+  - `<id>.relatedness_indiv_hist.pdf`, `<id>.relatedness_indiv_hist.png`: Histogram of the per-sample mean kinship, as the legacy `IndvIBD_Hist.r` drew it, without axis limits.
 
 </details>
 

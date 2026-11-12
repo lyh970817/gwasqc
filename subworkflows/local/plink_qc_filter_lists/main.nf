@@ -223,6 +223,7 @@ workflow PLINK_QC_FILTER_LISTS {
     maf_snplist        = PLINK2_WRITESNPLIST.out.snplist // channel: [ val(meta), path(snplist) ], over the standard chromosomes
     vmiss              = PLINK2_MISSING_VARIANTS.out.vmiss // channel: [ val(meta), path(vmiss) ], over the MAF-passing variants
     smiss              = ch_smiss // channel: [ val(meta), path(smiss) ], the report the applied mind list was decided from, over the geno-retained variants
+    smiss_maf          = PLINK2_MISSING_VARIANTS.out.smiss // channel: [ val(meta), path(smiss) ], over the MAF-passing variants and every sample, before any geno filter, under both missingness modes
     geno_exclude       = ch_geno_exclude // channel: [ val(meta), path(geno_exclude) ], the applied variant missingness exclusions
     mind_remove        = ch_mind_remove // channel: [ val(meta), path(mind_remove) ], the applied sample missingness removals
     missingness_ladder = MISSINGNESS_LADDER.out.ladder // channel: [ val(meta), path(ladder) ]
@@ -231,6 +232,7 @@ workflow PLINK_QC_FILTER_LISTS {
     hwe_exclude        = HWE_DECISIONS.out.variant_exclude // channel: [ val(meta), path(hwe_exclude) ]
     vmiss_hist_data    = MISSINGNESS_PLOTS.out.variant_hist_data // channel: [ val(meta), path(vmiss_hist) ]
     vmiss_hist_plot    = MISSINGNESS_PLOTS.out.variant_hist_plot // channel: [ val(meta), path(pdf), path(png) ]
+    vmiss_hist_ylim_plot = MISSINGNESS_PLOTS.out.variant_hist_ylim_plot // channel: [ val(meta), path(pdf) ]
     smiss_hist_data    = MISSINGNESS_PLOTS.out.sample_hist_data // channel: [ val(meta), path(smiss_hist) ]
     smiss_hist_plot    = MISSINGNESS_PLOTS.out.sample_hist_plot // channel: [ val(meta), path(pdf), path(png) ]
     ladder_plot        = MISSINGNESS_PLOTS.out.ladder_plot // channel: [ val(meta), path(pdf), path(png) ]

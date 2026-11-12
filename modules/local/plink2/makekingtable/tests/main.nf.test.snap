@@ -48,6 +48,41 @@
             "nextflow": "26.04.4"
         }
     },
+    "study_eur - bed - king-table-filter - matrix in the same pass": {
+        "content": [
+            [
+                [
+                    {
+                        "id": "study_eur",
+                        "ancestry": "EUR"
+                    },
+                    "study_eur.kin0:md5,0d64feed5ab5e0357e133a732cc5dcb6"
+                ]
+            ],
+            [
+                [
+                    {
+                        "id": "study_eur",
+                        "ancestry": "EUR"
+                    },
+                    "study_eur.king.bin:md5,992778ac6889a2983c8b05a16f0f68e4",
+                    "study_eur.king.id:md5,984f40eb233f97e4d709ac5619be4c32"
+                ]
+            ],
+            [
+                [
+                    "PLINK2_MAKEKINGTABLE",
+                    "plink2",
+                    "2.0.0-a.6.9LM"
+                ]
+            ]
+        ],
+        "timestamp": "2026-11-12T04:49:40.062049539",
+        "meta": {
+            "nf-test": "0.9.5",
+            "nextflow": "26.04.4"
+        }
+    },
     "study_eur - bed - stub": {
         "content": [
             {
@@ -59,6 +94,9 @@
                         },
                         "study_eur.kin0:md5,d41d8cd98f00b204e9800998ecf8427e"
                     ]
+                ],
+                "king": [
+                    
                 ],
                 "log": [
                     [
@@ -78,7 +116,7 @@
                 ]
             }
         ],
-        "timestamp": "2026-09-20T15:11:42.73412501",
+        "timestamp": "2026-11-12T04:51:04.89406846",
         "meta": {
             "nf-test": "0.9.5",
             "nextflow": "26.04.4"

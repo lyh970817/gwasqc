@@ -20,7 +20,7 @@ components:
   - relatedness_decisions
 input:
   - ch_genotypes:
-      description: One PLINK 1 fileset per stratum with the filter chain's lists; extract is the keep-list, exclude the list of exclusion lists, remove the mind removal list and smiss the sample missingness report over the geno-retained variants; meta.id must be unique across strata and meta.sample_qc_marker_set, `study` or `shared`, selects the stratum's marker set
+      description: One PLINK 1 fileset per stratum with the filter chain's lists; extract is the keep-list, exclude the list of exclusion lists, remove the mind removal list and smiss the sample missingness report over the MAF-passing variants before the geno filter, the basis of the duplicate rule; meta.id must be unique across strata and meta.sample_qc_marker_set, `study` or `shared`, selects the stratum's marker set
       structure: [map meta, path bed, path bim, path fam, path extract, list exclude, path remove, path smiss]
       pattern: "*.{bed,bim,fam,snplist,txt,smiss}"
       ontologies: []
@@ -146,7 +146,7 @@ output:
       ontologies: []
   - relatedness_indiv:
       type: file
-      description: Per-sample mean kinship with the outlier flag
+      description: Per-sample mean kinship over every other sample, read from the KING matrix of the same pass, with the outlier flag
       structure: [map meta, path indiv]
       pattern: "*.relatedness_indiv.tsv"
       ontologies: []
@@ -167,6 +167,12 @@ output:
       description: Histogram of the reported kinship coefficients, as PDF and PNG
       structure: [map meta, path pdf, path png]
       pattern: "*.relatedness_hist.{pdf,png}"
+      ontologies: []
+  - relatedness_indiv_hist_plot:
+      type: file
+      description: Histogram of the per-sample mean kinship, as PDF and PNG
+      structure: [map meta, path pdf, path png]
+      pattern: "*.relatedness_indiv_hist.{pdf,png}"
       ontologies: []
 authors:
   - "@lyh970817"

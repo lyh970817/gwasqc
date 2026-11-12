@@ -51,6 +51,44 @@ nextflow_process {
         }
     }
 
+    test("study_eur - bed - king-table-filter - matrix in the same pass") {
+
+        when {
+            params {
+                module_args = '--king-table-filter 0.0442 --make-king triangle bin4'
+            }
+            process {
+                """
+                input[0] = [
+                    [ id:'study_eur', ancestry:'EUR' ],
+                    file(params.pipelines_testdata_base_path + 'data/gwasqc/genotypes/study_eur.bed', checkIfExists: true),
+                    file(params.pipelines_testdata_base_path + 'data/gwasqc/genotypes/study_eur.bim', checkIfExists: true),
+                    file(params.pipelines_testdata_base_path + 'data/gwasqc/genotypes/study_eur.fam', checkIfExists: true),
+                    [],
+                    [],
+                    [],
+                    [],
+                ]
+                """
+            }
+        }
+
+        then {
+            def log = path(process.out.log.get(0).get(1)).text
+            def ids = path(process.out.king.get(0).get(2)).readLines()
+            assertAll(
+                { assert process.success },
+                // One KING pass writes both the filtered table and the lower-triangle matrix of every pair.
+                { assert log.contains('--make-king pass 1/1') && !log.contains('pass 1/2') },
+                { assert log.contains('Results written to study_eur.king.bin and study_eur.king.id') },
+                { assert log.contains('Results written to study_eur.kin0') },
+                { assert ids[0] == '#FID\tIID' && ids.size() == 126 },
+                { assert path(process.out.king.get(0).get(1)).size() == 4 * 125 * 124 / 2 },
+                { assert snapshot(process.out.kin0, process.out.king, process.out.versions_plink2).match() },
+            )
+        }
+    }
+
     test("plink_simulated - pgen - extract list - full table") {
 
         setup {
