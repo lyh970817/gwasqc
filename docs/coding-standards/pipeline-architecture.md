@@ -43,11 +43,15 @@ Decided 2026-09-20 with the foundation milestone of the legacy port; the tuple c
   describes the filtered set without a filtered fileset. The QC'd fileset is written exactly once, by the
   terminal `--make-bed`, from the original fileset and the complete list set. No intermediate bed/bim/fam
   exists anywhere in the chain.
-- **[MUST]** The QC'd fileset carries the human chromosomes only. The variants whose `.bim` chromosome code is
+- **[MUST]** Variants on non-standard contigs are kept by default, as the legacy pipeline kept them (it ran PLINK
+  with `--allow-extra-chr` and never dropped them); they are excluded only under the opt-in boolean
+  `exclude_nonstandard_contigs` (default `false`), under which the QC'd fileset carries the human chromosomes
+  only. Without it `contig_exclude` is not run, its slot is an empty list, and `variants_contig_removed` reads 0.
+  The variants whose `.bim` chromosome code is
   not one of 1-22, X, Y, XY and MT in a spelling plink2 reads as such (numeric or lettered, either case, an
   optional `chr` prefix, and `PAR1`/`PAR2`, the names plink2's own `--split-par` writes) are listed by
   `contig_exclude` from the variant table alone and applied under `--exclude` to the MAF run, the first filter,
-  and nowhere else: the MAF keep-list is then a standard-chromosome list and every later run extracts it, so no
+  and nowhere else (under the opt-in): the MAF keep-list is then a standard-chromosome list and every later run extracts it, so no
   such variant reaches a statistic, a decision list, the harmonisation or the terminal materialisation, and a
   reference panel's own contig variants can never be matched. The list is a pipeline-owned module rather than
   `--not-chr` on a plink2 run because plink2 stops with no variants left when the fileset carries none, and the
@@ -57,7 +61,7 @@ Decided 2026-09-20 with the foundation milestone of the legacy port; the tuple c
   `--make-bed`, `--score`, and the reference restriction under `--extract`) on a fileset carrying alt and
   random contigs, with outputs byte-identical to the standard-only fileset once the contig list is excluded;
   `--allow-extra-chr` is therefore not passed, and changes no output on standard-only input (verified on
-  2.0.0a.6.9). _(decided 2026-11-11 with issue #6)_
+  2.0.0a.6.9). _(decided 2026-11-11 with issue #6; made opt-in 2026-11-13)_
 - **[MUST]** Lists combine with plink2's native semantics, stated once here: files given to one flag are
   concatenated, so `--extract` keeps the union of its keep-lists, `--exclude` drops the union of its
   exclusion lists, and `--remove` drops the union of its removal lists; a variant survives only when it is in

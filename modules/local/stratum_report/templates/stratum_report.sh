@@ -34,7 +34,7 @@ apply_sample_removals='!{apply_sample_removals}'
 ancestry_remove_mismatched='!{ancestry_remove_mismatched}'
 fam='!{fam}'
 bim='!{bim}'
-contig_exclude='!{contig_exclude}'
+contig_exclude='!{contig_exclude_file}'
 maf_snplist='!{maf_snplist}'
 geno_exclude='!{geno_exclude}'
 mind_remove='!{mind_remove}'
@@ -77,9 +77,10 @@ add() {
 }
 
 # Input fileset and the variant and sample filter chain, in the order the lists were derived: the variants on
-# non-standard contigs first, then MAF over the rest.
+# non-standard contigs first when --exclude_nonstandard_contigs is set, then MAF over the rest.
 samples_input=$(lines "$fam")
 variants_input=$(lines "$bim")
+# The contig list is absent unless --exclude_nonstandard_contigs derived it; `lines` counts an absent list as 0.
 variants_contig_removed=$(lines "$contig_exclude")
 variants_after_maf=$(lines "$maf_snplist")
 variants_geno_removed=$(lines "$geno_exclude")
@@ -248,7 +249,7 @@ add variants_final "$variants_final"
 mqc_header() {
     printf '# id: %s\n# parent_id: %s\n# parent_name: "%s"\n# parent_description: "%s"\n# section_name: "%s"\n# description: "%s"\n# plot_type: table\n' "$1" "$2" "$3" "$4" "$5" "$6"
 }
-variant_qc_description='Per stratum: the input fileset, the variants on contigs outside 1-22, X, Y, XY and MT, what each filter of the MAF, missingness and Hardy-Weinberg chain removes at its threshold, the call-rate ladder, the LD-pruned set the sample checks run on, and the review histograms.'
+variant_qc_description='Per stratum: the input fileset, the variants excluded for a contig outside 1-22, X, Y, XY and MT (none by default), what each filter of the MAF, missingness and Hardy-Weinberg chain removes at its threshold, the call-rate ladder, the LD-pruned set the sample checks run on, and the review histograms.'
 sex_check_description='plink2 --check-sex after the pseudo-autosomal split, over the pruned set in study mode and over every QC-passing variant in shared mode. Its PROBLEM calls are the mismatches, tabled and listed for removal.'
 heterozygosity_description='Report only: the plink2 --het inbreeding coefficient F over the autosomal marker set of each stratum, the pruned set outside the long-range LD regions in study mode and the shared reference-pruned markers against the matched reference frequencies in shared mode. No threshold is applied and no sample is listed.'
 relatedness_description='KING-robust kinship over the same autosomal marker set, pairs at or above the table filter classified on KING boundaries. One member of each duplicate/MZ pair is listed for removal; the mean-kinship outliers are listed and never applied.'

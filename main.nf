@@ -45,6 +45,7 @@ workflow NFCORE_GWASQC {
         params.mind,
         params.hwe,
         params.missingness_mode,
+        params.exclude_nonstandard_contigs,
         params.high_ld_regions,
         params.genome_build,
         params.reference_pop_data,

@@ -35,6 +35,7 @@ workflow PLINK_QC_FILTER_LISTS {
     mind // value: maximum per-sample missing-call rate; under `iterative`, equal to geno
     hwe // value: Hardy-Weinberg exact-test p-value floor
     missingness_mode // value: `iterative`, the cumulative call-rate ladder applied up to the call rate 1 - geno, or `single`, geno and then mind applied once
+    exclude_nonstandard_contigs // boolean: list and exclude the variants on contigs outside 1-22, X, Y, XY and MT at the MAF step; false keeps them
 
     main:
 
@@ -46,23 +47,30 @@ workflow PLINK_QC_FILTER_LISTS {
     // list excluded, as the legacy chain measured it.
 
     //
-    // MODULE: Exclusion list of the variants on alt, random and other contigs outside 1-22, X, Y, XY and MT
+    // MODULE: Exclusion list of the variants on alt, random and other contigs outside 1-22, X, Y, XY and MT,
+    // derived only under --exclude_nonstandard_contigs; by default the slot is an empty list and no variant is
+    // excluded for its contig, as in the legacy pipeline
     //
-    CONTIG_EXCLUDE(
-        ch_genotypes.map { meta, _bed, bim, _fam -> [meta, bim] }
-    )
+    if (exclude_nonstandard_contigs) {
+        CONTIG_EXCLUDE(
+            ch_genotypes.map { meta, _bed, bim, _fam -> [meta, bim] }
+        )
+    }
+    def ch_contig_exclude = exclude_nonstandard_contigs
+        ? CONTIG_EXCLUDE.out.variant_exclude
+        : ch_genotypes.map { meta, _bed, _bim, _fam -> [meta, []] }
 
     def ch_contig_genotypes_by_id = ch_genotypes
         .map { meta, bed, bim, fam -> [meta.id, meta, bed, bim, fam] }
-        .join(CONTIG_EXCLUDE.out.variant_exclude.map { meta, contig_exclude -> [meta.id, contig_exclude] }, by: 0, failOnDuplicate: true, failOnMismatch: true)
+        .join(ch_contig_exclude.map { meta, contig_exclude -> [meta.id, contig_exclude] }, by: 0, failOnDuplicate: true, failOnMismatch: true)
 
     //
-    // MODULE: MAF keep-list over the standard chromosomes; the threshold is native optional behaviour and
-    // reaches plink2 through ext.args
+    // MODULE: MAF keep-list; the threshold is native optional behaviour and reaches plink2 through ext.args
     //
-    // The contig exclusion is applied here, at the first filter, and only here: every later run extracts this
-    // keep-list, so no variant on a non-standard contig reaches a statistic, a decision list, the ancestry
-    // route or the QC'd fileset.
+    // Under --exclude_nonstandard_contigs the contig exclusion is applied here, at the first filter, and only
+    // here: every later run extracts this keep-list, so no variant on a non-standard contig reaches a
+    // statistic, a decision list, the ancestry route or the QC'd fileset. By default the exclusion slot is
+    // empty and the keep-list carries every variant that passes the MAF.
     PLINK2_WRITESNPLIST(
         ch_contig_genotypes_by_id.map { _id, meta, bed, bim, fam, contig_exclude -> [meta, bed, bim, fam, [], contig_exclude, [], []] }
     )
@@ -219,8 +227,8 @@ workflow PLINK_QC_FILTER_LISTS {
     HWE_PLOTS(ch_hwe_inputs, hwe)
 
     emit:
-    contig_exclude     = CONTIG_EXCLUDE.out.variant_exclude // channel: [ val(meta), path(contig_exclude) ]
-    maf_snplist        = PLINK2_WRITESNPLIST.out.snplist // channel: [ val(meta), path(snplist) ], over the standard chromosomes
+    contig_exclude     = ch_contig_exclude // channel: [ val(meta), path(contig_exclude) ], an empty list unless exclude_nonstandard_contigs
+    maf_snplist        = PLINK2_WRITESNPLIST.out.snplist // channel: [ val(meta), path(snplist) ], over the standard chromosomes under exclude_nonstandard_contigs, else over every variant
     vmiss              = PLINK2_MISSING_VARIANTS.out.vmiss // channel: [ val(meta), path(vmiss) ], over the MAF-passing variants
     smiss              = ch_smiss // channel: [ val(meta), path(smiss) ], the report the applied mind list was decided from, over the geno-retained variants
     smiss_maf          = PLINK2_MISSING_VARIANTS.out.smiss // channel: [ val(meta), path(smiss) ], over the MAF-passing variants and every sample, before any geno filter, under both missingness modes

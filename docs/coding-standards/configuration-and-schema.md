@@ -222,7 +222,7 @@ arm64, emulate_amd64, singularity, podman, shifter, charliecloud, apptainer, wav
   included by both `test` and `test_full`. A value set through `-c` is not visible to a profile expression,
   so a resolver of this kind belongs in an `includeConfig`, not in `tests/nextflow.config`.
 - **[MUST]** A test profile whose subject is a cohort relationship, not a method option, replaces the cohort
-  in its own config and reads the same fixture source: `test_alt_contig` includes `conf/test.config`, so the
+  in its own config and reads the same fixture source: `test_alt_contig` (which runs both settings of `exclude_nonstandard_contigs`) includes `conf/test.config`, so the
   shared resolver chooses the base, and then writes its two-stratum samplesheet and its reference
   samplesheet against that base, as the resolver writes the reference samplesheet. A `-c` config cannot do
   this, because the profile's resolved base is not visible to it.

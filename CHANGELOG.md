@@ -97,18 +97,21 @@ The VCZ format route is deferred to its own issue, and pre-QC batch merging is o
   heterozygosity F agreed better with the predecessor pipeline's estimates (r 0.983 against 0.969 for MID,
   0.886 against 0.724 for AMR) at a cost of 6-8 % of the pruned markers (MID 69,057 against 73,681; AMR 62,562
   against 67,879), and the sex check and ancestry outputs were byte-identical between the modes.
-- Exclusion of the variants on non-standard contigs: a variant whose `.bim` chromosome code is not one of
-  1-22, X, Y, XY and MT (numeric or lettered, in either case, with or without a `chr` prefix, and `PAR1`/`PAR2`
-  for the pseudo-autosomal regions), such as a GRCh38 alt or random contig, is listed by the pipeline-owned
-  `contig_exclude` module, published as `qc/<id>/contigs/<id>.contig_exclude.txt` and excluded at the MAF run,
-  so that it reaches no statistic, decision list, ancestry projection or QC'd fileset. The count is the
-  `variants_contig_removed` column of `gwasqc_summary.tsv` and of the MultiQC summary and filter tables, and
-  `variants_maf_removed` counts the standard-chromosome variants alone. A reference panel carrying such
-  contigs is read unchanged: its contig variants are never matched.
+- Opt-in exclusion of the variants on non-standard contigs, `--exclude_nonstandard_contigs` (default `false`):
+  by default a variant on an alt, random or unplaced contig, or on chromosome 0, goes through the filters like
+  any other and reaches the QC'd fileset, as in the legacy pipeline, which ran PLINK with `--allow-extra-chr`
+  and never dropped them, and `variants_contig_removed` reads 0. When set, a variant whose `.bim` chromosome
+  code is not one of 1-22, X, Y, XY and MT (numeric or lettered, in either case, with or without a `chr` prefix,
+  and `PAR1`/`PAR2` for the pseudo-autosomal regions) is listed by the pipeline-owned `contig_exclude` module,
+  published as `qc/<id>/contigs/<id>.contig_exclude.txt` and excluded at the MAF run, so that it reaches no
+  statistic, decision list, ancestry projection or QC'd fileset; `variants_contig_removed` counts it and
+  `variants_maf_removed` counts the remaining variants alone. A reference panel carrying such contigs is read
+  unchanged either way.
 - `test_alt_contig` profile and fixture: the EUR stratum of the synthetic fixture beside a copy of it that
   also carries eight variants on seven GRCh38 alt and random contigs, against a copy of the reference panel
-  that carries the same, with a pipeline test asserting that the copy's QC'd fileset and every published list
-  and table equal the stratum's own.
+  that carries the same, with a pipeline test that asserts the copy keeps the eight variants by default and, under
+  `--exclude_nonstandard_contigs`, that the copy's QC'd fileset and every published list and table equal the
+  stratum's own.
 - `missing_block` fixture: a copy of the EUR stratum in which seven samples miss every call on chromosomes 1
   and 2, on which the two missingness modes part: the single pass drops the 615 variants of the block and
   keeps the samples, the iterative ladder removes the seven samples at its first rung and keeps the block.

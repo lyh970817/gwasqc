@@ -1,6 +1,6 @@
 # yaml-language-server: $schema=https://raw.githubusercontent.com/nf-core/modules/master/subworkflows/yaml-schema.json
 name: plink_qc_filter_lists
-description: Derive the exclusion list of the variants on non-standard contigs, the MAF keep-list over the standard chromosomes, the geno and mind missingness decision lists, from the legacy cumulative call-rate ladder or from one geno-then-mind pass, with the ladder table, and the Hardy-Weinberg exclusion list of one PLINK fileset per stratum from stats-only plink2 runs
+description: Derive, under exclude_nonstandard_contigs, the exclusion list of the variants on non-standard contigs, the MAF keep-list, the geno and mind missingness decision lists, from the legacy cumulative call-rate ladder or from one geno-then-mind pass, with the ladder table, and the Hardy-Weinberg exclusion list of one PLINK fileset per stratum from stats-only plink2 runs
 keywords:
   - plink
   - quality control
@@ -37,10 +37,13 @@ input:
   - missingness_mode:
       description: How the missingness thresholds are applied, `iterative` (the legacy cumulative call-rate ladder, each rung's variant and then sample threshold applied to what the previous rung kept, up to the call rate 1 - geno) or `single` (geno over all samples, then mind over the geno-retained variants)
       structure: string missingness_mode
+  - exclude_nonstandard_contigs:
+      description: Whether the variants on contigs outside 1-22, X, Y, XY and MT are listed and excluded at the MAF step (true) or kept and filtered like any other variant (false)
+      structure: boolean exclude_nonstandard_contigs
 output:
   - contig_exclude:
       type: file
-      description: Variants whose chromosome code is not one of 1-22, X, Y, XY and MT, such as alt and random contigs, one ID per line; applied under --exclude to the MAF run, so that the MAF keep-list and everything extracted from it carry the standard chromosomes only
+      description: Variants whose chromosome code is not one of 1-22, X, Y, XY and MT, such as alt and random contigs, one ID per line; applied under --exclude to the MAF run, so that the MAF keep-list and everything extracted from it carry the standard chromosomes only; an empty list when exclude_nonstandard_contigs is false, when no variant is excluded for its contig
       structure: [map meta, path contig_exclude]
       pattern: "*.contig_exclude.txt"
       ontologies: []

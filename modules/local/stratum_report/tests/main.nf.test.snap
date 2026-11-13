@@ -87,12 +87,12 @@
                     },
                     [
                         "test.heterozygosity_plots_mqc.yaml:md5,df566dae69083a172ce9146c0e72be25",
-                        "test.variant_qc_ladder_mqc.tsv:md5,09805a6267a65fec61bd605769faa75c"
+                        "test.variant_qc_ladder_mqc.tsv:md5,a55c7085aa26f844191956e2af1a0c0b"
                     ]
                 ]
             ]
         ],
-        "timestamp": "2026-11-12T06:47:29.108156187",
+        "timestamp": "2026-11-13T10:29:54.82718731",
         "meta": {
             "nf-test": "0.9.5",
             "nextflow": "26.04.6"
@@ -124,8 +124,8 @@
                         "test.relatedness_plots_mqc.yaml:md5,f98785b199fa36c6919ef9152adbecaa",
                         "test.sex_check_mismatches_mqc.tsv:md5,4dd4f4e99ca62062f90f254a4ef70d7a",
                         "test.sex_check_plots_mqc.yaml:md5,d946bb897c876dc35cb0829c5a74cbe7",
-                        "test.variant_qc_ladder_mqc.tsv:md5,93023b5999a68ff507f8ae1ca2e05ba1",
-                        "test.variant_qc_plots_mqc.yaml:md5,410f83e8f160ed3a9d9e42f9d7fe92cd"
+                        "test.variant_qc_ladder_mqc.tsv:md5,de1652644949b49f0262a8a571d7ec94",
+                        "test.variant_qc_plots_mqc.yaml:md5,0102e6f3a645cfec08ad13ce6419bb19"
                     ]
                 ]
             ],
@@ -144,7 +144,7 @@
                 ]
             ]
         ],
-        "timestamp": "2026-11-12T06:46:44.237580881",
+        "timestamp": "2026-11-13T10:29:38.210552307",
         "meta": {
             "nf-test": "0.9.5",
             "nextflow": "26.04.6"
@@ -171,12 +171,12 @@
                     },
                     [
                         "test.relatedness_pairs_mqc.tsv:md5,18d822ba5068f1027db00f5c3c1fe473",
-                        "test.variant_qc_ladder_mqc.tsv:md5,09805a6267a65fec61bd605769faa75c"
+                        "test.variant_qc_ladder_mqc.tsv:md5,a55c7085aa26f844191956e2af1a0c0b"
                     ]
                 ]
             ]
         ],
-        "timestamp": "2026-11-12T06:49:28.533547501",
+        "timestamp": "2026-11-13T10:30:37.718544043",
         "meta": {
             "nf-test": "0.9.5",
             "nextflow": "26.04.6"

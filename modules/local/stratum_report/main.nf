@@ -37,6 +37,7 @@ process STRATUM_REPORT {
     // The template reads these; an absent optional input is an empty string and an image list a blank-separated
     // list of staged paths.
     prefix = task.ext.prefix ?: "${meta.id}"
+    contig_exclude_file = contig_exclude ? contig_exclude.toString() : ''
     prune_in_file = prune_in ? prune_in.toString() : ''
     highld_exclude_file = highld_exclude ? highld_exclude.toString() : ''
     shared_markers_file = shared_markers ? shared_markers.toString() : ''

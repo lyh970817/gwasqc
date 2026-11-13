@@ -43,6 +43,7 @@ nextflow_workflow {
                 input[2] = 0.05
                 input[3] = 1e-10
                 input[4] = 'iterative'
+                input[5] = true
                 """
             }
         }
@@ -136,6 +137,7 @@ nextflow_workflow {
                 input[2] = 0.05
                 input[3] = 1e-10
                 input[4] = 'iterative'
+                input[5] = true
                 """
             }
         }
@@ -154,6 +156,54 @@ nextflow_workflow {
                 { assert compared.every { name -> text(name).size() == 2 && text(name).study_eur == text(name).study_eur_alt } },
                 { assert !by_id(workflow.out.vmiss).study_eur_alt.text.contains('AX-9') },
                 { assert snapshot(workflow.out.contig_exclude).match() },
+            )
+        }
+    }
+
+    // The same two strata with the contig exclusion off, the default: no contig list is derived, the slot is
+    // an empty list, and the copy's eight contig variants pass the MAF into the keep-list and reach the
+    // missingness statistic, while no filter list differs between the strata.
+    test("gwasqc fixtures - EUR stratum and its alt-contig copy - contigs kept") {
+
+        when {
+            workflow {
+                """
+                input[0] = channel.of(
+                    [
+                        [ id:'study_eur', ancestry:'EUR' ],
+                        file(params.pipelines_testdata_base_path + 'data/gwasqc/genotypes/study_eur.bed', checkIfExists: true),
+                        file(params.pipelines_testdata_base_path + 'data/gwasqc/genotypes/study_eur.bim', checkIfExists: true),
+                        file(params.pipelines_testdata_base_path + 'data/gwasqc/genotypes/study_eur.fam', checkIfExists: true),
+                    ],
+                    [
+                        [ id:'study_eur_alt', ancestry:'EUR' ],
+                        file(params.pipelines_testdata_base_path + 'data/gwasqc/alt_contig/study_eur_alt.bed', checkIfExists: true),
+                        file(params.pipelines_testdata_base_path + 'data/gwasqc/alt_contig/study_eur_alt.bim', checkIfExists: true),
+                        file(params.pipelines_testdata_base_path + 'data/gwasqc/alt_contig/study_eur_alt.fam', checkIfExists: true),
+                    ]
+                )
+                input[1] = 0.05
+                input[2] = 0.05
+                input[3] = 1e-10
+                input[4] = 'iterative'
+                input[5] = false
+                """
+            }
+        }
+
+        then {
+            def contig_variants = (1..8).collect { i -> "AX-90000000${i}".toString() }
+            def by_id = { emission -> emission.collectEntries { entry -> [(entry[0].id): entry[1]] } }
+            def text = { name -> by_id(workflow.out[name]).collectEntries { id, file -> [(id): path(file).text] } }
+            def maf_ids = text('maf_snplist').collectEntries { id, content -> [(id): content.readLines()] }
+            assertAll(
+                { assert workflow.success },
+                { assert workflow.out.contig_exclude.every { entry -> entry[1] == [] } },
+                { assert workflow.out.contig_exclude.collect { entry -> entry[0].id }.sort() == ['study_eur', 'study_eur_alt'] },
+                { assert maf_ids.study_eur_alt.containsAll(contig_variants) && maf_ids.study_eur_alt.size() == maf_ids.study_eur.size() + 8 },
+                { assert maf_ids.study_eur_alt.minus(contig_variants) == maf_ids.study_eur },
+                { assert text('vmiss').study_eur_alt.contains(contig_variants[0]) },
+                { assert ['geno_exclude', 'mind_remove', 'hwe_exclude'].every { name -> text(name).study_eur == text(name).study_eur_alt } },
             )
         }
     }
@@ -184,6 +234,7 @@ nextflow_workflow {
                 input[2] = 0.05
                 input[3] = 1e-10
                 input[4] = 'single'
+                input[5] = true
                 """
             }
         }
@@ -254,6 +305,7 @@ nextflow_workflow {
                 input[2] = 0.05
                 input[3] = 1e-10
                 input[4] = 'iterative'
+                input[5] = true
                 """
             }
         }
@@ -312,6 +364,7 @@ nextflow_workflow {
                 input[2] = 0.05
                 input[3] = 1e-10
                 input[4] = 'iterative'
+                input[5] = true
                 """
             }
         }

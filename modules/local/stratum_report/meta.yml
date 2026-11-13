@@ -37,7 +37,7 @@ input:
         ontologies: []
     - contig_exclude:
         type: file
-        description: Variants on contigs outside 1-22, X, Y, XY and MT, one ID per line; its line count is the variants excluded before the MAF filter
+        description: Variants on contigs outside 1-22, X, Y, XY and MT, one ID per line; its line count is the variants excluded before the MAF filter; an empty list when --exclude_nonstandard_contigs is off
         pattern: "*.contig_exclude.txt"
         ontologies:
           - edam: "http://edamontology.org/format_2330" # Text

@@ -495,7 +495,7 @@ header. Never merge the two roles into one file.
   fileset under `${params.outdir}/genotypes/${meta.id}` (`conf/modules/plink2.config`,
   `conf/modules/qc_decisions.config`). The stage directory is the scientific stage, not the process name, and a
   decision list is published beside the statistic it was derived from; a list derived from the variant table
-  alone, the contig exclusion, has a stage directory of its own (`contigs`).
+  alone, the contig exclusion (opt-in, `exclude_nonstandard_contigs`), has a stage directory of its own (`contigs`).
 - **[MUST]** The process-wide default publishes nothing (`nextflow.config:301-311`), and every per-family selector
   opts its own processes in. An enabled `publishDir` in `conf/modules/plink2.config` or
   `conf/modules/qc_decisions.config` declares an explicit `pattern`, which is how a run log is never published:

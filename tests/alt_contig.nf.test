@@ -6,16 +6,62 @@ nextflow_pipeline {
     tag "pipeline"
     tag "alt_contig"
 
-    // The fixture's EUR stratum beside a copy of it that also carries eight variants on seven GRCh38 alt and
-    // random contigs, each a copy of a common, complete, Hardy-Weinberg-conforming variant, against a
-    // reference panel that carries the same eight contig variants. The copy's eight variants are listed for
-    // exclusion and counted, and nothing else differs between the two strata: every published list and table,
-    // the ancestry route on the contig-carrying panel included, and the QC'd fileset, byte for byte.
+    // Default, as the legacy pipeline: the same two strata, and the copy's eight contig variants are not
+    // listed or excluded. They are counted in the input and in the MAF keep-list, no contig list is derived or
+    // published, `variants_contig_removed` reads 0 for both strata, and the copy's QC'd fileset is the
+    // stratum's own plus the eight variants with their contig codes intact. Every step the variants reach
+    // (missingness, Hardy-Weinberg, LD pruning, the high-LD exclusion, the sex check with the pseudo-autosomal
+    // split, heterozygosity, relatedness and the ancestry route against the contig-carrying panel) completes.
     test("-profile test_alt_contig") {
 
         when {
             params {
                 outdir = "$outputDir"
+            }
+        }
+
+        then {
+            def contig_variants = (1..8).collect { i -> "AX-90000000${i}".toString() }
+            def lines = { relative -> new File("${params.outdir}/${relative}").readLines() }
+            def summary_rows = lines('gwasqc_summary.tsv').collect { line -> line.split('\t', -1).toList() }
+            def summary = summary_rows.drop(1).collectEntries { fields -> [(fields[0]): [summary_rows[0], fields].transpose().collectEntries { column, value -> [(column): value] }] }
+            def bim = { id -> lines("genotypes/${id}/${id}.qc.bim").collect { line -> line.split('\t').toList() } }
+            def fam = { id -> new File("${params.outdir}/genotypes/${id}/${id}.qc.fam").text }
+            def alt_bim = bim('study_eur_alt')
+            def eur_ids = bim('study_eur').collect { fields -> fields[1] }
+            def alt_ids = alt_bim.collect { fields -> fields[1] }
+            def contig_rows = alt_bim.findAll { fields -> fields[1] in contig_variants }
+            assertAll(
+                { assert workflow.success },
+                { assert !new File("${params.outdir}/qc/study_eur_alt/contigs").exists() },
+                { assert !new File("${params.outdir}/qc/study_eur/contigs").exists() },
+                { assert summary.study_eur_alt.subMap(['variants_input', 'variants_contig_removed', 'variants_maf_removed', 'variants_after_maf']) == [variants_input: '3970', variants_contig_removed: '0', variants_maf_removed: '8', variants_after_maf: '3962'] },
+                { assert summary.study_eur.subMap(['variants_input', 'variants_contig_removed', 'variants_maf_removed', 'variants_after_maf']) == [variants_input: '3962', variants_contig_removed: '0', variants_maf_removed: '8', variants_after_maf: '3954'] },
+                // The eight variants pass every filter, so the copy keeps exactly them beyond the stratum's own.
+                { assert contig_rows.size() == 8 && contig_rows.every { fields -> !(fields[0] ==~ /^([1-9]|1[0-9]|2[0-2]|X|Y)$/) } },
+                { assert alt_ids.toSet() == (eur_ids + contig_variants).toSet() && alt_ids.size() == eur_ids.size() + 8 },
+                { assert summary.study_eur_alt.variants_final == "${eur_ids.size() + 8}".toString() },
+                { assert fam('study_eur_alt') == fam('study_eur') },
+                { assert summary.study_eur_alt.samples_final == summary.study_eur.samples_final },
+                { assert snapshot(
+                    removeNextflowVersion("$outputDir/pipeline_info/nf_core_gwasqc_software_mqc_versions.yml"),
+                    path("${params.outdir}/gwasqc_summary.tsv")
+                ).match() }
+            )
+        }
+    }
+
+    // Opt-in: the fixture's EUR stratum beside a copy of it that also carries eight variants on seven GRCh38 alt and
+    // random contigs, each a copy of a common, complete, Hardy-Weinberg-conforming variant, against a
+    // reference panel that carries the same eight contig variants. The copy's eight variants are listed for
+    // exclusion and counted, and nothing else differs between the two strata: every published list and table,
+    // the ancestry route on the contig-carrying panel included, and the QC'd fileset, byte for byte.
+    test("-profile test_alt_contig --exclude_nonstandard_contigs") {
+
+        when {
+            params {
+                outdir = "$outputDir"
+                exclude_nonstandard_contigs = true
             }
         }
 

@@ -2,9 +2,6 @@
     "-profile test --skip_ancestry --sample_qc_marker_set study": {
         "content": [
             {
-                "CONTIG_EXCLUDE": {
-                    "gawk": "5.3.1"
-                },
                 "GENO_DECISIONS_RUNG": {
                     "r-base": "4.3.1"
                 },
@@ -88,7 +85,7 @@
             },
             "gwasqc_summary.tsv:md5,fffb7916eeaa46b319ae8651a4759a97"
         ],
-        "timestamp": "2026-11-12T12:58:22.937251278",
+        "timestamp": "2026-11-13T12:40:10.86214196",
         "meta": {
             "nf-test": "0.9.5",
             "nextflow": "26.04.6"
@@ -249,9 +246,6 @@
                 "ANCESTRY_REFERENCE_KEEP": {
                     "gawk": "5.3.1"
                 },
-                "CONTIG_EXCLUDE": {
-                    "gawk": "5.3.1"
-                },
                 "GENO_DECISIONS_RUNG": {
                     "r-base": "4.3.1"
                 },
@@ -365,7 +359,7 @@
             },
             "gwasqc_summary.tsv:md5,c5cf208f6343eb33b3424ef5a86c7ccb"
         ],
-        "timestamp": "2026-11-12T12:51:57.201241141",
+        "timestamp": "2026-11-13T12:34:46.368429669",
         "meta": {
             "nf-test": "0.9.5",
             "nextflow": "26.04.6"
@@ -385,9 +379,6 @@
                 },
                 "ANCESTRY_HARMONISE": {
                     "r-base": "4.3.1"
-                },
-                "CONTIG_EXCLUDE": {
-                    "gawk": "5.3.1"
                 },
                 "GENO_DECISIONS_RUNG": {
                     "r-base": "4.3.1"
@@ -499,7 +490,7 @@
             },
             "gwasqc_summary.tsv:md5,e480382fbce3cefdca40b179b11747ca"
         ],
-        "timestamp": "2026-11-12T12:43:09.134238999",
+        "timestamp": "2026-11-13T12:27:05.662437539",
         "meta": {
             "nf-test": "0.9.5",
             "nextflow": "26.04.6"

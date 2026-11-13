@@ -139,6 +139,13 @@
                     "description": "How the variant and sample missingness thresholds are applied: `iterative` applies the call-rate ladder from 90 % up to the call rate 1 - `--geno`, each rung's variant and then sample threshold on the previous rung's result, as the legacy GLAD pipeline applied it; `single` applies `--geno` and then `--mind` once.",
                     "help_text": "`iterative` needs `--geno` and `--mind` to be equal and a whole percentage from 0.01 to 0.10: the legacy ladder steps whole call-rate percentages and applies one threshold to variants and samples at each rung. `single` takes any pair of thresholds. The call-rate ladder table is computed and published in both modes.",
                     "fa_icon": "fas fa-stream"
+                },
+                "exclude_nonstandard_contigs": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Exclude the variants on contigs outside 1-22, X, Y, XY and MT, such as alt, random and unplaced contigs and chromosome 0, before every filter.",
+                    "help_text": "By default these variants are kept and go through the filters like any other, as in the legacy pipeline, which ran PLINK with `--allow-extra-chr` and never dropped them. With this option they are listed in `qc/<stratum>/contigs/` and excluded at the MAF step, so no statistic, decision list, ancestry step or the QC'd fileset sees them.",
+                    "fa_icon": "fas fa-dna"
                 }
             }
         },

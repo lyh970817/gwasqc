@@ -40,6 +40,7 @@ workflow GWASQC {
     mind // value: maximum per-sample missing-call rate; under `iterative`, equal to geno
     hwe // value: Hardy-Weinberg exact-test p-value floor
     missingness_mode // value: `iterative`, the cumulative call-rate ladder applied up to the call rate 1 - geno, or `single`, geno and then mind once
+    exclude_nonstandard_contigs // boolean: list and exclude the variants on contigs outside 1-22, X, Y, XY and MT before every filter; false keeps them
     high_ld_regions // value: path to the BED of long-range LD regions
     genome_build // value: genome build of the study, which the reference panel must share
     reference_pop_data // value: path to the TSV of FID, IID, pop and super_pop per reference sample, or null when ancestry is skipped
@@ -74,14 +75,16 @@ workflow GWASQC {
     //
     // SUBWORKFLOW: Non-standard contig, MAF, missingness and Hardy-Weinberg filter lists, per stratum
     //
-    // The contig exclusion is applied at the MAF run, so the MAF keep-list that every later run extracts, the
-    // terminal materialisation's included, carries the standard chromosomes only.
+    // Under --exclude_nonstandard_contigs the exclusion is applied at the MAF run, so the MAF keep-list that
+    // every later run extracts, the terminal materialisation's included, carries the standard chromosomes
+    // only; by default no exclusion is applied and the keep-list carries every variant that passes the MAF.
     PLINK_QC_FILTER_LISTS(
         ch_samplesheet,
         geno,
         mind,
         hwe,
         missingness_mode,
+        exclude_nonstandard_contigs,
     )
 
     def ch_samplesheet_by_id = ch_samplesheet.map { meta, bed, bim, fam -> [meta.id, meta, bed, bim, fam] }

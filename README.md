@@ -27,7 +27,7 @@ Every check runs on the unfiltered fileset with the decision lists accumulated s
 
 ## Pipeline summary
 
-1. Minor allele frequency keep-list (`plink2 --maf` with `--write-snplist`) over the variants on chromosomes 1 to 22, X, Y, XY and MT, the variants on alt, random and other contigs listed for exclusion first
+1. Minor allele frequency keep-list (`plink2 --maf` with `--write-snplist`) over every variant, or with `--exclude_nonstandard_contigs` over the variants on chromosomes 1 to 22, X, Y, XY and MT only, the variants on alt, random and other contigs listed for exclusion first
 2. Missingness ([`plink2 --missing`](https://www.cog-genomics.org/plink/2.0/basic_stats#missing)): by default the cumulative call-rate ladder of the legacy GLAD pipeline, which removes variants and then samples at each call rate from 90 % up to 1 − `--geno` (95 %), each step measured on what the step before it left; `--missingness_mode single` applies `--geno` and then `--mind` once instead. The whole ladder, 90 % to 99 %, is published as a table either way
 3. Hardy-Weinberg equilibrium ([`plink2 --hardy`](https://www.cog-genomics.org/plink/2.0/basic_stats#hardy)) with an exclusion list at the `--hwe` p-value floor, autosomal and chromosome X read together
 4. LD pruning over every chromosome ([`plink2 --indep-pairwise`](https://www.cog-genomics.org/plink/2.0/ld#indep)), then an exclusion list of the pruned variants that lie in a long-range LD region or off chromosomes 1 to 22
