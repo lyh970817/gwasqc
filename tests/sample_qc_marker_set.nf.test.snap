@@ -109,9 +109,6 @@
                 "ANCESTRY_REFERENCE_KEEP": {
                     "gawk": "5.3.1"
                 },
-                "CONTIG_EXCLUDE": {
-                    "gawk": "5.3.1"
-                },
                 "GENO_DECISIONS_RUNG": {
                     "r-base": "4.3.1"
                 },
