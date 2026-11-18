@@ -61,7 +61,7 @@
                             "id": "study_afr",
                             "sample_qc_marker_set": "study"
                         },
-                        "study_afr.het_sex_scatter.tsv:md5,161fc8003e067dfc9698cefea3861f97"
+                        "study_afr.het_sex_scatter.tsv:md5,02238f6004a084c93959b3abdcf38b16"
                     ],
                     [
                         {
@@ -69,7 +69,7 @@
                             "id": "study_csa",
                             "sample_qc_marker_set": "shared"
                         },
-                        "study_csa.het_sex_scatter.tsv:md5,355541ba4a142b793cb55e4088175226"
+                        "study_csa.het_sex_scatter.tsv:md5,b9e24ed4473a8958c8fde903fddafc8b"
                     ],
                     [
                         {
@@ -77,7 +77,7 @@
                             "id": "study_eur",
                             "sample_qc_marker_set": "study"
                         },
-                        "study_eur.het_sex_scatter.tsv:md5,428615de82406f243d4028140fdc2e59"
+                        "study_eur.het_sex_scatter.tsv:md5,bffc8b055538b56a0e50952f4d7cee50"
                     ]
                 ],
                 "highld_exclude": [
@@ -291,7 +291,7 @@
                             "id": "study_afr",
                             "sample_qc_marker_set": "study"
                         },
-                        "study_afr.sex_mismatch.tsv:md5,4884076140d25f0786f1b9a10f631f55"
+                        "study_afr.sex_mismatch.tsv:md5,a03d1a54a9f88aeda658ae0e75f415bd"
                     ],
                     [
                         {
@@ -307,7 +307,7 @@
                             "id": "study_eur",
                             "sample_qc_marker_set": "study"
                         },
-                        "study_eur.sex_mismatch.tsv:md5,689ac7faf48e0729a31bb31a42e5dd6c"
+                        "study_eur.sex_mismatch.tsv:md5,6043f35ffc37cb62c9be16ca60747cbe"
                     ]
                 ],
                 "sex_remove": [
@@ -343,7 +343,7 @@
                             "id": "study_afr",
                             "sample_qc_marker_set": "study"
                         },
-                        "study_afr.sexcheck:md5,5c0dcb5d3bbd5ecdb693b88f885c8722"
+                        "study_afr.sexcheck:md5,6c3cf256123b4949e0606397ab964eeb"
                     ],
                     [
                         {
@@ -351,7 +351,7 @@
                             "id": "study_csa",
                             "sample_qc_marker_set": "shared"
                         },
-                        "study_csa.sexcheck:md5,eaf5531094b6b5528070bfd0b621ddfb"
+                        "study_csa.sexcheck:md5,77cc958f543f13c631fd017fa207f394"
                     ],
                     [
                         {
@@ -359,12 +359,12 @@
                             "id": "study_eur",
                             "sample_qc_marker_set": "study"
                         },
-                        "study_eur.sexcheck:md5,138090ffc7008416cd84f53690124e0b"
+                        "study_eur.sexcheck:md5,aad2e2879782dc81479ea1c6b5f6af1c"
                     ]
                 ]
             }
         ],
-        "timestamp": "2026-11-12T12:21:18.623443677",
+        "timestamp": "2026-11-18T15:36:14.77947763",
         "meta": {
             "nf-test": "0.9.5",
             "nextflow": "26.04.6"

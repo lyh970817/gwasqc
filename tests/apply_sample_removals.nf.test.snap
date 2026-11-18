@@ -56,7 +56,13 @@
                 "PLINK2_FREQ": {
                     "plink2": "2.0.0-a.6.9LM"
                 },
+                "PLINK2_FREQ_SEXCHECK": {
+                    "plink2": "2.0.0-a.6.9LM"
+                },
                 "PLINK2_HARDY": {
+                    "plink2": "2.0.0-a.6.9LM"
+                },
+                "PLINK2_HARDY_NONMALE": {
                     "plink2": "2.0.0-a.6.9LM"
                 },
                 "PLINK2_HET": {
@@ -75,6 +81,9 @@
                     "plink2": "2.0.0-a.6.9LM"
                 },
                 "PLINK2_MAKEBED": {
+                    "plink2": "2.0.0-a.6.9LM"
+                },
+                "PLINK2_MAKEBED_HAPLOID_VIEW": {
                     "plink2": "2.0.0-a.6.9LM"
                 },
                 "PLINK2_MAKEBED_REFERENCE": {
@@ -130,6 +139,9 @@
                     "coreutils": 9.4,
                     "gawk": "5.3.1"
                 },
+                "UNKNOWN_SEX_RECODE": {
+                    "gawk": "5.3.1"
+                },
                 "Workflow": {
                     "nf-core/gwasqc": "v1.0.0dev"
                 }
@@ -140,7 +152,7 @@
                 "study_csa.qc.fam:md5,b95b65c280df6149489aca0f784408ee"
             ]
         ],
-        "timestamp": "2026-11-13T12:16:15.92135622",
+        "timestamp": "2026-11-18T16:17:58.199278018",
         "meta": {
             "nf-test": "0.9.5",
             "nextflow": "26.04.6"

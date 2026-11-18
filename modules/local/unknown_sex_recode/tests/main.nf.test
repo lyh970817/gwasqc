@@ -1,0 +1,87 @@
+nextflow_process {
+
+    name "Test Process UNKNOWN_SEX_RECODE"
+    script "../main.nf"
+    process "UNKNOWN_SEX_RECODE"
+    config "./nextflow.config"
+
+    tag "modules"
+    tag "modules_local"
+    tag "unknown_sex_recode"
+
+    // Every fixture sample has a recorded sex, so the rewrite changes the separator alone: the space-separated
+    // file comes back tab-separated, field for field.
+    test("study_eur - fam - every sex recorded") {
+
+        when {
+            process {
+                """
+                input[0] = [
+                    [ id:'study_eur', ancestry:'EUR' ],
+                    file(params.pipelines_testdata_base_path + 'data/gwasqc/genotypes/study_eur.fam', checkIfExists: true),
+                ]
+                """
+            }
+        }
+
+        then {
+            // The staged input sits beside the `recoded/` directory in the task's work directory.
+            def recoded = path(process.out.fam.get(0).get(1))
+            def original = recoded.parent.parent.resolve('study_eur.fam').readLines().collect { line -> line.split(/\s+/).toList() }
+            assertAll(
+                { assert process.success },
+                { assert recoded.fileName.toString() == 'study_eur.fam' },
+                { assert recoded.readLines().collect { line -> line.split('\t').toList() } == original },
+                { assert snapshot(process.out).match() },
+            )
+        }
+    }
+
+    // Unknown sex, 0, becomes 2; males and females, and every other column, are left as they were.
+    test("synthetic - fam - unknown sex") {
+
+        when {
+            process {
+                """
+                def fam = file("\${workDir}/synthetic.fam")
+                fam.text = ['M01 M01 0 0 1 -9', 'F01 F01 0 0 2 2', 'U01 U01 0 0 0 1', 'U02\\tU02\\tP1\\tP2\\t0\\t-9'].join('\\n') + '\\n'
+                input[0] = [
+                    [ id:'synthetic' ],
+                    fam,
+                ]
+                """
+            }
+        }
+
+        then {
+            assertAll(
+                { assert process.success },
+                { assert path(process.out.fam.get(0).get(1)).readLines() == ['M01\tM01\t0\t0\t1\t-9', 'F01\tF01\t0\t0\t2\t2', 'U01\tU01\t0\t0\t2\t1', 'U02\tU02\tP1\tP2\t2\t-9'] },
+                { assert snapshot(process.out.fam).match() },
+            )
+        }
+    }
+
+    test("study_eur - fam - stub") {
+
+        options "-stub"
+
+        when {
+            process {
+                """
+                input[0] = [
+                    [ id:'study_eur', ancestry:'EUR' ],
+                    file(params.pipelines_testdata_base_path + 'data/gwasqc/genotypes/study_eur.fam', checkIfExists: true),
+                ]
+                """
+            }
+        }
+
+        then {
+            assertAll(
+                { assert process.success },
+                { assert snapshot(sanitizeOutput(process.out)).match() },
+            )
+        }
+    }
+}

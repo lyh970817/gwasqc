@@ -1,4 +1,45 @@
 {
+    "synthetic - heterozygous haploid calls and unknown sex": {
+        "content": [
+            [
+                [
+                    {
+                        "id": "synthetic_hh"
+                    },
+                    "synthetic_hh.maf.snplist:md5,54f406f194062a6e6625e8f126766094"
+                ]
+            ],
+            [
+                [
+                    {
+                        "id": "synthetic_hh"
+                    },
+                    "synthetic_hh.hardy:md5,c7eb598d36c1ca944b633e1048c48b23"
+                ]
+            ],
+            [
+                [
+                    {
+                        "id": "synthetic_hh"
+                    },
+                    "synthetic_hh.hardy.x:md5,13950c221fb9325daec44cbfc07a18e8"
+                ]
+            ],
+            [
+                [
+                    {
+                        "id": "synthetic_hh"
+                    },
+                    "synthetic_hh.hwe_exclude.txt:md5,c56291e5938d063bd18b531899fca1c3"
+                ]
+            ]
+        ],
+        "timestamp": "2026-11-18T15:27:30.899795948",
+        "meta": {
+            "nf-test": "0.9.5",
+            "nextflow": "26.04.6"
+        }
+    },
     "gwasqc fixtures - two strata - stub": {
         "content": [
             {
@@ -32,6 +73,26 @@
                             "id": "study_eur"
                         },
                         "study_eur.rung95.geno_exclude.txt:md5,d41d8cd98f00b204e9800998ecf8427e"
+                    ]
+                ],
+                "haploid_view": [
+                    [
+                        {
+                            "ancestry": "AFR",
+                            "id": "study_afr"
+                        },
+                        "study_afr.haploid_view.bed:md5,d41d8cd98f00b204e9800998ecf8427e",
+                        "study_afr.haploid_view.bim:md5,d41d8cd98f00b204e9800998ecf8427e",
+                        "study_afr.haploid_view.fam:md5,d41d8cd98f00b204e9800998ecf8427e"
+                    ],
+                    [
+                        {
+                            "ancestry": "EUR",
+                            "id": "study_eur"
+                        },
+                        "study_eur.haploid_view.bed:md5,d41d8cd98f00b204e9800998ecf8427e",
+                        "study_eur.haploid_view.bim:md5,d41d8cd98f00b204e9800998ecf8427e",
+                        "study_eur.haploid_view.fam:md5,d41d8cd98f00b204e9800998ecf8427e"
                     ]
                 ],
                 "hardy": [
@@ -350,7 +411,7 @@
                 ]
             }
         ],
-        "timestamp": "2026-11-12T05:05:33.604586965",
+        "timestamp": "2026-11-18T15:26:08.13206404",
         "meta": {
             "nf-test": "0.9.5",
             "nextflow": "26.04.6"
@@ -391,6 +452,26 @@
                         "study_eur.rung95.geno_exclude.txt:md5,f0f3e8c5b9e33e4b48377cd4831501eb"
                     ]
                 ],
+                "haploid_view": [
+                    [
+                        {
+                            "ancestry": "AFR",
+                            "id": "study_afr"
+                        },
+                        "study_afr.haploid_view.bed:md5,447bfabdf85b7bd8312077a3fa7f66d4",
+                        "study_afr.haploid_view.bim:md5,94b4b740e5a42dd951215360026dfd87",
+                        "study_afr.haploid_view.fam:md5,a9b98207ea116fc539be3391b3d44ae5"
+                    ],
+                    [
+                        {
+                            "ancestry": "EUR",
+                            "id": "study_eur"
+                        },
+                        "study_eur.haploid_view.bed:md5,a56a98c172eb80a17e79617e2769cb98",
+                        "study_eur.haploid_view.bim:md5,94b4b740e5a42dd951215360026dfd87",
+                        "study_eur.haploid_view.fam:md5,153f10c2b25e15779f5743b30019ca85"
+                    ]
+                ],
                 "hardy": [
                     [
                         {
@@ -413,14 +494,14 @@
                             "ancestry": "AFR",
                             "id": "study_afr"
                         },
-                        "study_afr.hardy.x:md5,f1392683d7473bcc5df7c8541ee3b902"
+                        "study_afr.hardy.x:md5,7343ac5e0528e9f7040775c0831a19ff"
                     ],
                     [
                         {
                             "ancestry": "EUR",
                             "id": "study_eur"
                         },
-                        "study_eur.hardy.x:md5,695be05c13fd662e156aadbd3af91f9c"
+                        "study_eur.hardy.x:md5,faaf9fd90f30522ea0a526d2a70bb581"
                     ]
                 ],
                 "hwe_exclude": [
@@ -445,14 +526,14 @@
                             "ancestry": "AFR",
                             "id": "study_afr"
                         },
-                        "study_afr.hwe_hist.tsv:md5,4e076de63a8d8c1839b039fb4e96470d"
+                        "study_afr.hwe_hist.tsv:md5,8173e3d62b71c8413e7d72d1c168597d"
                     ],
                     [
                         {
                             "ancestry": "EUR",
                             "id": "study_eur"
                         },
-                        "study_eur.hwe_hist.tsv:md5,c4d665b76754b66c60748b3576beb9b9"
+                        "study_eur.hwe_hist.tsv:md5,2124334826a2157166e2efdd52891fc4"
                     ]
                 ],
                 "hwe_window_data": [
@@ -461,14 +542,14 @@
                             "ancestry": "AFR",
                             "id": "study_afr"
                         },
-                        "study_afr.hwe_hist_window.tsv:md5,6c51c20dc0d6049fa20d2fce45d4cc3d"
+                        "study_afr.hwe_hist_window.tsv:md5,88319b889e83c4ef589251b31f8dba7b"
                     ],
                     [
                         {
                             "ancestry": "EUR",
                             "id": "study_eur"
                         },
-                        "study_eur.hwe_hist_window.tsv:md5,e492165d0bcfc832dd28c2244a5900c4"
+                        "study_eur.hwe_hist_window.tsv:md5,ee75e4d3aae9cce7cf0d010c1c8584a5"
                     ]
                 ],
                 "maf_snplist": [
@@ -601,7 +682,7 @@
                 ]
             }
         ],
-        "timestamp": "2026-11-12T04:56:37.713884455",
+        "timestamp": "2026-11-18T15:21:27.414449436",
         "meta": {
             "nf-test": "0.9.5",
             "nextflow": "26.04.6"

@@ -1,9 +1,12 @@
 // Derive the variant and sample filter lists of the contig, MAF, missingness and Hardy-Weinberg chain for one
-// PLINK fileset per stratum from stats-only plink2 runs, without materialising an intermediate fileset.
+// PLINK fileset per stratum from stats-only plink2 runs; the one fileset it writes is the haploid view below,
+// which the frequency-based runs read in place of the stratum fileset.
 // Pipeline-owned: the R decision modules carry the pipeline's thresholds, so this is not an upstream candidate.
 
 // MODULE: Local to the pipeline
 include { CONTIG_EXCLUDE                            } from '../../../modules/local/contig_exclude/main'
+include { UNKNOWN_SEX_RECODE                        } from '../../../modules/local/unknown_sex_recode/main'
+include { PLINK2_MAKEBED as PLINK2_MAKEBED_HAPLOID_VIEW } from '../../../modules/local/plink2/makebed/main'
 include { PLINK2_WRITESNPLIST                       } from '../../../modules/local/plink2/writesnplist/main'
 include { PLINK2_MISSING as PLINK2_MISSING_VARIANTS } from '../../../modules/local/plink2/missing/main'
 include { GENO_DECISIONS                            } from '../../../modules/local/geno_decisions/main'
@@ -12,6 +15,7 @@ include { MIND_DECISIONS                            } from '../../../modules/loc
 include { MISSINGNESS_LADDER                        } from '../../../modules/local/missingness_ladder/main'
 include { MISSINGNESS_PLOTS                         } from '../../../modules/local/missingness_plots/main'
 include { PLINK2_HARDY                              } from '../../../modules/local/plink2/hardy/main'
+include { PLINK2_HARDY as PLINK2_HARDY_NONMALE      } from '../../../modules/local/plink2/hardy/main'
 include { HWE_DECISIONS                             } from '../../../modules/local/hwe_decisions/main'
 include { HWE_PLOTS                                 } from '../../../modules/local/hwe_plots/main'
 
@@ -64,15 +68,58 @@ workflow PLINK_QC_FILTER_LISTS {
         .map { meta, bed, bim, fam -> [meta.id, meta, bed, bim, fam] }
         .join(ch_contig_exclude.map { meta, contig_exclude -> [meta.id, contig_exclude] }, by: 0, failOnDuplicate: true, failOnMismatch: true)
 
+    // THE HAPLOID VIEW
+    //
+    // PLINK 1.9, which the legacy chain ran, treats a heterozygous call on a haploid chromosome (a male's on
+    // chromosome X outside a pseudo-autosomal region coded XY, anyone's on chromosome Y) and a nonmale's
+    // chromosome Y call as missing in its frequency-based commands, and keeps them in every fileset it writes:
+    // `--freq`, and so `--maf`, `--check-sex`'s frequencies and `--indep-pairwise`, ignore them, while
+    // `--missing`, `--geno`, `--mind` and the genotypes `--check-sex` scores count them as called. plink2 counts
+    // a heterozygous haploid call as half an allele in `--freq` and `--maf`, and counts an unknown-sex sample's
+    // chromosome Y calls (verified on 1.90b6.21 and 2.0.0a.6.9). PLINK 1.9 also divides the samples into males
+    // and nonmales, an unknown-sex sample with the females, where plink2 keeps unknown sex apart: it leaves those
+    // samples out of the chromosome X Hardy-Weinberg test, which PLINK 1.9 runs over every nonmale. The view
+    // is the stratum fileset as PLINK 1.9's frequency-based commands saw it: unknown sex recoded female, then
+    // the invalid haploid calls set to missing with `--set-invalid-haploid-missing`, which also erases the
+    // female, and so the formerly unknown-sex, chromosome Y calls. It is the one study-side intermediate fileset
+    // of the chain, because plink2 applies that erasure only while writing a fileset, never within a statistics
+    // run. It is read by the MAF run, the chromosome X Hardy-Weinberg run and the frequencies of the sex check,
+    // and by nothing else: the missingness runs, the autosomal Hardy-Weinberg run, the sex check itself and the
+    // terminal materialisation read the stratum fileset, whose heterozygous haploid calls the QC'd fileset
+    // keeps, as the legacy filesets kept them. It is not published.
+
+    //
+    // MODULE: The sample file with every unknown sex recoded female
+    //
+    UNKNOWN_SEX_RECODE(
+        ch_genotypes.map { meta, _bed, _bim, fam -> [meta, fam] }
+    )
+
+    //
+    // MODULE: The haploid view; the erasure reaches plink2 through ext.args
+    //
+    def ch_haploid_view_inputs = ch_genotypes
+        .map { meta, bed, bim, _fam -> [meta.id, meta, bed, bim] }
+        .join(UNKNOWN_SEX_RECODE.out.fam.map { meta, fam -> [meta.id, fam] }, by: 0, failOnDuplicate: true, failOnMismatch: true)
+        .map { _id, meta, bed, bim, fam -> [meta, bed, bim, fam, [], [], [], []] }
+
+    PLINK2_MAKEBED_HAPLOID_VIEW(ch_haploid_view_inputs)
+
+    def ch_haploid_view_by_id = PLINK2_MAKEBED_HAPLOID_VIEW.out.bed.map { meta, bed, bim, fam -> [meta.id, bed, bim, fam] }
+
     //
     // MODULE: MAF keep-list; the threshold is native optional behaviour and reaches plink2 through ext.args
     //
     // Under --exclude_nonstandard_contigs the contig exclusion is applied here, at the first filter, and only
     // here: every later run extracts this keep-list, so no variant on a non-standard contig reaches a
     // statistic, a decision list, the ancestry route or the QC'd fileset. By default the exclusion slot is
-    // empty and the keep-list carries every variant that passes the MAF.
+    // empty and the keep-list carries every variant that passes the MAF. The frequencies are the haploid
+    // view's, as the legacy `--maf` computed them; the view carries the stratum's variant IDs, so the keep-list
+    // applies to the stratum fileset unchanged.
     PLINK2_WRITESNPLIST(
-        ch_contig_genotypes_by_id.map { _id, meta, bed, bim, fam, contig_exclude -> [meta, bed, bim, fam, [], contig_exclude, [], []] }
+        ch_contig_genotypes_by_id
+            .join(ch_haploid_view_by_id, by: 0, failOnDuplicate: true, failOnMismatch: true)
+            .map { _id, meta, _bed, _bim, _fam, contig_exclude, view_bed, view_bim, view_fam -> [meta, view_bed, view_bim, view_fam, [], contig_exclude, [], []] }
     )
 
     def ch_maf_genotypes_by_id = ch_genotypes
@@ -201,21 +248,42 @@ workflow PLINK_QC_FILTER_LISTS {
     )
 
     //
-    // MODULE: Hardy-Weinberg reports on the missingness-filtered set, as the legacy chain measured them
+    // MODULE: Hardy-Weinberg report off chromosome X on the missingness-filtered set, as the legacy chain
+    // measured it; chromosome X is left out through ext.args
     //
-    def ch_hardy_inputs = ch_maf_genotypes_by_id
+    def ch_hardy_lists_by_id = ch_maf_genotypes_by_id
         .join(ch_geno_exclude_by_id, by: 0, failOnDuplicate: true, failOnMismatch: true)
         .join(ch_mind_remove.map { meta, mind_remove -> [meta.id, mind_remove] }, by: 0, failOnDuplicate: true, failOnMismatch: true)
-        .map { _id, meta, bed, bim, fam, snplist, geno_exclude, mind_remove -> [meta, bed, bim, fam, snplist, geno_exclude, [], mind_remove] }
 
-    PLINK2_HARDY(ch_hardy_inputs)
+    PLINK2_HARDY(
+        ch_hardy_lists_by_id.map { _id, meta, bed, bim, fam, snplist, geno_exclude, mind_remove -> [meta, bed, bim, fam, snplist, geno_exclude, [], mind_remove] }
+    )
 
     //
-    // MODULE: HWE exclusion list; the chromosome X report exists only for filesets that carry chromosome X
+    // MODULE: Chromosome X Hardy-Weinberg report over the nonmale samples of the same set, on the haploid view
+    //
+    // PLINK 1.9 tested chromosome X with the ordinary exact test over its nonmale samples, females and unknown
+    // sex alike; plink2 tests it with the Graffelman-Weir test over females and males and leaves unknown sex
+    // out. With the males removed and unknown sex recoded female, plink2's test is PLINK 1.9's, to its printed
+    // precision (verified on 1.90b6.21 and 2.0.0a.6.9). A stratum without a nonmale sample has no such report,
+    // as plink2 stops when `--remove-males` leaves no sample; the report of the other chromosomes this run also
+    // writes, over the nonmale samples alone, is not used.
+    def ch_nonmale_hardy_inputs = ch_hardy_lists_by_id
+        .join(ch_haploid_view_by_id, by: 0, failOnDuplicate: true, failOnMismatch: true)
+        .filter { _id, _meta, _bed, _bim, fam, _snplist, _geno_exclude, _mind_remove, _view_bed, _view_bim, _view_fam ->
+            fam.readLines().any { line -> def fields = line.trim().split(/\s+/); fields.size() >= 5 && fields[4] != '1' }
+        }
+        .map { _id, meta, _bed, _bim, _fam, snplist, geno_exclude, mind_remove, view_bed, view_bim, view_fam -> [meta, view_bed, view_bim, view_fam, snplist, geno_exclude, [], mind_remove] }
+
+    PLINK2_HARDY_NONMALE(ch_nonmale_hardy_inputs)
+
+    //
+    // MODULE: HWE exclusion list; the chromosome X report exists only for filesets that carry chromosome X and
+    // a nonmale sample
     //
     def ch_hwe_inputs = PLINK2_HARDY.out.hardy
         .map { meta, hardy -> [meta.id, meta, hardy] }
-        .join(PLINK2_HARDY.out.hardy_x.map { meta, hardy_x -> [meta.id, hardy_x] }, by: 0, remainder: true)
+        .join(PLINK2_HARDY_NONMALE.out.hardy_x.map { meta, hardy_x -> [meta.id, hardy_x] }, by: 0, remainder: true)
         .map { _id, meta, hardy, hardy_x -> [meta, hardy, hardy_x ?: []] }
 
     HWE_DECISIONS(ch_hwe_inputs, hwe)
@@ -235,8 +303,9 @@ workflow PLINK_QC_FILTER_LISTS {
     geno_exclude       = ch_geno_exclude // channel: [ val(meta), path(geno_exclude) ], the applied variant missingness exclusions
     mind_remove        = ch_mind_remove // channel: [ val(meta), path(mind_remove) ], the applied sample missingness removals
     missingness_ladder = MISSINGNESS_LADDER.out.ladder // channel: [ val(meta), path(ladder) ]
-    hardy              = PLINK2_HARDY.out.hardy // channel: [ val(meta), path(hardy) ]
-    hardy_x            = PLINK2_HARDY.out.hardy_x // channel: [ val(meta), path(hardy_x) ], optional
+    haploid_view       = PLINK2_MAKEBED_HAPLOID_VIEW.out.bed // channel: [ val(meta), path(bed), path(bim), path(fam) ], the stratum with unknown sex recoded female and the invalid haploid calls missing; for frequencies only
+    hardy              = PLINK2_HARDY.out.hardy // channel: [ val(meta), path(hardy) ], every chromosome but X
+    hardy_x            = PLINK2_HARDY_NONMALE.out.hardy_x // channel: [ val(meta), path(hardy_x) ], over the nonmale samples; optional
     hwe_exclude        = HWE_DECISIONS.out.variant_exclude // channel: [ val(meta), path(hwe_exclude) ]
     vmiss_hist_data    = MISSINGNESS_PLOTS.out.variant_hist_data // channel: [ val(meta), path(vmiss_hist) ]
     vmiss_hist_plot    = MISSINGNESS_PLOTS.out.variant_hist_plot // channel: [ val(meta), path(pdf), path(png) ]

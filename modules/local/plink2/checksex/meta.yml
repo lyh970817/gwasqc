@@ -55,6 +55,12 @@ input:
         description: Optional sample ID list file(s) passed to `--remove`; plink2 drops the union of the listed samples; use `[]` when absent
         pattern: "*"
         ontologies: []
+    - read_freq:
+        type: file
+        description: Optional allele-frequency table passed to `--read-freq`, from plink2 `--freq` (`.afreq`), `--freq counts` (`.acount`) or `--geno-counts`, or a PLINK 1 `.frq`/`.frqx`; when given, the chromosome X F statistic is computed against these frequencies instead of the sample's own, which also lifts plink2's refusal to estimate them from fewer than 50 samples; use `[]` when absent
+        pattern: "*.{afreq,acount,gcount,frq,frqx}"
+        ontologies:
+          - edam: "http://edamontology.org/format_3475" # TSV
 output:
   sexcheck:
     - - meta:

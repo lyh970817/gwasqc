@@ -56,7 +56,13 @@
                 "PLINK2_FREQ": {
                     "plink2": "2.0.0-a.6.9LM"
                 },
+                "PLINK2_FREQ_SEXCHECK": {
+                    "plink2": "2.0.0-a.6.9LM"
+                },
                 "PLINK2_HARDY": {
+                    "plink2": "2.0.0-a.6.9LM"
+                },
+                "PLINK2_HARDY_NONMALE": {
                     "plink2": "2.0.0-a.6.9LM"
                 },
                 "PLINK2_HET": {
@@ -72,6 +78,9 @@
                     "plink2": "2.0.0-a.6.9LM"
                 },
                 "PLINK2_MAKEBED": {
+                    "plink2": "2.0.0-a.6.9LM"
+                },
+                "PLINK2_MAKEBED_HAPLOID_VIEW": {
                     "plink2": "2.0.0-a.6.9LM"
                 },
                 "PLINK2_MAKEBED_REFERENCE": {
@@ -125,6 +134,9 @@
                 },
                 "STRATUM_REPORT": {
                     "coreutils": 9.4,
+                    "gawk": "5.3.1"
+                },
+                "UNKNOWN_SEX_RECODE": {
                     "gawk": "5.3.1"
                 },
                 "Workflow": {
@@ -403,7 +415,7 @@
                 "qc/study_eur/sex_check/study_eur.sexcheck"
             ]
         ],
-        "timestamp": "2026-11-13T12:21:24.885648627",
+        "timestamp": "2026-11-18T16:21:52.928491156",
         "meta": {
             "nf-test": "0.9.5",
             "nextflow": "26.04.6"
@@ -466,7 +478,13 @@
                 "PLINK2_FREQ": {
                     "plink2": "2.0.0-a.6.9LM"
                 },
+                "PLINK2_FREQ_SEXCHECK": {
+                    "plink2": "2.0.0-a.6.9LM"
+                },
                 "PLINK2_HARDY": {
+                    "plink2": "2.0.0-a.6.9LM"
+                },
+                "PLINK2_HARDY_NONMALE": {
                     "plink2": "2.0.0-a.6.9LM"
                 },
                 "PLINK2_HET": {
@@ -485,6 +503,9 @@
                     "plink2": "2.0.0-a.6.9LM"
                 },
                 "PLINK2_MAKEBED": {
+                    "plink2": "2.0.0-a.6.9LM"
+                },
+                "PLINK2_MAKEBED_HAPLOID_VIEW": {
                     "plink2": "2.0.0-a.6.9LM"
                 },
                 "PLINK2_MAKEBED_REFERENCE": {
@@ -538,6 +559,9 @@
                 },
                 "STRATUM_REPORT": {
                     "coreutils": 9.4,
+                    "gawk": "5.3.1"
+                },
+                "UNKNOWN_SEX_RECODE": {
                     "gawk": "5.3.1"
                 },
                 "Workflow": {
@@ -872,25 +896,25 @@
                 "study_afr.qc.bed:md5,6330049be102cf902fb2cf9c0fe01bc4",
                 "study_afr.qc.bim:md5,8027fee05d60999ab65eceeb04318c8d",
                 "study_afr.qc.fam:md5,20515aeb1d656acdaa21f4f951d5950f",
-                "study_csa.qc.bed:md5,70d8e12370bc983aaab6138316bcf111",
-                "study_csa.qc.bim:md5,f02628da7edac607a5c56f51bd68793c",
+                "study_csa.qc.bed:md5,15d0709f425545d7123658e689cd1bf6",
+                "study_csa.qc.bim:md5,ea3ffdcffed6d1544c51e3ae2a85a230",
                 "study_csa.qc.fam:md5,560742beefe2afb4da3cbd459a65dace",
                 "study_eur.qc.bed:md5,5d9aecc0a56c1a4f7c6cbb04724402b4",
                 "study_eur.qc.bim:md5,9642dcb6c1ff8a530ea487c7e8515691",
                 "study_eur.qc.fam:md5,222ef1adda2a6ad4f165129f9ba122c9",
-                "gwasqc_summary.tsv:md5,5a8ebace0b3165551c0caf7f2cc8c311",
+                "gwasqc_summary.tsv:md5,8febec14d1b55b804f88d2f5aa269798",
                 "multiqc_citations.txt:md5,4c806e63a283ec1b7e78cdae3a923d4f",
                 "multiqc_gwasqc_ancestry_summary.txt:md5,384ad50edb3c1d5890eada906534f2ea",
                 "multiqc_gwasqc_heterozygosity_summary.txt:md5,7f4f285cf5224ec667356a4be2d2f228",
-                "multiqc_gwasqc_qc_summary.txt:md5,2f0126ce577b1864aac434dc3fd14904",
+                "multiqc_gwasqc_qc_summary.txt:md5,f684ccbfaba7cadbce1b63685e5d9f77",
                 "multiqc_gwasqc_relatedness_pairs.txt:md5,f6ae8fe3aac0c796239286208a8ddfac",
                 "multiqc_gwasqc_relatedness_summary.txt:md5,8b0b3d04e3225555186de9a83c5c21c3",
-                "multiqc_gwasqc_sample_qc_markers.txt:md5,aa84f706e9ad28ecf7e7d23258549f67",
-                "multiqc_gwasqc_sample_removals.txt:md5,5eef04fb5a28e29e9def6e150d12cc40",
-                "multiqc_gwasqc_sex_check_mismatches.txt:md5,bee2a6c0436266c3b46ceb45d7eb1ad9",
+                "multiqc_gwasqc_sample_qc_markers.txt:md5,8579692e4b0a9ed763c4ff416f4db714",
+                "multiqc_gwasqc_sample_removals.txt:md5,9d583be08f45d91e5bbb2135f46d1195",
+                "multiqc_gwasqc_sex_check_mismatches.txt:md5,3405f5861505b2f45d75f618551be528",
                 "multiqc_gwasqc_sex_check_summary.txt:md5,af5d93b47f10e2438cd5bff168dfbb9a",
-                "multiqc_gwasqc_variant_qc_filters.txt:md5,25595a88cb5387ef2b5a9d2e058bf6d4",
-                "multiqc_gwasqc_variant_qc_ladder.txt:md5,9246b8e53e37deccbdacbf71288dd4ca",
+                "multiqc_gwasqc_variant_qc_filters.txt:md5,0137bb06053384a3f62906184e7d3981",
+                "multiqc_gwasqc_variant_qc_ladder.txt:md5,b16741f60aee9bd9abbb47ac8f215d88",
                 "study_afr.ancestry.eigenval:md5,7a8e06b3c84bf6790d70d0d545f8be98",
                 "study_afr.ancestry.highld_exclude.txt:md5,fbb6734da1ab108f1ce9ab407a72afe0",
                 "study_afr.ancestry.prune.in:md5,34107aa1095b60336ef967bdcf522b2a",
@@ -913,12 +937,12 @@
                 "study_afr.ancestry_summary.tsv:md5,14fdc774cdd5f4de8385e1ba2749f2b8",
                 "study_afr.het:md5,55f9230c168c1b31a5cc4ba815b78675",
                 "study_afr.het_hist.tsv:md5,3d10c7a8fe0cb3b803c4f741a5ab90c9",
-                "study_afr.het_sex_scatter.tsv:md5,161fc8003e067dfc9698cefea3861f97",
+                "study_afr.het_sex_scatter.tsv:md5,02238f6004a084c93959b3abdcf38b16",
                 "study_afr.hardy:md5,104db322aee4fd5d1a2ddcf1c4326a4b",
-                "study_afr.hardy.x:md5,f1392683d7473bcc5df7c8541ee3b902",
+                "study_afr.hardy.x:md5,7343ac5e0528e9f7040775c0831a19ff",
                 "study_afr.hwe_exclude.txt:md5,5c5c7bb5cc1ca307c582e2e9a5062ed3",
-                "study_afr.hwe_hist.tsv:md5,4e076de63a8d8c1839b039fb4e96470d",
-                "study_afr.hwe_hist_window.tsv:md5,6c51c20dc0d6049fa20d2fce45d4cc3d",
+                "study_afr.hwe_hist.tsv:md5,8173e3d62b71c8413e7d72d1c168597d",
+                "study_afr.hwe_hist_window.tsv:md5,88319b889e83c4ef589251b31f8dba7b",
                 "study_afr.highld_exclude.txt:md5,c2430f79277e7059211d9d03d6e877de",
                 "study_afr.prune.in:md5,075acd0994a998d0a1e0510e453842ae",
                 "study_afr.maf.snplist:md5,610b5acd571d2bf7c7bc9acf8555f9e7",
@@ -935,10 +959,10 @@
                 "study_afr.relatedness_outliers.txt:md5,d41d8cd98f00b204e9800998ecf8427e",
                 "study_afr.relatedness_pairs.tsv:md5,21eb549f7950c24d50413a106f00b0cc",
                 "study_afr.relatedness_remove.txt:md5,2681ec5c1e5d5f794f8411eaf23d7ee6",
-                "study_afr.sex_check_hist.tsv:md5,f205ba3df57e9b693041d2e75f584a7c",
-                "study_afr.sex_mismatch.tsv:md5,4884076140d25f0786f1b9a10f631f55",
+                "study_afr.sex_check_hist.tsv:md5,b90054496376ec51298602281f87cb5d",
+                "study_afr.sex_mismatch.tsv:md5,a03d1a54a9f88aeda658ae0e75f415bd",
                 "study_afr.sex_mismatch_remove.txt:md5,70e6cbea58571d12303f9ac70eae6f7e",
-                "study_afr.sexcheck:md5,5c0dcb5d3bbd5ecdb693b88f885c8722",
+                "study_afr.sexcheck:md5,6c3cf256123b4949e0606397ab964eeb",
                 "study_csa.ancestry.eigenval:md5,23afd2389c94c36b8b3ce0bd59f03917",
                 "study_csa.ancestry.highld_exclude.txt:md5,993d320de691a137a6fbb7bd07649f2a",
                 "study_csa.ancestry.prune.in:md5,a0cf1417efe7e1335be4dfd8f1b53933",
@@ -949,8 +973,8 @@
                 "study_csa.ancestry_EUR.keep:md5,d41d8cd98f00b204e9800998ecf8427e",
                 "study_csa.ancestry_assignment.tsv:md5,cec13fc62275aecd16455106882368f6",
                 "study_csa.ancestry_flip_update.txt:md5,891339fa4f430f6fbb40bf64786a5c6c",
-                "study_csa.ancestry_harmonisation.tsv:md5,2b77091b6fcace5865ce1306885f6209",
-                "study_csa.ancestry_harmonisation_summary.tsv:md5,f3cbf73ba471ada5936d9a04ad4c7a68",
+                "study_csa.ancestry_harmonisation.tsv:md5,663852afa3553eb1e339cdb607f969ff",
+                "study_csa.ancestry_harmonisation_summary.tsv:md5,6c3a65b04bf9f0ff34dc1a4c0ff497ad",
                 "study_csa.ancestry_harmonised.snplist:md5,d11fe4a41a5618bf288f63dbf0929120",
                 "study_csa.ancestry_matched.prune.in:md5,cd22b8802d2ba6c3d01df443e70a2745",
                 "study_csa.ancestry_mismatch_remove.txt:md5,d41d8cd98f00b204e9800998ecf8427e",
@@ -962,23 +986,23 @@
                 "study_csa.ancestry_summary.tsv:md5,b13eefb29c8dc4035f4f1b496ba0bd28",
                 "study_csa.het:md5,839dfdc7000015638f6055677291ecea",
                 "study_csa.het_hist.tsv:md5,9f8ea49c7291567a40335559c57b2be3",
-                "study_csa.het_sex_scatter.tsv:md5,412745eb155d588a84d96a1e78e0831b",
+                "study_csa.het_sex_scatter.tsv:md5,9d13508fef9e61a22810c903144078ff",
                 "study_csa.reference.afreq:md5,f6e7de473af504c11f81e47ee8bb036d",
                 "study_csa.reference.het:md5,36c41e805f282072560bd106825f7879",
                 "study_csa.reference_keep.txt:md5,cb552c0acd7acb39acfb779103d34724",
                 "study_csa.hardy:md5,7acf41825cd28b62b36e8e0df166d882",
-                "study_csa.hardy.x:md5,2eeaea6e4d8d9def22c184ff6feaa986",
+                "study_csa.hardy.x:md5,d8ab2ba7284150fc5c1df0c8f6e4691d",
                 "study_csa.hwe_exclude.txt:md5,d41d8cd98f00b204e9800998ecf8427e",
-                "study_csa.hwe_hist.tsv:md5,d234f09bf4d52ab68421b2e8335c183c",
-                "study_csa.hwe_hist_window.tsv:md5,b816596518c5bc9b526960035efaf352",
-                "study_csa.maf.snplist:md5,fb425693805c298be7a23b49b14cf982",
+                "study_csa.hwe_hist.tsv:md5,f4b1e16dde7d99c24b460686a6e0fd4d",
+                "study_csa.hwe_hist_window.tsv:md5,df328b8c0ef7cc1056f218b72772d60e",
+                "study_csa.maf.snplist:md5,77a5d412c25c59253e40f93311b557f4",
                 "study_csa.geno_exclude.txt:md5,0baecc93e429ed1822437816894e9216",
                 "study_csa.mind_remove.txt:md5,d41d8cd98f00b204e9800998ecf8427e",
-                "study_csa.missingness_ladder.tsv:md5,34712bdfc33ad92d63010111436e0c8e",
-                "study_csa.smiss:md5,76b6935f824a76c53ed39d051ae0357a",
+                "study_csa.missingness_ladder.tsv:md5,4763a9b4439085ba6a5c89350fe56350",
+                "study_csa.smiss:md5,f5d9be5df28afc530119f419f63bd820",
                 "study_csa.smiss_hist.tsv:md5,9fbcf100fae387018530a41e4b689692",
-                "study_csa.vmiss:md5,827a7b9037fc0cc914e625185c3b986f",
-                "study_csa.vmiss_hist.tsv:md5,f5e5a7f62a771f7e09fa4fa85d3c1c84",
+                "study_csa.vmiss:md5,a79a60a2ff9e56a42ddc9a0a516e68ef",
+                "study_csa.vmiss_hist.tsv:md5,1097fefc0f648025d97c4b2e97b68e4e",
                 "study_csa.relatedness_hist.tsv:md5,ea9c68568ecd4fd51cdda95a1f11f7f7",
                 "study_csa.relatedness_indiv.tsv:md5,534c4b62cc7c99718fbb1a0412252348",
                 "study_csa.relatedness_indiv_hist.tsv:md5,c14c9ded78c484138717891608e5a2ce",
@@ -988,7 +1012,7 @@
                 "study_csa.sex_check_hist.tsv:md5,54b137aaaf9f3c7f70bfd0a1bb2056d9",
                 "study_csa.sex_mismatch.tsv:md5,c95d29beb2e895a4603e5a4708d2d036",
                 "study_csa.sex_mismatch_remove.txt:md5,041387fd081fb96243469321c705cfc4",
-                "study_csa.sexcheck:md5,eaf5531094b6b5528070bfd0b621ddfb",
+                "study_csa.sexcheck:md5,77cc958f543f13c631fd017fa207f394",
                 "study_eur.ancestry.eigenval:md5,f9aa99f06a2c4a94941fe67796857193",
                 "study_eur.ancestry.highld_exclude.txt:md5,fbb6734da1ab108f1ce9ab407a72afe0",
                 "study_eur.ancestry.prune.in:md5,b6204be3dcf3b8fe84bd9c90b32f85ca",
@@ -1011,12 +1035,12 @@
                 "study_eur.ancestry_summary.tsv:md5,fcfc1e847c5cb018d4c654a420f1b34c",
                 "study_eur.het:md5,8ea5f859b3a62368abc9b7170c9792b9",
                 "study_eur.het_hist.tsv:md5,247fcfe6d93ed39962921248537a9c8b",
-                "study_eur.het_sex_scatter.tsv:md5,428615de82406f243d4028140fdc2e59",
+                "study_eur.het_sex_scatter.tsv:md5,bffc8b055538b56a0e50952f4d7cee50",
                 "study_eur.hardy:md5,0e4cadff801db7131ac9622d19d1a142",
-                "study_eur.hardy.x:md5,695be05c13fd662e156aadbd3af91f9c",
+                "study_eur.hardy.x:md5,faaf9fd90f30522ea0a526d2a70bb581",
                 "study_eur.hwe_exclude.txt:md5,5c5c7bb5cc1ca307c582e2e9a5062ed3",
-                "study_eur.hwe_hist.tsv:md5,c4d665b76754b66c60748b3576beb9b9",
-                "study_eur.hwe_hist_window.tsv:md5,e492165d0bcfc832dd28c2244a5900c4",
+                "study_eur.hwe_hist.tsv:md5,2124334826a2157166e2efdd52891fc4",
+                "study_eur.hwe_hist_window.tsv:md5,ee75e4d3aae9cce7cf0d010c1c8584a5",
                 "study_eur.highld_exclude.txt:md5,20606a3ef430e338b05e872a7970d435",
                 "study_eur.prune.in:md5,0181b60baa0a76c6550b93fb3342012d",
                 "study_eur.maf.snplist:md5,6873b91a6fe3c9066a90b572089641d2",
@@ -1033,13 +1057,13 @@
                 "study_eur.relatedness_outliers.txt:md5,d41d8cd98f00b204e9800998ecf8427e",
                 "study_eur.relatedness_pairs.tsv:md5,bbcec06b28d3627c1800b080de470dc6",
                 "study_eur.relatedness_remove.txt:md5,cc15f0acd2b312b8fe93ff9476ba3605",
-                "study_eur.sex_check_hist.tsv:md5,457095000a0607f6529b61862ca55cb0",
-                "study_eur.sex_mismatch.tsv:md5,689ac7faf48e0729a31bb31a42e5dd6c",
+                "study_eur.sex_check_hist.tsv:md5,a7b5673211398e5c5f015ba9f84d5d0b",
+                "study_eur.sex_mismatch.tsv:md5,6043f35ffc37cb62c9be16ca60747cbe",
                 "study_eur.sex_mismatch_remove.txt:md5,a15cb4ea5ae0beb9ffc14c624d142f0e",
-                "study_eur.sexcheck:md5,138090ffc7008416cd84f53690124e0b"
+                "study_eur.sexcheck:md5,aad2e2879782dc81479ea1c6b5f6af1c"
             ]
         ],
-        "timestamp": "2026-11-13T12:19:26.557160707",
+        "timestamp": "2026-11-18T16:20:12.28757464",
         "meta": {
             "nf-test": "0.9.5",
             "nextflow": "26.04.6"

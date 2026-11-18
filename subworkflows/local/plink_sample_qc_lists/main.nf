@@ -10,6 +10,7 @@
 include { PLINK2_INDEPPAIRWISE               } from '../../../modules/local/plink2/indeppairwise/main'
 include { HIGHLD_EXCLUDE                     } from '../../../modules/local/highld_exclude/main'
 include { PLINK2_FREQ                        } from '../../../modules/local/plink2/freq/main'
+include { PLINK2_FREQ as PLINK2_FREQ_SEXCHECK } from '../../../modules/local/plink2/freq/main'
 include { PLINK2_HET as PLINK2_HET_REFERENCE } from '../../../modules/local/plink2/het/main'
 include { PLINK2_CHECKSEX                    } from '../../../modules/local/plink2/checksex/main'
 include { SEX_CHECK_DECISIONS                } from '../../../modules/local/sex_check_decisions/main'
@@ -22,6 +23,7 @@ workflow PLINK_SAMPLE_QC_LISTS {
     take:
     ch_genotypes // channel: [ val(meta), path(bed), path(bim), path(fam), path(extract), [ path(exclude), ... ], path(remove), path(smiss) ]; meta.sample_qc_marker_set is `study` or `shared`; smiss is the sample missingness over the MAF-passing variants before the geno filter, the duplicate rule's basis
     ch_reference // channel: [ val(meta), path(shared_markers), path(pgen), path(pvar), path(psam), path(reference_keep) ], one item per stratum in shared mode: the shared marker list, the merged reference fileset and the reference samples of the stratum's super-population, all from the ancestry route
+    ch_haploid_view // channel: [ val(meta), path(bed), path(bim), path(fam) ], one item per stratum: the haploid view of the filter chain, whose frequencies the sex check reads
     high_ld_regions // value: path to the BED of long-range LD regions
     ld_window_size // value: --indep-pairwise window, in variants
     ld_step_size // value: --indep-pairwise step, in variants
@@ -113,9 +115,28 @@ workflow PLINK_SAMPLE_QC_LISTS {
     // BOTH MODES
 
     //
+    // MODULE: Allele frequencies of the sex check, over its own variants and samples on the haploid view
+    //
+    // PLINK 1.9's `--check-sex` scored every called genotype, heterozygous haploid calls included, against
+    // frequencies that treat those calls as missing; the check below scores the stratum fileset and reads
+    // these frequencies, which reproduces its F (verified on 1.90b6.21 and 2.0.0a.6.9).
+    def ch_checksex_by_id = ch_study_checksex_inputs
+        .mix(ch_shared_checksex_inputs)
+        .map { meta, bed, bim, fam, extract, exclude, keep, remove -> [meta.id, meta, bed, bim, fam, extract, exclude, keep, remove] }
+        .join(ch_haploid_view.map { meta, bed, bim, fam -> [meta.id, bed, bim, fam] }, by: 0, failOnDuplicate: true, failOnMismatch: true)
+
+    PLINK2_FREQ_SEXCHECK(
+        ch_checksex_by_id.map { _id, meta, _bed, _bim, _fam, extract, exclude, keep, remove, view_bed, view_bim, view_fam -> [meta, view_bed, view_bim, view_fam, extract, exclude, keep, remove] }
+    )
+
+    //
     // MODULE: Sex check with chromosome X; the PAR split and thresholds reach plink2 through ext.args
     //
-    PLINK2_CHECKSEX(ch_study_checksex_inputs.mix(ch_shared_checksex_inputs))
+    PLINK2_CHECKSEX(
+        ch_checksex_by_id
+            .join(PLINK2_FREQ_SEXCHECK.out.afreq.map { meta, afreq -> [meta.id, afreq] }, by: 0, failOnDuplicate: true, failOnMismatch: true)
+            .map { _id, meta, bed, bim, fam, extract, exclude, keep, remove, _view_bed, _view_bim, _view_fam, afreq -> [meta, bed, bim, fam, extract, exclude, keep, remove, afreq] }
+    )
 
     //
     // MODULE: Sex mismatch table, removal list and F histogram

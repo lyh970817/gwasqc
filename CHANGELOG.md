@@ -25,7 +25,7 @@ The VCZ format route is deferred to its own issue, and pre-QC batch merging is o
   lists from the legacy 90 %–99 % call-rate ladder, Hardy-Weinberg statistics with an exclusion list, and a
   single terminal `--make-bed` materialisation driven by the accumulated
   `--extract`/`--exclude`/`--keep`/`--remove` lists. Every statistic runs on the unfiltered fileset with the
-  lists so far applied, so no intermediate fileset exists anywhere in the chain.
+  lists so far applied, so no filtered intermediate fileset exists anywhere in the chain.
 - Sample QC chain per stratum: LD pruning, a long-range LD and non-autosomal exclusion list from the tracked
   GRCh38 asset `assets/high_ld_regions_b38.bed`, the plink2 sex check with the pseudo-autosomal split and its
   mismatch table, removal list and F histogram, the heterozygosity report with its histogram and
@@ -139,8 +139,8 @@ The VCZ format route is deferred to its own issue, and pre-QC batch merging is o
   for a stratum in the shared mode, and its `ld_pruning` directory is absent.
 - plink2's refusal to run `--indep-pairwise`, `--check-sex` and `--het` below 50 samples is lifted where the
   marker-set mode makes the stratum's own estimates the user's choice: `--bad-ld` on the study-side pruning
-  and `--bad-freqs` on the sex check and on the `study`-mode heterozygosity report, through `ext.args`; the
-  `shared`-mode heterozygosity report reads the reference frequencies instead.
+  and `--bad-freqs` on the `study`-mode heterozygosity report, through `ext.args`; the sex check and the
+  `shared`-mode heterozygosity report read their frequencies from file instead.
 - Publication policy: the published tree holds the QC'd fileset, the decision lists, the statistics tables,
   the plot-data tables and figures, the ladder and summary tables, the MultiQC report and the pipeline
   information. The pruned-out list, the raw KING `.kin0` table and the `--score` projections are no longer
@@ -190,6 +190,23 @@ The VCZ format route is deferred to its own issue, and pre-QC batch merging is o
 
 ### Fixed
 
+- The sex chromosomes are handled as the legacy pipeline's PLINK 1.9 handled them. PLINK 1.9 treats a
+  heterozygous haploid call (a male's on chromosome X, the pseudo-autosomal regions included unless coded `XY`,
+  and anyone's on Y) and a nonmale's chromosome Y call as missing in its frequency-based commands and keeps
+  them in the filesets it writes, counts a sample of unknown sex with the females, and tests chromosome X for
+  Hardy-Weinberg equilibrium over the nonmale samples; plink2 counted those calls as half an allele in `--maf`,
+  so the port kept chromosome X variants whose minor allele lies only in male heterozygous calls (4 in the
+  12-sample fixture stratum), and tested chromosome X over females and males with unknown sex left out. Each stratum now has an unpublished haploid view, written by
+  `PLINK2_MAKEBED_HAPLOID_VIEW` with `--set-invalid-haploid-missing` from the sample file with unknown sex
+  recoded female by the new pipeline-owned `unknown_sex_recode` module; the MAF keep-list, the chromosome X
+  Hardy-Weinberg report (now over the nonmale samples, `--remove-males`, which is PLINK 1.9's test; the
+  report of the other chromosomes runs with `--not-chr X`) and the sex check's allele frequencies
+  (`--read-freq`, through the new optional `read_freq` input of `plink2/checksex`) are computed on it. The
+  missingness steps, the genotypes the sex check scores and the QC'd fileset still come from the stratum,
+  which keeps its heterozygous haploid calls as the legacy filesets did. Verified against PLINK 1.90b6.21:
+  the MAF keep-list and the Hardy-Weinberg list of every fixture stratum, and the sex-check `F` to PLINK
+  1.9's printed precision. The sex check's `--bad-freqs` is withdrawn, as the frequency table lifts plink2's
+  small-sample refusal.
 - Sample and variant IDs are read as text in every R step that reads a plink or population table
   (`geno_decisions`, `mind_decisions`, `hwe_decisions`, `hwe_plots`, `missingness_ladder`, `missingness_plots`,
   `sex_check_decisions`, `heterozygosity_plots`, `relatedness_decisions` and `ancestry_assign`), so an

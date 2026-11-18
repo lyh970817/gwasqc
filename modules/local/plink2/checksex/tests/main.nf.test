@@ -9,6 +9,7 @@ nextflow_process {
     tag "modules_nfcore"
     tag "plink2"
     tag "plink2/checksex"
+    tag "plink2/freq"
 
     // The public plink_simulated fixture carries no sex chromosome, so the check runs on the gwasqc fixture
     // stratum: 250 chrX non-PAR, 50 chrX PAR and 30 chrY variants, with EUR_S010 (recorded female, male
@@ -27,6 +28,7 @@ nextflow_process {
                     file(params.pipelines_testdata_base_path + 'data/gwasqc/genotypes/study_eur.bed', checkIfExists: true),
                     file(params.pipelines_testdata_base_path + 'data/gwasqc/genotypes/study_eur.bim', checkIfExists: true),
                     file(params.pipelines_testdata_base_path + 'data/gwasqc/genotypes/study_eur.fam', checkIfExists: true),
+                    [],
                     [],
                     [],
                     [],
@@ -88,6 +90,7 @@ nextflow_process {
                         [],
                         [],
                         [],
+                        [],
                     ]
                 }
                 """
@@ -109,6 +112,66 @@ nextflow_process {
         }
     }
 
+    // The F statistic against an external frequency table: here the stratum's own `--freq`, written by the
+    // freq atom, which also lifts plink2's 50-sample floor on the frequencies it would otherwise estimate.
+    test("study_eur - bed - read-freq") {
+
+        setup {
+            run("PLINK2_FREQ") {
+                script "../../freq/main.nf"
+                process {
+                    """
+                    input[0] = [
+                        [ id:'study_eur' ],
+                        file(params.pipelines_testdata_base_path + 'data/gwasqc/genotypes/study_eur.bed', checkIfExists: true),
+                        file(params.pipelines_testdata_base_path + 'data/gwasqc/genotypes/study_eur.bim', checkIfExists: true),
+                        file(params.pipelines_testdata_base_path + 'data/gwasqc/genotypes/study_eur.fam', checkIfExists: true),
+                        [],
+                        [],
+                        [],
+                        [],
+                    ]
+                    """
+                }
+            }
+        }
+
+        when {
+            params {
+                module_args  = '--split-par b38'
+                module_args2 = 'max-female-xf=0.2 min-male-xf=0.8 max-female-ycount=0 min-male-ycount=1 cols=+ycount'
+            }
+            process {
+                """
+                input[0] = PLINK2_FREQ.out.afreq.map { meta, afreq ->
+                    [
+                        [ id:'study_eur', ancestry:'EUR' ],
+                        file(params.pipelines_testdata_base_path + 'data/gwasqc/genotypes/study_eur.bed', checkIfExists: true),
+                        file(params.pipelines_testdata_base_path + 'data/gwasqc/genotypes/study_eur.bim', checkIfExists: true),
+                        file(params.pipelines_testdata_base_path + 'data/gwasqc/genotypes/study_eur.fam', checkIfExists: true),
+                        [],
+                        [],
+                        [],
+                        [],
+                        afreq,
+                    ]
+                }
+                """
+            }
+        }
+
+        then {
+            def command = path(process.out.sexcheck.get(0).get(1)).parent.resolve('.command.sh').text
+            def report = path(process.out.sexcheck.get(0).get(1)).readLines().collect { line -> line.split('\t').toList() }
+            assertAll(
+                { assert process.success },
+                { assert command.contains('--read-freq study_eur.afreq') },
+                { assert report.findAll { fields -> fields[4] == 'PROBLEM' }.collect { fields -> fields[1] } == ['EUR_S010', 'EUR_S011'] },
+                { assert snapshot(process.out.sexcheck, process.out.versions_plink2).match() },
+            )
+        }
+    }
+
     test("study_eur - bed - stub") {
 
         options "-stub"
@@ -121,6 +184,7 @@ nextflow_process {
                     file(params.pipelines_testdata_base_path + 'data/gwasqc/genotypes/study_eur.bed', checkIfExists: true),
                     file(params.pipelines_testdata_base_path + 'data/gwasqc/genotypes/study_eur.bim', checkIfExists: true),
                     file(params.pipelines_testdata_base_path + 'data/gwasqc/genotypes/study_eur.fam', checkIfExists: true),
+                    [],
                     [],
                     [],
                     [],

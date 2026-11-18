@@ -1,6 +1,6 @@
 # yaml-language-server: $schema=https://raw.githubusercontent.com/nf-core/modules/master/subworkflows/yaml-schema.json
 name: plink_qc_filter_lists
-description: Derive, under exclude_nonstandard_contigs, the exclusion list of the variants on non-standard contigs, the MAF keep-list, the geno and mind missingness decision lists, from the legacy cumulative call-rate ladder or from one geno-then-mind pass, with the ladder table, and the Hardy-Weinberg exclusion list of one PLINK fileset per stratum from stats-only plink2 runs
+description: Derive, under exclude_nonstandard_contigs, the exclusion list of the variants on non-standard contigs, the MAF keep-list, the geno and mind missingness decision lists, from the legacy cumulative call-rate ladder or from one geno-then-mind pass, with the ladder table, and the Hardy-Weinberg exclusion list of one PLINK fileset per stratum from stats-only plink2 runs, the frequency-based ones on a haploid view of the stratum in which PLINK 1.9's invalid haploid calls are missing
 keywords:
   - plink
   - quality control
@@ -9,6 +9,8 @@ keywords:
   - minor allele frequency
 components:
   - contig_exclude
+  - unknown_sex_recode
+  - plink2/makebed
   - plink2/writesnplist
   - plink2/missing
   - geno_decisions
@@ -89,15 +91,21 @@ output:
       structure: [map meta, path ladder]
       pattern: "*.missingness_ladder.tsv"
       ontologies: []
+  - haploid_view:
+      type: file
+      description: The stratum fileset with every unknown sex recoded female and, by plink2 --set-invalid-haploid-missing, the heterozygous haploid and the female chromosome Y calls set to missing, as PLINK 1.9's frequency-based commands saw it; for frequencies only, never a QC'd fileset, and not published
+      structure: [map meta, path bed, path bim, path fam]
+      pattern: "*.haploid_view.{bed,bim,fam}"
+      ontologies: []
   - hardy:
       type: file
-      description: plink2 autosomal Hardy-Weinberg report over the MAF-, geno- and mind-filtered set
+      description: plink2 Hardy-Weinberg report of every chromosome but X over the MAF-, geno- and mind-filtered set
       structure: [map meta, path hardy]
       pattern: "*.hardy"
       ontologies: []
   - hardy_x:
       type: file
-      description: plink2 chromosome X Hardy-Weinberg report, emitted only for filesets that carry chromosome X
+      description: plink2 chromosome X Hardy-Weinberg report over the nonmale samples of the same set on the haploid view, unknown sex counted with the females, which is PLINK 1.9's chromosome X test; emitted only for filesets that carry chromosome X and a nonmale sample
       structure: [map meta, path hardy_x]
       optional: true
       pattern: "*.hardy.x"
