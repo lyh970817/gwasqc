@@ -1,0 +1,89 @@
+{
+    "synthetic - fam - unknown sex": {
+        "content": [
+            [
+                [
+                    {
+                        "id": "synthetic"
+                    },
+                    "synthetic.fam:md5,07f81f0b9b6cd6fac50d8fad5960e423"
+                ]
+            ]
+        ],
+        "timestamp": "2026-11-18T15:02:16.922696611",
+        "meta": {
+            "nf-test": "0.9.5",
+            "nextflow": "26.04.6"
+        }
+    },
+    "study_eur - fam - stub": {
+        "content": [
+            {
+                "fam": [
+                    [
+                        {
+                            "ancestry": "EUR",
+                            "id": "study_eur"
+                        },
+                        "study_eur.fam:md5,d41d8cd98f00b204e9800998ecf8427e"
+                    ]
+                ],
+                "versions_gawk": [
+                    [
+                        "UNKNOWN_SEX_RECODE",
+                        "gawk",
+                        "5.3.1"
+                    ]
+                ]
+            }
+        ],
+        "timestamp": "2026-11-18T15:02:24.532744285",
+        "meta": {
+            "nf-test": "0.9.5",
+            "nextflow": "26.04.6"
+        }
+    },
+    "study_eur - fam - every sex recorded": {
+        "content": [
+            {
+                "0": [
+                    [
+                        {
+                            "id": "study_eur",
+                            "ancestry": "EUR"
+                        },
+                        "study_eur.fam:md5,153f10c2b25e15779f5743b30019ca85"
+                    ]
+                ],
+                "1": [
+                    [
+                        "UNKNOWN_SEX_RECODE",
+                        "gawk",
+                        "5.3.1"
+                    ]
+                ],
+                "fam": [
+                    [
+                        {
+                            "id": "study_eur",
+                            "ancestry": "EUR"
+                        },
+                        "study_eur.fam:md5,153f10c2b25e15779f5743b30019ca85"
+                    ]
+                ],
+                "versions_gawk": [
+                    [
+                        "UNKNOWN_SEX_RECODE",
+                        "gawk",
+                        "5.3.1"
+                    ]
+                ]
+            }
+        ],
+        "timestamp": "2026-11-18T15:03:09.149242483",
+        "meta": {
+            "nf-test": "0.9.5",
+            "nextflow": "26.04.6"
+        }
+    }
+}

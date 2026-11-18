@@ -1,0 +1,80 @@
+name: unknown_sex_recode
+description: Rewrite a PLINK 1 sample file with every sample of unknown sex recoded as female, so that plink2 divides the samples into males and nonmales as PLINK 1.9 did
+keywords:
+  - sex
+  - haploid
+  - genotype
+  - quality control
+tools:
+  - gawk:
+      description: GNU awk, the text-processing language used to rewrite the sex column
+      homepage: https://www.gnu.org/software/gawk/
+      documentation: https://www.gnu.org/software/gawk/manual/
+      licence: ["GPL-3.0-or-later"]
+input:
+  - - meta:
+        type: map
+        description: |
+          Groovy map describing the stratum.
+          Expected keys:
+            - id (string): Stratum identifier.
+    - plink_sample_file:
+        type: file
+        description: PLINK 1 sample information file, sex in column 5
+        pattern: "*.fam"
+        ontologies:
+          - edam: "http://edamontology.org/format_3286" # PLINK FAM
+output:
+  fam:
+    - - meta:
+          type: map
+          description: Metadata map propagated from input
+      - "recoded/${plink_sample_file.name}":
+          type: file
+          description: |
+            The sample file with every sex code other than 1 (male) and 2 (female) written as 2, every other
+            column unchanged, tab-separated. It keeps the input's name, under `recoded/`, so that it stands in for
+            the sample file of the fileset it came from; it is not a sample record of the stratum and is not
+            published.
+          pattern: "recoded/*.fam"
+          ontologies:
+            - edam: "http://edamontology.org/format_3286" # PLINK FAM
+  versions_gawk:
+    - - "${task.process}":
+          type: string
+          description: The process the version was collected from
+      - "gawk":
+          type: string
+          description: The tool name
+      - "gawk --version | head -n 1 | sed 's/^GNU Awk //; s/,.*\\$//'":
+          type: eval
+          description: The command used to retrieve the gawk version
+topics:
+  versions:
+    - - ${task.process}:
+          type: string
+          description: The process the version was collected from
+      - gawk:
+          type: string
+          description: The tool name
+      - "gawk --version | head -n 1 | sed 's/^GNU Awk //; s/,.*\\$//'":
+          type: eval
+          description: The command used to retrieve the gawk version
+authors:
+  - "@lyh970817"
+maintainers:
+  - "@lyh970817"
+containers:
+  conda:
+    linux/amd64:
+      lock_file: "modules/local/unknown_sex_recode/.conda-lock/linux_amd64-bd-d5d074ad9f29be71_1.txt"
+  docker:
+    linux/amd64:
+      build_id: "bd-d5d074ad9f29be71_1"
+      name: "community.wave.seqera.io/library/gawk:5.3.1--d5d074ad9f29be71"
+      scan_id: "sc-872432f3c6e6b071_1"
+  singularity:
+    linux/amd64:
+      build_id: "bd-55cafbff4f74c897_1"
+      name: "oras://community.wave.seqera.io/library/gawk:5.3.1--55cafbff4f74c897"
+      https: "https://community-cr-prod.seqera.io/docker/registry/v2/blobs/sha256/0c/0c4365ad2ac928e4b018455102731c78cfcf43ecd4cb8178c12cd00c02f6ee29/data"
