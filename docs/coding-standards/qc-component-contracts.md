@@ -325,7 +325,7 @@ header. Never merge the two roles into one file.
   - the three plink2 statistics that refuse a fileset below 50 samples, `--indep-pairwise`, `--check-sex` and
     `--het`, which run on such a stratum only because `conf/modules/plink2.config` lifts the refusal with
     `--bad-ld` and `--bad-freqs` where the marker-set mode makes the stratum's own estimates the user's choice,
-    and because `--read-freq` of a covering table lifts it for `--het` on its own (verified on 2.0.0a.6.9 with
+    and because `--read-freq` of a covering table lifts it for `--het` and `--check-sex` on its own (verified on 2.0.0a.6.9 with
     the 12-sample fixture stratum);
   - the Hardy-Weinberg `P` column, which plink2 _renames_ to `MIDP` under a `midp` modifier rather than adding a
     column, so that modifier must stay out of `PLINK2_HARDY`'s `ext.args2`, the seam through which `--hardy`
@@ -347,7 +347,10 @@ header. Never merge the two roles into one file.
     reports are read independently and their failing IDs unioned, not joined, so a variant listed on several lines
     is listed once (`modules/local/hwe_decisions/templates/hwe_decisions.R:35-40`). The chromosome-X report is
     optional at the atom and the caller substitutes `[]` for it through a `remainder: true` join rather than
-    assuming it exists (`subworkflows/local/plink_qc_filter_lists/main.nf:123-126`).
+    assuming it exists (`subworkflows/local/plink_qc_filter_lists/main.nf`). In the pipeline the two come from two
+    runs: `.hardy` from `PLINK2_HARDY` on the stratum with `--not-chr X`, `.hardy.x` from `PLINK2_HARDY_NONMALE`
+    on the haploid view with `--remove-males`, which is PLINK 1.9's chromosome X test, and absent for a stratum
+    without a nonmale sample.
   - `.sexcheck` from `--check-sex` — `PEDSEX`, `STATUS`, `F`, plus the ID columns; every other column passes
     through into the mismatch table. The pipeline lists plink2's own `PROBLEM` verdict rather than recomputing it
     (`modules/local/sex_check_decisions/templates/sex_check_decisions.R:27-34`).
@@ -462,13 +465,20 @@ header. Never merge the two roles into one file.
 ## One terminal materialisation and reference-only intermediates
 
 - **[MUST]** The study fileset is written exactly once, by the terminal `--make-bed`, from the original fileset and
-  the complete list set (`workflows/gwasqc.nf:145`). No stage of the QC chain or of the ancestry route writes an
-  intermediate study fileset, and a component that would need one is wrong for this pipeline: the statistic runs
-  on the unfiltered fileset with the lists accumulated so far.
+  the complete list set (`workflows/gwasqc.nf`, `PLINK2_MAKEBED`). No stage of the QC chain or of the ancestry
+  route writes a filtered study fileset, and a component that would need one is wrong for this pipeline: the
+  statistic runs on the unfiltered fileset, or on its unfiltered haploid view below, with the lists accumulated
+  so far.
 - **[MUST]** The `shared`-mode frequency table and reference report are statistics runs on the merged reference,
   not filesets, and are published beside the study's report (`conf/modules/plink2.config`, `PLINK2_FREQ` and
   `PLINK2_HET_REFERENCE`), because they are the basis a reviewer reads the study's `F` against.
-- **[MUST]** The only materialised intermediates are the reference filesets of the ancestry route, and they exist
+- **[MUST]** The one materialised study-side intermediate is the haploid view of `PLINK_QC_FILTER_LISTS`
+  (`PLINK2_MAKEBED_HAPLOID_VIEW`), and it exists because plink2 applies `--set-invalid-haploid-missing` only
+  while writing a fileset: it is the stratum, unfiltered, with unknown sex recoded female and the invalid
+  haploid calls missing, read only by the frequency-based runs that PLINK 1.9 computed without those calls
+  (the MAF keep-list, the nonmale chromosome X Hardy-Weinberg report and the sex check's frequencies), never
+  published and never the source of a QC'd fileset.
+- **[MUST]** The only other materialised intermediates are the reference filesets of the ancestry route, and they exist
   because plink2 cannot produce them any other way: the per-fileset restriction to the matched reference IDs
   because `--extract` is applied only after `--pmerge-list` has concatenated its inputs in full, and the merged,
   renamed and harmonised reference because pruning, the decomposition, and the reference projection all read one

@@ -41,8 +41,24 @@ Decided 2026-09-20 with the foundation milestone of the legacy port; the tuple c
   `--check-sex`, KING) runs on the unfiltered stratum fileset and receives the lists accumulated so far as
   inputs; plink2 applies `--extract`, `--exclude`, `--keep` and `--remove` before it computes, so each report
   describes the filtered set without a filtered fileset. The QC'd fileset is written exactly once, by the
-  terminal `--make-bed`, from the original fileset and the complete list set. No intermediate bed/bim/fam
-  exists anywhere in the chain.
+  terminal `--make-bed`, from the original fileset and the complete list set. The one intermediate study
+  fileset is the haploid view below, which is never filtered and never published.
+- **[MUST]** The chain reproduces PLINK 1.9's treatment of the sex chromosomes, which the legacy pipeline ran.
+  PLINK 1.9 treats a heterozygous haploid call (a male's on chromosome X, the pseudo-autosomal regions included
+  unless coded XY, and anyone's on Y) and a nonmale's chromosome Y call as missing in its frequency-based
+  commands (`--freq`, hence `--maf` and `--check-sex`'s frequencies, and `--indep-pairwise`) but as called in
+  `--missing`, `--geno`, `--mind` and the genotypes `--check-sex` scores, keeps them in every fileset it
+  writes, counts an unknown-sex sample with the females, and tests chromosome X for Hardy-Weinberg equilibrium
+  over the nonmale samples with the ordinary exact test. plink2 counts a heterozygous haploid call as half an
+  allele in `--freq` and `--maf`, counts an unknown-sex sample's chromosome Y calls there, and tests chromosome
+  X with the Graffelman-Weir test over females and males, unknown sex left out. `PLINK_QC_FILTER_LISTS`
+  therefore writes per stratum a haploid view, the stratum with unknown sex recoded female (`unknown_sex_recode`)
+  and `--set-invalid-haploid-missing` applied, because plink2 applies that erasure only while writing a fileset;
+  the MAF run, the chromosome X Hardy-Weinberg run (`--remove-males`) and the frequencies the sex check reads
+  through `--read-freq` run on the view, and every other run, the terminal `--make-bed` among them, on the
+  stratum fileset (verified against 1.90b6.21 on 2.0.0a.6.9: the MAF keep-list, the chromosome X test and the
+  sex-check `F` agree, and `--indep-pairwise` already ignores heterozygous haploid calls in both).
+  _(decided 2026-11-18: deviations from the legacy scripts found on real data are bugs to fix)_
 - **[MUST]** Variants on non-standard contigs are kept by default, as the legacy pipeline kept them (it ran PLINK
   with `--allow-extra-chr` and never dropped them); they are excluded only under the opt-in boolean
   `exclude_nonstandard_contigs` (default `false`), under which the QC'd fileset carries the human chromosomes
@@ -125,8 +141,8 @@ Decided 2026-09-20 with the foundation milestone of the legacy port; the tuple c
   pooled panel is not a substitute, as its frequencies inflate F by the panel's differentiation.
 - **[MUST]** The mind removals apply to every study-side run of either mode; no other sample list does. plink2
   refuses `--indep-pairwise`, `--check-sex` and `--het` below 50 samples; the configuration lifts the refusal
-  with `--bad-ld` on the study-side pruning and `--bad-freqs` on the sex check and the `study`-mode
-  heterozygosity report, never on a reference-side run, because there the stratum's own estimates are the
+  with `--bad-ld` on the study-side pruning and `--bad-freqs` on the `study`-mode heterozygosity report, and
+  the sex check's `--read-freq` table lifts it there, never on a reference-side run, because there the stratum's own estimates are the
   user's explicit choice and the collapse note is the safety net (verified on 2.0.0a.6.9 with the 12-sample
   fixture stratum, which prunes to 4.8 % under `--bad-ld`).
 - **[MUST]** Sex mismatches are plink2's own `PROBLEM` calls, tabled with the report's header and listed for
