@@ -1,4 +1,29 @@
 {
+    "study_eur - bed - read-freq": {
+        "content": [
+            [
+                [
+                    {
+                        "id": "study_eur",
+                        "ancestry": "EUR"
+                    },
+                    "study_eur.sexcheck:md5,47b75e4daaca817639c2fa4d637d2618"
+                ]
+            ],
+            [
+                [
+                    "PLINK2_CHECKSEX",
+                    "plink2",
+                    "2.0.0-a.6.9LM"
+                ]
+            ]
+        ],
+        "timestamp": "2026-11-18T15:13:38.779302987",
+        "meta": {
+            "nf-test": "0.9.5",
+            "nextflow": "26.04.6"
+        }
+    },
     "study_eur - bed - split-par and thresholds": {
         "content": [
             [

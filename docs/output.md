@@ -66,7 +66,7 @@ Every number in the summary is a line count of a published decision list, a row 
 - `qc/<id>/contigs/` (only under `--exclude_nonstandard_contigs`)
   - `<id>.contig_exclude.txt`: Variants whose `.bim` chromosome code is not one of 1-22, X, Y, XY and MT in any of the spellings [Chromosome codes](usage.md#chromosome-codes) lists, such as alt, random and unplaced contigs, one ID per line in `.bim` order; empty when every code is standard. Not produced by default, when these variants are kept.
 - `qc/<id>/maf/`
-  - `<id>.maf.snplist`: Variants on the standard chromosomes passing the `--maf` threshold, one ID per line; the keep-list every later step starts from.
+  - `<id>.maf.snplist`: Variants on the standard chromosomes passing the `--maf` threshold, one ID per line; the keep-list every later step starts from. The frequencies are computed as PLINK 1.9 computed them, with heterozygous haploid and nonmale chromosome Y calls missing and unknown sex counted as female (see [Haploid calls and samples of unknown sex](usage.md#haploid-calls-and-samples-of-unknown-sex)).
 - `qc/<id>/missingness/`
   - `<id>.vmiss`: [plink2 `--missing`](https://www.cog-genomics.org/plink/2.0/basic_stats#missing) per-variant missing-call report over the MAF-passing variants.
   - `<id>.geno_exclude.txt`: The applied variant missingness exclusions, one ID per line. Under `--missingness_mode iterative` (the default), the variants removed by the variant step of any rung of the call-rate ladder from 90 % up to the call rate 1 − `--geno`, in the order the rungs removed them; each rung's rate is measured over the samples the rungs before it kept. Under `single`, the variants whose rate in `<id>.vmiss` exceeds `--geno`.
@@ -80,8 +80,8 @@ Every number in the summary is a line count of a published decision list, a row 
   - `<id>.smiss_hist.tsv`: Counts of samples in 100 bins of `F_MISS` from zero to the larger of the largest rate and `--mind`, the data behind the histogram.
   - `<id>.smiss_hist.pdf`, `<id>.smiss_hist.png`: Histogram of the per-sample missing-call rate in the same two panels, with `--mind` as a dashed line.
 - `qc/<id>/hwe/`
-  - `<id>.hardy`: [plink2 `--hardy`](https://www.cog-genomics.org/plink/2.0/basic_stats#hardy) autosomal exact-test report over the MAF-, `--geno`- and `--mind`-filtered set.
-  - `<id>.hardy.x`: The chromosome X report, present only when the stratum carries chromosome X variants.
+  - `<id>.hardy`: [plink2 `--hardy`](https://www.cog-genomics.org/plink/2.0/basic_stats#hardy) exact-test report of every chromosome but X over the MAF-, `--geno`- and `--mind`-filtered set.
+  - `<id>.hardy.x`: The chromosome X report over the nonmale samples of the same set, the unknown-sex samples counted in the `FEMALE_*` columns and the `MALE_*` columns zero, which is PLINK 1.9's chromosome X test; present only when the stratum carries chromosome X variants and a nonmale sample.
   - `<id>.hwe_exclude.txt`: Variants whose exact-test p-value is below `--hwe`, one ID per line.
   - `<id>.hwe_hist.tsv`: Counts of variant rows per `report` (`autosomal`, `chrX`) in 100 bins of the p-value over [0, 1] (`bin_start`, `bin_end`, `count`), the data behind the histogram.
   - `<id>.hwe_hist.pdf`, `<id>.hwe_hist.png`: Histogram of the exact-test p-value over every variant row, stacked by report.

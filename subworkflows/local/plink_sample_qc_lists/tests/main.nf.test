@@ -110,12 +110,13 @@ nextflow_workflow {
                     .join(ANCESTRY_INFERENCE.out.reference_genotypes.map { meta, pgen, pvar, psam -> [meta.id, pgen, pvar, psam] })
                     .join(ANCESTRY_INFERENCE.out.reference_keep.map { meta, reference_keep -> [meta.id, reference_keep] })
                     .map { _id, meta, shared_markers, pgen, pvar, psam, reference_keep -> [meta, shared_markers, pgen, pvar, psam, reference_keep] }
-                input[2] = file(params.pipelines_testdata_base_path + 'data/gwasqc/highld/high_ld_regions_b38.bed', checkIfExists: true)
-                input[3] = 1500
-                input[4] = 150
-                input[5] = 0.2
-                input[6] = 3
-                input[7] = 0.005
+                input[2] = PLINK_QC_FILTER_LISTS.out.haploid_view
+                input[3] = file(params.pipelines_testdata_base_path + 'data/gwasqc/highld/high_ld_regions_b38.bed', checkIfExists: true)
+                input[4] = 1500
+                input[5] = 150
+                input[6] = 0.2
+                input[7] = 3
+                input[8] = 0.005
                 """
             }
         }
@@ -169,6 +170,9 @@ nextflow_workflow {
                 { assert command_of(workflow.out.kin0, 'study_csa').contains('--extract study_csa.ancestry.prune.in') },
                 { assert command_of(workflow.out.sexcheck, 'study_csa').contains('--extract study_csa.maf.snplist') && command_of(workflow.out.sexcheck, 'study_csa').contains('--exclude study_csa.rung95.geno_exclude.txt study_csa.hwe_exclude.txt') },
                 { assert study.every { id -> command_of(workflow.out.sexcheck, id).contains("--extract ${id}.prune.in".toString()) } },
+                // Every check scores the stratum fileset against the frequencies of its haploid view, over the
+                // same variants and samples.
+                { assert (study + ['study_csa']).every { id -> command_of(workflow.out.sexcheck, id).contains("--bfile ${id} ".toString()) && command_of(workflow.out.sexcheck, id).contains("--read-freq ${id}.sex_check.afreq".toString()) } },
                 // The study report and the reference report of the shared stratum cover the same markers, and
                 // the histogram data carries both sources over the same bins.
                 { assert het.study_csa.readLines().drop(1).collect { line -> line.split('\t')[4] }.unique() == reference_het.study_csa.readLines().drop(1).collect { line -> line.split('\t')[4] }.unique() },
@@ -226,12 +230,13 @@ nextflow_workflow {
                     .join(ANCESTRY_INFERENCE.out.reference_genotypes.map { meta, pgen, pvar, psam -> [meta.id, pgen, pvar, psam] })
                     .join(ANCESTRY_INFERENCE.out.reference_keep.map { meta, reference_keep -> [meta.id, reference_keep] })
                     .map { _id, meta, shared_markers, pgen, pvar, psam, reference_keep -> [meta, shared_markers, pgen, pvar, psam, reference_keep] }
-                input[2] = file(params.pipelines_testdata_base_path + 'data/gwasqc/highld/high_ld_regions_b38.bed', checkIfExists: true)
-                input[3] = 1500
-                input[4] = 150
-                input[5] = 0.2
-                input[6] = 3
-                input[7] = 0.005
+                input[2] = PLINK_QC_FILTER_LISTS.out.haploid_view
+                input[3] = file(params.pipelines_testdata_base_path + 'data/gwasqc/highld/high_ld_regions_b38.bed', checkIfExists: true)
+                input[4] = 1500
+                input[5] = 150
+                input[6] = 0.2
+                input[7] = 3
+                input[8] = 0.005
                 """
             }
         }

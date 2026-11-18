@@ -27,6 +27,7 @@ nextflow_process {
                         [],
                         [],
                         [],
+                        [],
                     ]
                     """
                 }
@@ -78,6 +79,7 @@ nextflow_process {
                         [],
                         [],
                         mismatches,
+                        [],
                     ]
                     """
                 }
@@ -146,6 +148,7 @@ nextflow_process {
                         file(params.pipelines_testdata_base_path + 'data/gwasqc/genotypes/study_eur.bed', checkIfExists: true),
                         file(params.pipelines_testdata_base_path + 'data/gwasqc/genotypes/study_eur.bim', checkIfExists: true),
                         file(params.pipelines_testdata_base_path + 'data/gwasqc/genotypes/study_eur.fam', checkIfExists: true),
+                        [],
                         [],
                         [],
                         [],

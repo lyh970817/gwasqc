@@ -164,6 +164,8 @@ workflow GWASQC {
     //
     // The duplicate rule compares the sample missingness over the MAF-passing variants before the geno filter,
     // the report the legacy chain compared.
+    // The sex check reads its frequencies from the haploid view of the filter chain, where the
+    // heterozygous haploid calls are missing, and scores the stratum's own genotypes.
     def ch_sample_qc_inputs = ch_strata_by_id
         .join(PLINK_QC_FILTER_LISTS.out.smiss_maf.map { meta, smiss -> [meta.id, smiss] }, by: 0, failOnDuplicate: true, failOnMismatch: true)
         .map { _id, meta, bed, bim, fam, maf_snplist, geno_exclude, hwe_exclude, mind_remove, smiss ->
@@ -173,6 +175,7 @@ workflow GWASQC {
     PLINK_SAMPLE_QC_LISTS(
         ch_sample_qc_inputs,
         ch_shared_reference,
+        PLINK_QC_FILTER_LISTS.out.haploid_view,
         file(high_ld_regions),
         ld_window_size,
         ld_step_size,

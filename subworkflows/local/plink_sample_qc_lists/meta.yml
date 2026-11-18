@@ -29,6 +29,11 @@ input:
       structure: [map meta, path shared_markers, path pgen, path pvar, path psam, path reference_keep]
       pattern: "*.{prune.in,pgen,pvar,psam,txt}"
       ontologies: []
+  - ch_haploid_view:
+      description: One item per stratum; the haploid view of the filter chain, the stratum fileset with unknown sex recoded female and the invalid haploid calls missing, from which the sex check's chromosome X frequencies are computed over the check's own variants and samples and read through --read-freq
+      structure: [map meta, path bed, path bim, path fam]
+      pattern: "*.haploid_view.{bed,bim,fam}"
+      ontologies: []
   - high_ld_regions:
       description: BED of long-range LD regions, 0-based half-open, bare chromosome codes
       structure: path high_ld_regions
