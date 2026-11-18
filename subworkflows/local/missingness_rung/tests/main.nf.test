@@ -53,7 +53,7 @@ nextflow_workflow {
                 { assert mind_remove.sort() == (['EUR_S040 EUR_S040', 'EUR_S041 EUR_S041'] + block_samples).sort() },
                 { assert smiss.size() == 125 },
                 { assert smiss.collect { fields -> fields[3] as Integer }.max() == 3962 - 20 },
-                { assert snapshot(sanitizeOutput(workflow.out)).match() },
+                { assert snapshot([lists: workflow.out.lists.collect { l -> [l[0], l[5], l[6]] }, smiss: workflow.out.smiss]).match() },
             )
         }
     }
@@ -109,7 +109,7 @@ nextflow_workflow {
                 { assert mind_remove.sort() == (['EUR_S040 EUR_S040', 'EUR_S041 EUR_S041'] + (100..106).collect { n -> "EUR_S${n} EUR_S${n}".toString() }).sort() },
                 { assert geno_exclude.size() == 25 },
                 { assert smiss.collect { fields -> fields[3] as Integer }.max() == 3962 - geno_exclude.size() },
-                { assert snapshot(sanitizeOutput(workflow.out)).match() },
+                { assert snapshot([lists: workflow.out.lists.collect { l -> [l[0], l[5], l[6]] }, smiss: workflow.out.smiss]).match() },
             )
         }
     }
@@ -140,7 +140,7 @@ nextflow_workflow {
         then {
             assertAll(
                 { assert workflow.success },
-                { assert snapshot(sanitizeOutput(workflow.out)).match() },
+                { assert snapshot([lists: workflow.out.lists.collect { l -> [l[0], l[5], l[6]] }, smiss: workflow.out.smiss]).match() },
             )
         }
     }

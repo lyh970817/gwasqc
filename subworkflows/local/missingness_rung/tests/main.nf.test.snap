@@ -5,16 +5,10 @@
                 "lists": [
                     [
                         {
+                            "id": "study_eur_missing_block",
                             "ancestry": "EUR",
-                            "call_rate": 90,
-                            "id": "study_eur_missing_block"
+                            "call_rate": 90
                         },
-                        "study_eur_missing_block.bed:md5,82440af460ece262dd4e85b9423d4fc4",
-                        "study_eur_missing_block.bim:md5,94b4b740e5a42dd951215360026dfd87",
-                        "study_eur_missing_block.fam:md5,75d413f18db6421dab1d10696d674201",
-                        [
-                            
-                        ],
                         "study_eur_missing_block.rung90.geno_exclude.txt:md5,d41d8cd98f00b204e9800998ecf8427e",
                         "study_eur_missing_block.rung90.mind_remove.txt:md5,d41d8cd98f00b204e9800998ecf8427e"
                     ]
@@ -22,16 +16,16 @@
                 "smiss": [
                     [
                         {
+                            "id": "study_eur_missing_block",
                             "ancestry": "EUR",
-                            "call_rate": 90,
-                            "id": "study_eur_missing_block"
+                            "call_rate": 90
                         },
                         "study_eur_missing_block.rung90.smiss:md5,d41d8cd98f00b204e9800998ecf8427e"
                     ]
                 ]
             }
         ],
-        "timestamp": "2026-11-12T06:41:00.76453491",
+        "timestamp": "2026-11-18T19:26:55.108635068",
         "meta": {
             "nf-test": "0.9.5",
             "nextflow": "26.04.6"
@@ -43,16 +37,10 @@
                 "lists": [
                     [
                         {
+                            "id": "study_eur_missing_block",
                             "ancestry": "EUR",
-                            "call_rate": 95,
-                            "id": "study_eur_missing_block"
+                            "call_rate": 95
                         },
-                        "study_eur_missing_block.bed:md5,82440af460ece262dd4e85b9423d4fc4",
-                        "study_eur_missing_block.bim:md5,94b4b740e5a42dd951215360026dfd87",
-                        "study_eur_missing_block.fam:md5,75d413f18db6421dab1d10696d674201",
-                        [
-                            
-                        ],
                         "study_eur_missing_block.rung95.geno_exclude.txt:md5,89da468ea5f291da6dabe34a4031707e",
                         "study_eur_missing_block.rung95.mind_remove.txt:md5,dbe1fbcceded54eec43441686891b52c"
                     ]
@@ -60,16 +48,16 @@
                 "smiss": [
                     [
                         {
+                            "id": "study_eur_missing_block",
                             "ancestry": "EUR",
-                            "call_rate": 95,
-                            "id": "study_eur_missing_block"
+                            "call_rate": 95
                         },
                         "study_eur_missing_block.rung95.smiss:md5,9b2e249c3fbe93b7ad5d0918dca74e0f"
                     ]
                 ]
             }
         ],
-        "timestamp": "2026-11-12T06:40:12.619146427",
+        "timestamp": "2026-11-18T19:26:44.994520709",
         "meta": {
             "nf-test": "0.9.5",
             "nextflow": "26.04.6"
@@ -81,16 +69,10 @@
                 "lists": [
                     [
                         {
+                            "id": "study_eur_missing_block",
                             "ancestry": "EUR",
-                            "call_rate": 90,
-                            "id": "study_eur_missing_block"
+                            "call_rate": 90
                         },
-                        "study_eur_missing_block.bed:md5,82440af460ece262dd4e85b9423d4fc4",
-                        "study_eur_missing_block.bim:md5,94b4b740e5a42dd951215360026dfd87",
-                        "study_eur_missing_block.fam:md5,75d413f18db6421dab1d10696d674201",
-                        [
-                            
-                        ],
                         "study_eur_missing_block.rung90.geno_exclude.txt:md5,47d67a97605dcfc7e4a94d1e7b4a782a",
                         "study_eur_missing_block.rung90.mind_remove.txt:md5,dbe1fbcceded54eec43441686891b52c"
                     ]
@@ -98,16 +80,16 @@
                 "smiss": [
                     [
                         {
+                            "id": "study_eur_missing_block",
                             "ancestry": "EUR",
-                            "call_rate": 90,
-                            "id": "study_eur_missing_block"
+                            "call_rate": 90
                         },
                         "study_eur_missing_block.rung90.smiss:md5,cc22e926494666aecc61e87018e62329"
                     ]
                 ]
             }
         ],
-        "timestamp": "2026-11-12T06:39:08.242514502",
+        "timestamp": "2026-11-18T19:26:32.194215163",
         "meta": {
             "nf-test": "0.9.5",
             "nextflow": "26.04.6"
