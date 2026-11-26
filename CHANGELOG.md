@@ -190,6 +190,18 @@ The VCZ format route is deferred to its own issue, and pre-QC batch merging is o
 
 ### Fixed
 
+- LD pruning reproduces the legacy pipeline's PLINK 1.9 `--indep-pairwise`. plink2 checks the pairs of a
+  window in a different order by default and, unlike PLINK 1.9, counts heterozygous haploid calls in its
+  r-squared and tie-breaking frequencies, so on a real 36,746-sample stratum the study-mode pruning kept
+  224,168 variants where the legacy run kept 232,416, with 16,251 and 8,003 variants unique to each side on
+  every chromosome. Every pruning run, the study-mode `PLINK2_INDEPPAIRWISE` and the reference-side
+  `PLINK2_INDEPPAIRWISE_REFERENCE` and `PLINK2_INDEPPAIRWISE_MATCHED`, now passes `--indep-order 1`, PLINK
+  1.x's pair order, and the study-mode run reads the stratum's haploid view. Verified against PLINK
+  1.90b6.10, the legacy build, on 2.0.0a.6.9 with a simulated LD-structured fileset and the fixture: the
+  pruned set is identical on the autosomes, chromosome Y and MT, and on the reference. Chromosome X keeps a
+  residual that no plink2 option closes: PLINK 1.9's default `--ld-xchr 1` codes a male's genotype 0/1 beside
+  the females' 0/1/2, and plink2 implements only the `--ld-xchr 3` model, with which its chromosome X set is
+  identical to PLINK 1.9's.
 - The sex chromosomes are handled as the legacy pipeline's PLINK 1.9 handled them. PLINK 1.9 treats a
   heterozygous haploid call (a male's on chromosome X, the pseudo-autosomal regions included unless coded `XY`,
   and anyone's on Y) and a nonmale's chromosome Y call as missing in its frequency-based commands and keeps
