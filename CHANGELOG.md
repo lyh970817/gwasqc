@@ -202,6 +202,8 @@ The VCZ format route is deferred to its own issue, and pre-QC batch merging is o
   residual that no plink2 option closes: PLINK 1.9's default `--ld-xchr 1` codes a male's genotype 0/1 beside
   the females' 0/1/2, and plink2 implements only the `--ld-xchr 3` model, with which its chromosome X set is
   identical to PLINK 1.9's.
+- The sex-check histogram counts a sample of unknown recorded sex as unknown. plink2 writes that sex as `NA`
+  where PLINK 1.9 wrote `0`, so `sex_check_decisions` dropped such samples from the histogram and its table.
 - The sex chromosomes are handled as the legacy pipeline's PLINK 1.9 handled them. PLINK 1.9 treats a
   heterozygous haploid call (a male's on chromosome X, the pseudo-autosomal regions included unless coded `XY`,
   and anyone's on Y) and a nonmale's chromosome Y call as missing in its frequency-based commands and keeps

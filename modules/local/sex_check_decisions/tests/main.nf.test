@@ -134,6 +134,39 @@ nextflow_process {
         }
     }
 
+    test("synthetic - unknown recorded sex") {
+
+        when {
+            process {
+                """
+                // plink2 writes an unknown recorded sex as NA; the histogram counts it as unknown, as the legacy
+                // plot counted PLINK 1.9's 0.
+                def report = file("${workDir}/unknown.sexcheck")
+                report.text = [
+                    ['#FID', 'IID', 'PEDSEX', 'SNPSEX', 'STATUS', 'F', 'YCOUNT', 'YRATE'].join('\\t'),
+                    ['S1', 'S1', 'NA', '1', 'PROBLEM', '0.95', '20', '1'].join('\\t'),
+                    ['S2', 'S2', 'NA', '2', 'PROBLEM', '0.05', '0', '0'].join('\\t'),
+                    ['S3', 'S3', '2', '2', 'OK', '0.02', '0', '0'].join('\\t'),
+                    ['S4', 'S4', '1', '1', 'OK', '0.99', '20', '1'].join('\\t'),
+                ].join('\\n') + '\\n'
+                input[0] = [ [ id:'unknown' ], report ]
+                """
+            }
+        }
+
+        then {
+            def counts = path(process.out.hist_data.get(0).get(1)).readLines().drop(1)
+                .collect { line -> line.split('\t').toList() }
+                .groupBy { fields -> fields[0] }
+                .collectEntries { level, rows -> [level, rows.collect { fields -> fields[3] as Integer }.sum()] }
+            assertAll(
+                { assert process.success },
+                { assert counts == ['female (2)': 1, 'male (1)': 1, 'unknown (0)': 2] },
+                { assert path(process.out.sample_remove.get(0).get(1)).readLines() == ['S1 S1', 'S2 S2'] },
+            )
+        }
+    }
+
     test("study_eur - stub") {
 
         options "-stub"
