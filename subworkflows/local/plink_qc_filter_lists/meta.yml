@@ -93,7 +93,7 @@ output:
       ontologies: []
   - haploid_view:
       type: file
-      description: The stratum fileset with every unknown sex recoded female and, by plink2 --set-invalid-haploid-missing, the heterozygous haploid and the female chromosome Y calls set to missing, as PLINK 1.9's frequency-based commands saw it; for frequencies only, never a QC'd fileset, and not published
+      description: The stratum fileset with every unknown sex recoded female and, by plink2 --set-invalid-haploid-missing, the heterozygous haploid and the female chromosome Y calls set to missing, as PLINK 1.9's frequency-based commands and LD pruning saw it; for frequencies and LD pruning only, never a QC'd fileset, and not published
       structure: [map meta, path bed, path bim, path fam]
       pattern: "*.haploid_view.{bed,bim,fam}"
       ontologies: []

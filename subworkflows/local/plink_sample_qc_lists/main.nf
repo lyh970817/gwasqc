@@ -23,7 +23,7 @@ workflow PLINK_SAMPLE_QC_LISTS {
     take:
     ch_genotypes // channel: [ val(meta), path(bed), path(bim), path(fam), path(extract), [ path(exclude), ... ], path(remove), path(smiss) ]; meta.sample_qc_marker_set is `study` or `shared`; smiss is the sample missingness over the MAF-passing variants before the geno filter, the duplicate rule's basis
     ch_reference // channel: [ val(meta), path(shared_markers), path(pgen), path(pvar), path(psam), path(reference_keep) ], one item per stratum in shared mode: the shared marker list, the merged reference fileset and the reference samples of the stratum's super-population, all from the ancestry route
-    ch_haploid_view // channel: [ val(meta), path(bed), path(bim), path(fam) ], one item per stratum: the haploid view of the filter chain, whose frequencies the sex check reads
+    ch_haploid_view // channel: [ val(meta), path(bed), path(bim), path(fam) ], one item per stratum: the haploid view of the filter chain, which the study-mode pruning reads and whose frequencies the sex check reads
     high_ld_regions // value: path to the BED of long-range LD regions
     ld_window_size // value: --indep-pairwise window, in variants
     ld_step_size // value: --indep-pairwise step, in variants
@@ -46,13 +46,27 @@ workflow PLINK_SAMPLE_QC_LISTS {
     //
     // Pruning runs on the QC'd set over every chromosome, so that the sex check sees the pruned chromosome X;
     // the long-range LD and non-autosomal exclusion is applied afterwards, for the heterozygosity and
-    // relatedness reports, as the legacy chain ordered the two.
+    // relatedness reports, as the legacy chain ordered the two. It reads the haploid view, because PLINK 1.9's
+    // `--indep-pairwise` treated the invalid haploid calls as missing in both its r-squared and the allele
+    // frequencies that break its ties; the view carries the stratum's variant and sample IDs, so the filter
+    // lists apply to it unchanged.
 
     //
-    // MODULE: LD pruning of the QC'd variant set
+    // MODULE: LD pruning of the QC'd variant set, on the haploid view
     //
+    // The view of every stratum is paired with its stratum and the study-mode views are kept, the complement
+    // of the shared branch above, so that both joins stay strict.
+    def ch_study_haploid_view = ch_genotypes
+        .map { meta, _bed, _bim, _fam, _extract, _exclude, _remove, _smiss -> [meta.id, meta] }
+        .join(ch_haploid_view.map { meta, bed, bim, fam -> [meta.id, bed, bim, fam] }, by: 0, failOnDuplicate: true, failOnMismatch: true)
+        .filter { _id, meta, _bed, _bim, _fam -> meta.sample_qc_marker_set != 'shared' }
+
+    def ch_study_haploid_view_by_id = ch_by_mode.study
+        .map { meta, _bed, _bim, _fam, extract, exclude, remove, _smiss -> [meta.id, meta, extract, exclude, remove] }
+        .join(ch_study_haploid_view.map { id, _meta, bed, bim, fam -> [id, bed, bim, fam] }, by: 0, failOnDuplicate: true, failOnMismatch: true)
+
     PLINK2_INDEPPAIRWISE(
-        ch_by_mode.study.map { meta, bed, bim, fam, extract, exclude, remove, _smiss -> [meta, bed, bim, fam, extract, exclude, [], remove] },
+        ch_study_haploid_view_by_id.map { _id, meta, extract, exclude, remove, view_bed, view_bim, view_fam -> [meta, view_bed, view_bim, view_fam, extract, exclude, [], remove] },
         ld_window_size,
         ld_step_size,
         ld_r2,

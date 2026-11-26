@@ -6,8 +6,8 @@ nextflow_pipeline {
     tag "sample_qc_marker_set"
 
     // `study` forced on every stratum, the 12-sample one included: plink2 prunes it under the pipeline's
-    // `--bad-ld`, and on this LD-free fixture the pruning collapses for real, to 184 of 3660 QC'd variants.
-    // That is 5.02 %, a hair above the default 5 % floor, so the scenario raises the floor to 10 % to exercise
+    // `--bad-ld`, and on this LD-free fixture the pruning collapses for real, to 220 of 3660 QC'd variants.
+    // That is 6.01 %, above the default 5 % floor, so the scenario raises the floor to 10 % to exercise
     // the note on the real collapse rather than on a synthetic case. The planted defects are still found on
     // what pruning left, and the starved chromosome X also mis-calls one true female, the legacy signature
     // the shared mode exists to avoid.
@@ -39,9 +39,9 @@ nextflow_pipeline {
                 { assert workflow.trace.tasks().findAll { task -> task.name.contains('PLINK2_HET_REFERENCE (') }.isEmpty() },
                 // The large strata keep nearly every variant and carry no note; the small one collapses.
                 { assert ['study_eur', 'study_afr'].every { id -> retained(id) > 0.9 && summary[id].sample_qc_note == '' } },
-                { assert summary.study_csa.subMap(['variants_after_hwe', 'variants_ld_pruned_in']) == [variants_after_hwe: '3660', variants_ld_pruned_in: '184'] },
-                { assert retained('study_csa') < 0.06 },
-                { assert summary.study_csa.sample_qc_note == 'LD pruning retained 184 of 3660 QC variants (5.0%, below the --ld_min_retained_fraction floor of 0.1); the study-pruned marker set is unreliable at this sample size, consider --sample_qc_marker_set shared' },
+                { assert summary.study_csa.subMap(['variants_after_hwe', 'variants_ld_pruned_in']) == [variants_after_hwe: '3660', variants_ld_pruned_in: '220'] },
+                { assert retained('study_csa') < 0.07 },
+                { assert summary.study_csa.sample_qc_note == 'LD pruning retained 220 of 3660 QC variants (6.0%, below the --ld_min_retained_fraction floor of 0.1); the study-pruned marker set is unreliable at this sample size, consider --sample_qc_marker_set shared' },
                 { assert summary.study_csa.sample_qc_markers == (lines('qc/study_csa/ld_pruning/study_csa.prune.in').size() - lines('qc/study_csa/ld_pruning/study_csa.highld_exclude.txt').size()).toString() },
                 { assert report.contains('id="gwasqc_sample_qc_markers"') },
                 { assert report.contains('consider --sample_qc_marker_set shared') },

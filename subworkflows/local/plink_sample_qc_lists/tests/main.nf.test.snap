@@ -77,7 +77,7 @@
                             "id": "study_eur",
                             "sample_qc_marker_set": "study"
                         },
-                        "study_eur.het_sex_scatter.tsv:md5,bffc8b055538b56a0e50952f4d7cee50"
+                        "study_eur.het_sex_scatter.tsv:md5,b7eca734776d7b7b2a4d8195eea401f7"
                     ]
                 ],
                 "highld_exclude": [
@@ -95,7 +95,7 @@
                             "id": "study_eur",
                             "sample_qc_marker_set": "study"
                         },
-                        "study_eur.highld_exclude.txt:md5,20606a3ef430e338b05e872a7970d435"
+                        "study_eur.highld_exclude.txt:md5,249b22d17c5cbee593b4120bc821de3b"
                     ]
                 ],
                 "kin0": [
@@ -139,7 +139,7 @@
                             "id": "study_eur",
                             "sample_qc_marker_set": "study"
                         },
-                        "study_eur.prune.in:md5,0181b60baa0a76c6550b93fb3342012d"
+                        "study_eur.prune.in:md5,d9d930ee37126f4789f64b1c6c3bea06"
                     ]
                 ],
                 "prune_out": [
@@ -157,7 +157,7 @@
                             "id": "study_eur",
                             "sample_qc_marker_set": "study"
                         },
-                        "study_eur.prune.out:md5,174ae125f87e3949f7991bbdcca47bb9"
+                        "study_eur.prune.out:md5,c74b9d4d6544df7f89e890997e5b77f3"
                     ]
                 ],
                 "reference_afreq": [
@@ -307,7 +307,7 @@
                             "id": "study_eur",
                             "sample_qc_marker_set": "study"
                         },
-                        "study_eur.sex_mismatch.tsv:md5,6043f35ffc37cb62c9be16ca60747cbe"
+                        "study_eur.sex_mismatch.tsv:md5,3914e0ace9250ef383326c7c1010d82d"
                     ]
                 ],
                 "sex_remove": [
@@ -359,12 +359,12 @@
                             "id": "study_eur",
                             "sample_qc_marker_set": "study"
                         },
-                        "study_eur.sexcheck:md5,aad2e2879782dc81479ea1c6b5f6af1c"
+                        "study_eur.sexcheck:md5,6e287933a8f94c3a00dbeae85ab2b8bc"
                     ]
                 ]
             }
         ],
-        "timestamp": "2026-11-18T15:36:14.77947763",
+        "timestamp": "2026-11-26T17:24:27.755246836",
         "meta": {
             "nf-test": "0.9.5",
             "nextflow": "26.04.6"

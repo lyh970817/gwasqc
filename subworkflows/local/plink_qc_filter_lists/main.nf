@@ -83,10 +83,10 @@ workflow PLINK_QC_FILTER_LISTS {
     // the invalid haploid calls set to missing with `--set-invalid-haploid-missing`, which also erases the
     // female, and so the formerly unknown-sex, chromosome Y calls. It is the one study-side intermediate fileset
     // of the chain, because plink2 applies that erasure only while writing a fileset, never within a statistics
-    // run. It is read by the MAF run, the chromosome X Hardy-Weinberg run and the frequencies of the sex check,
-    // and by nothing else: the missingness runs, the autosomal Hardy-Weinberg run, the sex check itself and the
-    // terminal materialisation read the stratum fileset, whose heterozygous haploid calls the QC'd fileset
-    // keeps, as the legacy filesets kept them. It is not published.
+    // run. It is read by the MAF run, the chromosome X Hardy-Weinberg run, the frequencies of the sex check and
+    // the study-mode LD pruning, and by nothing else: the missingness runs, the autosomal Hardy-Weinberg run,
+    // the sex check itself and the terminal materialisation read the stratum fileset, whose heterozygous
+    // haploid calls the QC'd fileset keeps, as the legacy filesets kept them. It is not published.
 
     //
     // MODULE: The sample file with every unknown sex recoded female
@@ -303,7 +303,7 @@ workflow PLINK_QC_FILTER_LISTS {
     geno_exclude       = ch_geno_exclude // channel: [ val(meta), path(geno_exclude) ], the applied variant missingness exclusions
     mind_remove        = ch_mind_remove // channel: [ val(meta), path(mind_remove) ], the applied sample missingness removals
     missingness_ladder = MISSINGNESS_LADDER.out.ladder // channel: [ val(meta), path(ladder) ]
-    haploid_view       = PLINK2_MAKEBED_HAPLOID_VIEW.out.bed // channel: [ val(meta), path(bed), path(bim), path(fam) ], the stratum with unknown sex recoded female and the invalid haploid calls missing; for frequencies only
+    haploid_view       = PLINK2_MAKEBED_HAPLOID_VIEW.out.bed // channel: [ val(meta), path(bed), path(bim), path(fam) ], the stratum with unknown sex recoded female and the invalid haploid calls missing; for frequencies and LD pruning only
     hardy              = PLINK2_HARDY.out.hardy // channel: [ val(meta), path(hardy) ], every chromosome but X
     hardy_x            = PLINK2_HARDY_NONMALE.out.hardy_x // channel: [ val(meta), path(hardy_x) ], over the nonmale samples; optional
     hwe_exclude        = HWE_DECISIONS.out.variant_exclude // channel: [ val(meta), path(hwe_exclude) ]

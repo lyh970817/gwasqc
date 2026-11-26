@@ -134,10 +134,10 @@
                     "nf-core/gwasqc": "v1.0.0dev"
                 }
             },
-            "gwasqc_summary.tsv:md5,f04471e43976f652c52ae1c906087c29",
+            "gwasqc_summary.tsv:md5,5c85b2696706164f26651b89b301da16",
             "study_eur_alt.contig_exclude.txt:md5,e72b8b8ca4c23bff6d77463f8a3c10e4"
         ],
-        "timestamp": "2026-11-18T16:15:33.212101345",
+        "timestamp": "2026-11-26T17:07:48.398993134",
         "meta": {
             "nf-test": "0.9.5",
             "nextflow": "26.04.6"
@@ -275,9 +275,9 @@
                     "nf-core/gwasqc": "v1.0.0dev"
                 }
             },
-            "gwasqc_summary.tsv:md5,2d3e01c88cbbb7d555f7140b36afe1bd"
+            "gwasqc_summary.tsv:md5,bee83258008e223e88f839735cacf76d"
         ],
-        "timestamp": "2026-11-18T16:13:06.144361732",
+        "timestamp": "2026-11-26T17:03:03.083171354",
         "meta": {
             "nf-test": "0.9.5",
             "nextflow": "26.04.6"

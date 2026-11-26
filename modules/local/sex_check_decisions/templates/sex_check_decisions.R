@@ -44,9 +44,12 @@ fwrite(problems, paste0(prefix, ".sex_mismatch.tsv"), sep = "\\t")
 writeLines(do.call(paste, problems[, id_columns, with = FALSE]), paste0(prefix, ".sex_mismatch_remove.txt"))
 
 # Histogram of F by recorded sex over 100 bins spanning the observed range, as the legacy sex_check_hist.r
-# drew it; the counts are written first and the plot is drawn from them.
+# drew it; the counts are written first and the plot is drawn from them. plink2 writes an unknown recorded
+# sex as NA where PLINK 1.9 wrote 0, so NA is the unknown level the legacy plot drew in blue.
 sex_labels <- c("2" = "female (2)", "1" = "male (1)", "0" = "unknown (0)")
-recorded_sex <- factor(sex_labels[as.character(report[["PEDSEX"]])], levels = sex_labels)
+recorded_codes <- as.character(report[["PEDSEX"]])
+recorded_codes[is.na(recorded_codes)] <- "0"
+recorded_sex <- factor(sex_labels[recorded_codes], levels = sex_labels)
 f_values <- as.numeric(report[["F"]])
 f_range <- range(f_values, na.rm = TRUE)
 if (!all(is.finite(f_range)) || diff(f_range) == 0) {

@@ -95,9 +95,9 @@
                     "nf-core/gwasqc": "v1.0.0dev"
                 }
             },
-            "gwasqc_summary.tsv:md5,180e996b951ee26e417d059190705781"
+            "gwasqc_summary.tsv:md5,a74fc3bbb74e7fe77e5658ad1777c9d4"
         ],
-        "timestamp": "2026-11-18T16:38:03.413071321",
+        "timestamp": "2026-11-26T17:48:50.452648259",
         "meta": {
             "nf-test": "0.9.5",
             "nextflow": "26.04.6"
@@ -390,9 +390,9 @@
                     "nf-core/gwasqc": "v1.0.0dev"
                 }
             },
-            "gwasqc_summary.tsv:md5,153c6be135e83001e6420e8dfe3588bd"
+            "gwasqc_summary.tsv:md5,5dec90cce443948bfae95a1381080ee6"
         ],
-        "timestamp": "2026-11-18T16:31:11.387934019",
+        "timestamp": "2026-11-26T17:42:39.778230695",
         "meta": {
             "nf-test": "0.9.5",
             "nextflow": "26.04.6"
@@ -533,9 +533,9 @@
                     "nf-core/gwasqc": "v1.0.0dev"
                 }
             },
-            "gwasqc_summary.tsv:md5,92114a14b5bfd9caa700967ba08a5e36"
+            "gwasqc_summary.tsv:md5,20261b874be22690d9a82996b6b3ba88"
         ],
-        "timestamp": "2026-11-18T16:24:48.466166419",
+        "timestamp": "2026-11-26T17:34:35.170244917",
         "meta": {
             "nf-test": "0.9.5",
             "nextflow": "26.04.6"
