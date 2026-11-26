@@ -147,8 +147,41 @@ jobs:
           name: pr-comment-fragment-${{ strategy.job-index }}
           path: pr-comment-fragment/
 
+  # nf-test hands parameters to the pipeline through a params file, so no nf-test case exercises a
+  # parameter given on the command line, where the value reaches nf-schema as text. Run the validation
+  # alone (`-preview`, which starts no process) with numeric parameters on the command line and in a params
+  # file; both must exit 0.
+  cli-numeric-params:
+    name: "cli-numeric-params | ${{ matrix.NXF_VER }}"
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        NXF_VER:
+          - "25.10.4"
+          - "latest-everything"
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+
+      - name: Setup Nextflow
+        uses: nf-core/setup-nextflow@b4ec1bc7c16a94435159de94a05253542fddf6ef # v3
+        with:
+          version: "${{ matrix.NXF_VER }}"
+
+      - name: Validate numeric parameters given on the command line
+        continue-on-error: ${{ matrix.NXF_VER == 'latest-everything' }}
+        run: |
+          nextflow run . -profile test,docker --outdir cli-out -preview \
+            --maf 0.02 --ld_window_size 1000 --ancestry_n_pcs 5
+
+      - name: Validate scientific notation given in a params file
+        continue-on-error: ${{ matrix.NXF_VER == 'latest-everything' }}
+        run: |
+          printf 'hwe: 1e-10\nancestry_hwe: 1e-6\n' > params.yaml
+          nextflow run . -profile test,docker --outdir cli-out -preview -params-file params.yaml
+
   confirm-pass:
-    needs: [nf-test]
+    needs: [nf-test, cli-numeric-params]
     if: always()
     runs-on: ubuntu-latest
     steps:

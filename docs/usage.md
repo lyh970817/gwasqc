@@ -184,6 +184,8 @@ outdir: './results/'
 
 You can also generate such `YAML`/`JSON` files via [nf-core/launch](https://nf-co.re/launch).
 
+Nextflow passes a parameter given on the command line to the pipeline as text, and the pipeline's validation accepts a plain decimal or integer such as `--maf 0.02` or `--ld_window_size 1000` but rejects a value in scientific notation such as `--hwe 1e-10` or `--ancestry_hwe 1e-6` as not being a number. Give such a value in a params file (`hwe: 1e-10`) or as a plain decimal on the command line (`--hwe 0.0000000001`).
+
 ### Updating the pipeline
 
 When you run the above command, Nextflow automatically pulls the pipeline code from GitHub and stores it as a cached version. When running the pipeline after this, it will always use the cached version if available - even if the pipeline has been updated since. To make sure that you're running the latest version of the pipeline, make sure that you regularly update the cached version of the pipeline:
