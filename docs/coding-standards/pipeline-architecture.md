@@ -54,10 +54,12 @@ Decided 2026-09-20 with the foundation milestone of the legacy port; the tuple c
   X with the Graffelman-Weir test over females and males, unknown sex left out. `PLINK_QC_FILTER_LISTS`
   therefore writes per stratum a haploid view, the stratum with unknown sex recoded female (`unknown_sex_recode`)
   and `--set-invalid-haploid-missing` applied, because plink2 applies that erasure only while writing a fileset;
-  the MAF run, the chromosome X Hardy-Weinberg run (`--remove-males`) and the frequencies the sex check reads
-  through `--read-freq` run on the view, and every other run, the terminal `--make-bed` among them, on the
-  stratum fileset (verified against 1.90b6.21 on 2.0.0a.6.9: the MAF keep-list, the chromosome X test and the
-  sex-check `F` agree, and `--indep-pairwise` already ignores heterozygous haploid calls in both).
+  the MAF run, the chromosome X Hardy-Weinberg run (`--remove-males`), the frequencies the sex check reads
+  through `--read-freq` and the study-mode `--indep-pairwise` run on the view, and every other run, the
+  terminal `--make-bed` among them, on the stratum fileset (verified against 1.90b6.21 on 2.0.0a.6.9: the MAF
+  keep-list, the chromosome X test and the sex-check `F` agree; verified against 1.90b6.10 on 2.0.0a.6.9:
+  PLINK 1.9's `--indep-pairwise` sets heterozygous haploid calls missing, plink2's does not, and on the view
+  plink2's chromosome X pruning equals PLINK 1.9's `--ld-xchr 3`).
   _(decided 2026-11-18: deviations from the legacy scripts found on real data are bugs to fix)_
 - **[MUST]** Variants on non-standard contigs are kept by default, as the legacy pipeline kept them (it ran PLINK
   with `--allow-extra-chr` and never dropped them); they are excluded only under the opt-in boolean
@@ -118,9 +120,13 @@ Decided 2026-09-20 with the foundation milestone of the legacy port; the tuple c
   input count alone decides it will need it, are rejected at ingress, and the residual case when the mode is
   decided. _(decided 2026-09-21 with the small-n milestone, issue #2)_
 - **[MUST]** In the `study` mode the chain keeps the legacy ordering: `--indep-pairwise` prunes the QC'd set over
-  every chromosome; the long-range LD regions (the tracked GRCh38 asset, derived from the legacy awk rules) and
-  every non-autosomal variant are then listed for exclusion among the pruned variants. The sex check runs on
-  the pruned set with chromosome X, splitting the pseudo-autosomal regions and applying its thresholds in the
+  every chromosome, on the haploid view and with `--indep-order 1`, PLINK 1.x's pair order, as does every
+  reference-side pruning run (verified against 1.90b6.10 on 2.0.0a.6.9: identical prune.in on the autosomes,
+  chromosome Y and MT; plink2's default backward scan keeps a different set). Chromosome X keeps a residual:
+  PLINK 1.9's default `--ld-xchr 1` codes males 0/1 beside the females' 0/1/2, plink2 implements only the
+  `--ld-xchr 3` model (males 0/2, nonmales counted twice) and offers no option for another. The long-range LD
+  regions (the tracked GRCh38 asset, derived from the legacy awk rules) and every non-autosomal variant are then
+  listed for exclusion among the pruned variants. The sex check runs on the pruned set with chromosome X, splitting the pseudo-autosomal regions and applying its thresholds in the
   one `--check-sex` run (verified: `--split-par b38`, `--extract` and `--check-sex` combine on a `--bfile`
   input, so nothing is materialised); heterozygosity and KING relatedness run on the pruned autosomal set
   outside the regions. A stratum whose pruning kept fewer than `ld_min_retained_fraction` of its QC'd variants
