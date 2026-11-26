@@ -246,7 +246,7 @@
                     "default": 1,
                     "minimum": 1,
                     "description": "Smallest number of non-missing chromosome Y calls a sample called male must carry; fewer downgrades the call to a mismatch.",
-                    "help_text": "plink1.9 `--check-sex ycount` defaulted this to 0, which plink2 rejects; 1 is the smallest value plink2 accepts and the plink1.9 `y-only` default.",
+                    "help_text": "plink1.9 `--check-sex ycount` defaulted this to 0, which plink2 rejects; 1 is the smallest value plink2 accepts and the plink1.9 `y-only` default. A recorded male with a male chromosome X F but no valid chromosome Y call is therefore a `PROBLEM` here, where plink1.9 called him male.",
                     "fa_icon": "fas fa-mars"
                 },
                 "king_table_filter": {
